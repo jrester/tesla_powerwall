@@ -1,0 +1,4 @@
+language: crystal
+script:
+  - crystal tool format --check
+  - crystal spec

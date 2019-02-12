@@ -1,0 +1,9 @@
+name: tesla-powerwall
+version: 0.1.0
+
+authors:
+  - Jrester <jrester379@gmail.com>
+
+crystal: 0.27.1
+
+license: MIT
