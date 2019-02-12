@@ -9,7 +9,7 @@ Crystal API for Tesla Powerwall.
    ```yaml
    dependencies:
      tesla-powerwall:
-       github: your-github-user/tesla-powerwall
+       github: jrester/tesla-powerwall
    ```
 
 2. Run `shards install`
@@ -21,7 +21,7 @@ To retrive Aggregates site:
 ```crystal
 require "tesla-powerwall"
 
-Tesla::Powerwall::Client.get "https:/<your-domain>", Tesla::Powerwall::Client::Page::Aggregates
+Tesla::Powerwall::Client.get "https://<your-domain>", Tesla::Powerwall::Client::Page::Aggregates
 ```
 
 Currently these pages are supported:

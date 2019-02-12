@@ -55,15 +55,15 @@ module Tesla::Powerwall
 
       def to_json(value : Status, builder : JSON::Builder)
         status = case value
-        when Connected
-          "SystemGridConnected"
-        when Down
-          "SystemIslandedActive"
-        when Transition
-          "SystemTransitionToGrid"
-        else
-          raise "Unkown grid status: #{value}"
-        end
+                 when Connected
+                   "SystemGridConnected"
+                 when Down
+                   "SystemIslandedActive"
+                 when Transition
+                   "SystemTransitionToGrid"
+                 else
+                   raise "Unkown grid status: #{value}"
+                 end
         status.to_json(builder)
       end
     end
@@ -83,7 +83,7 @@ module Tesla::Powerwall
   class SiteMaster
     JSON.mapping(
       running: Bool,
-      uptime: String|Time,
+      uptime: String | Time,
       connected_to_tesla: Bool
     )
   end
@@ -117,7 +117,7 @@ module Tesla::Powerwall
       def encode : String
         case self
         when Aggregates
-           "/api/meters/aggregates"
+          "/api/meters/aggregates"
         when GridStatus
           "/api/system_status/grid_status"
         when StateOfEnergy
@@ -132,7 +132,7 @@ module Tesla::Powerwall
       def object_for_page
         case self
         when Aggregates
-           Tesla::Powerwall::Aggregates
+          Tesla::Powerwall::Aggregates
         when GridStatus
           Tesla::Powerwall::GridStatus
         when StateOfEnergy
