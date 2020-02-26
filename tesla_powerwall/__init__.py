@@ -1,12 +1,13 @@
-import requests
 import logging
 import sys
 
+import requests
+from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-#logging.basicConfig(stream=sys.stdout)
+# logging.basicConfig(stream=sys.stdout)
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
@@ -27,20 +28,37 @@ BACKUP_RESERVE_PERCENTAGE_21 = 24.6
 BACKUP_RESERVE_PERCENTAGE_30 = 33
 BACKUP_RESERVE_PERCENTAGE_100 = 100
 
+
 class ApiError(Exception):
     def __init__(self, error):
         super().__init__(f"Power Wall api error: {error}")
+
 
 class PowerWallUnreachableError(Exception):
     def __init__(self):
         super().__init__(f"Site master or Power wall is unreachable!")
 
+
 class InvalidPassword(Exception):
     def __init__(self,):
-        super().__init__(f'Invalid password')
+        super().__init__(f"Invalid password")
+
 
 class MetersResponse:
-    JSON_ATTRS = ["last_communication_time", "instant_power", "instant_reactive_power", "instant_apparent_power", "frequency", "energy_exported", "energy_imported", "instant_average_voltage", "instant_total_current", "i_a_current", "i_b_current", "i_c_current"]
+    JSON_ATTRS = [
+        "last_communication_time",
+        "instant_power",
+        "instant_reactive_power",
+        "instant_apparent_power",
+        "frequency",
+        "energy_exported",
+        "energy_imported",
+        "instant_average_voltage",
+        "instant_total_current",
+        "i_a_current",
+        "i_b_current",
+        "i_c_current",
+    ]
 
     def __init__(self, response_json):
         self.response_json = response_json
@@ -48,11 +66,14 @@ class MetersResponse:
         for attr in MetersResponse.JSON_ATTRS:
             setattr(self, attr, response_json[attr])
 
+
 class PowerWall:
-    def __init__(self, host, password=None):
+    def __init__(self, host, password=None, timeout=10, http_session=None):
         self.host = host
         self.password = password
         self.token = None
+        self._timeout = timeout
+        self._http_session = http_session if http_session else Session()
         self.auth_header = {}
         self._login_flag = False
 
@@ -69,31 +90,42 @@ class PowerWall:
         _LOGGER.debug(f"Response: {response.text}")
         response_json = response.json()
 
-        if 'error' in response_json:
-            raise ApiError(response_json['error'])
+        if "error" in response_json:
+            raise ApiError(response_json["error"])
 
         return response_json
 
     def _get(self, endpoint, needs_authentication=False):
-        _LOGGER.debug(f'Getting https://{self.host}/{endpoint}')
+        _LOGGER.debug(f"Getting https://{self.host}/{endpoint}")
 
         header = {}
         if needs_authentication and self.token is None:
             _LOGGER.debug("Authenticating")
             self.login()
 
-        response = requests.get(url=f'https://{self.host}/{endpoint}', verify=False, headers=self.auth_header)
+        response = self._http_session.get(
+            url=f"https://{self.host}/{endpoint}",
+            timeout=self._timeout,
+            verify=False,
+            headers=self.auth_header,
+        )
 
         return self._process_response(response)
-        
-    def _post(self, endpoint : str, payload : dict, needs_authentication=False):
+
+    def _post(self, endpoint: str, payload: dict, needs_authentication=False):
         _LOGGER.debug(f"Post {payload} to https://{self.host}/{endpoint}")
 
         if needs_authentication and self.token is None:
             _LOGGER.debug("Authenticating")
             self.login()
 
-        response = requests.post(url=f'https://{self.host}/{endpoint}', data=payload, verify=False, headers=self.auth_header)
+        response = self._http_session.post(
+            url=f"https://{self.host}/{endpoint}",
+            data=payload,
+            timeout=self._timeout,
+            verify=False,
+            headers=self.auth_header,
+        )
 
         return self._process_response(response)
 
@@ -103,21 +135,24 @@ class PowerWall:
         if self.password is None:
             raise InvalidPassword()
 
-        response = self._post('api/login/Basic', {'username': '', 'password': self.password, 'force_sm_off': True})
-            
-        self.token = response['token']
-        _LOGGER.debug(f'Received new token {self.token}')
-        self.auth_header = {'Authorization': 'Bearer ' + self.token}
+        response = self._post(
+            "api/login/Basic",
+            {"username": "", "password": self.password, "force_sm_off": True},
+        )
+
+        self.token = response["token"]
+        _LOGGER.debug(f"Received new token {self.token}")
+        self.auth_header = {"Authorization": "Bearer " + self.token}
         self.run()
 
         self._login_flag = False
 
     def run(self):
         self._get("api/sitemaster/run")
-        
+
     @property
     def charge(self):
-        return self._get('api/system_status/soe')['percentage']
+        return self._get("api/system_status/soe")["percentage"]
 
     @property
     def sitemaster(self):
@@ -138,7 +173,7 @@ class PowerWall:
     @property
     def meters(self):
         return self._get("api/meters/aggregates")
-    
+
     @property
     def solar(self):
         return MetersResponse(self.meters["solar"])
@@ -194,7 +229,7 @@ class PowerWall:
     @property
     def solar_power(self):
         return self.solar.instant_power
-    
+
     @property
     def battery_power(self):
         return self.battery.instant_power
@@ -206,7 +241,7 @@ class PowerWall:
     @property
     def mode(self):
         return self.operation["mode"]
-    
+
     @property
     def backup_preserve_percentage(self):
         return self.operation["backup_reserve_percentage"]
@@ -228,7 +263,7 @@ class PowerWall:
 
     def is_sending_to_battery(self):
         return self.battery_power < 0
-    
+
     def is_drawing_from_battery(self):
         return not self.sending_to_battery
 
