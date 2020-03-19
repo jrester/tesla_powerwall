@@ -215,8 +215,16 @@ class PowerWall:
         return self._get("api/site_info")
 
     @property
-    def status(self):
+    def site_info_status(self):
         return self._get("api/site_info/status")
+
+    @property
+    def status(self):
+        return self._get("api/status")
+
+    @property
+    def device_type(self):
+        return self._get("api/device_type")
 
     @property
     def home_power(self):
