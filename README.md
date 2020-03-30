@@ -1,6 +1,6 @@
 # Python tesla powerwall API
 
-Python Tesla Powerwall API based on the [documentation](https://github.com/vloschiavo/powerwall2) by Vince Loschiavo.
+Python Tesla Powerwall API
 
 ## Usage
 
@@ -13,7 +13,10 @@ from tesla_powerwall import PowerWall
 power_wall = PowerWall("<ip of your powerwall>")
 
 # With authentication
-power_wall = PowerWall("<ip of your powerwall>", "password")
+power_wall = PowerWall("<ip of your powerwall>")
+
+# Username must be either 'installer' or 'custumer'
+power_wall.login("<username>", "<email>", "<password>)
 
 ```
 

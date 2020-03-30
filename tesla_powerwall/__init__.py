@@ -2,15 +2,11 @@ import logging
 import sys
 
 import requests
+from urllib.parse import urljoin, urlparse, urlunparse, urlsplit, urlunsplit
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
-# logging.basicConfig(stream=sys.stdout)
-
-_LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.DEBUG)
 
 GRID_STATUS_SYSTEM_GRID_UP = "SystemGridConnected"
 GRID_STATUS_SYSTEM_GRID_DOWN = "SystemIslandedActive"
@@ -39,9 +35,12 @@ class PowerWallUnreachableError(Exception):
         super().__init__(f"Site master or Power wall is unreachable!")
 
 
-class InvalidPassword(Exception):
-    def __init__(self,):
-        super().__init__(f"Invalid password")
+class AccessDeniedError(Exception):
+    def __init__(self, resource, error=None):
+        msg = f"Access denied for resource {resource}"
+        if msg is not None:
+            msg = f"{msg}: {error}"
+        super().__init__(msg)
 
 
 class MetersResponse:
@@ -68,26 +67,33 @@ class MetersResponse:
 
 
 class PowerWall:
-    def __init__(self, host, password=None, timeout=10, http_session=None):
-        self.host = host
-        self.password = password
-        self.token = None
+    def __init__(self, endpoint, timeout=10, http_session=None, verify_ssl=False):
+        if endpoint.startswith("https"):
+            self._endpoint = endpoint
+        elif endpoint.startswith("http"):
+            self._endpoint = endpoint.replace("http", "https")
+        else:
+            self._endpoint = f"https://{endpoint}"
+
         self._timeout = timeout
         self._http_session = http_session if http_session else Session()
-        self.auth_header = {}
-        self._login_flag = False
+        self._http_session.verify = verify_ssl
+        self._password = None
+        self._username = None
 
     def _process_response(self, response):
-        if response.status_code == 401:
-            if self._login_flag:
-                raise InvalidPassword()
-
-            self.login()
+        if response.status_code == 401 or response.status_code == 403:
+            response_json = None
+            try:
+                response_json = response.json()
+            except Exception:
+                raise AccessDeniedError(response.request.path_url)
+            else:
+                raise AccessDeniedError(response.request.path_url, response_json["error"])
 
         if response.status_code == 502:
             raise PowerWallUnreachableError()
 
-        _LOGGER.debug(f"Response: {response.text}")
         response_json = response.json()
 
         if "error" in response_json:
@@ -95,57 +101,44 @@ class PowerWall:
 
         return response_json
 
-    def _get(self, endpoint, needs_authentication=False):
-        _LOGGER.debug(f"Getting https://{self.host}/{endpoint}")
-
-        header = {}
-        if needs_authentication and self.token is None:
-            _LOGGER.debug("Authenticating")
-            self.login()
+    def _get(self, path: str, needs_authentication=False, headers: dict = {}):
+        if needs_authentication is True and not "Authorization" in self._http_session.headers.keys():
+            raise ApiError(f"Authentication required to access {path}")
 
         response = self._http_session.get(
-            url=f"https://{self.host}/{endpoint}",
+            url=urljoin(self._endpoint, path),
             timeout=self._timeout,
-            verify=False,
-            headers=self.auth_header,
+            headers=headers,
         )
 
         return self._process_response(response)
 
-    def _post(self, endpoint: str, payload: dict, needs_authentication=False):
-        _LOGGER.debug(f"Post {payload} to https://{self.host}/{endpoint}")
-
-        if needs_authentication and self.token is None:
-            _LOGGER.debug("Authenticating")
-            self.login()
+    def _post(self, path: str, payload: dict, needs_authentication=False, headers: dict = {}):
+        if needs_authentication and not "Authorization" in self._http_session.headers.keys():
+            raise ApiError(f"Authentication required to access {path}")
 
         response = self._http_session.post(
-            url=f"https://{self.host}/{endpoint}",
+            url=urljoin(self._endpoint, path),
             data=payload,
             timeout=self._timeout,
-            verify=False,
-            headers=self.auth_header,
+            headers=headers,
         )
 
         return self._process_response(response)
 
-    def login(self):
-        self._login_flag = True
-
-        if self.password is None:
-            raise InvalidPassword()
+    def login(self, username: str, email : str, password: str):
+        if username not in ("installer", "custumer"):
+            raise ValueError(
+                f"Username must be 'installer' or 'custumer' not {username}")
 
         response = self._post(
             "api/login/Basic",
-            {"username": "", "password": self.password, "force_sm_off": True},
+            {"username": username, "email": email, "password": password, "force_sm_off": True},
         )
 
-        self.token = response["token"]
-        _LOGGER.debug(f"Received new token {self.token}")
-        self.auth_header = {"Authorization": "Bearer " + self.token}
-        self.run()
+        token = response["token"]
 
-        self._login_flag = False
+        self._http_session.headers["Authorization"] = "Bearer " + token
 
     def run(self):
         self._get("api/sitemaster/run")
@@ -258,25 +251,30 @@ class PowerWall:
         self._post("api/operation", {"mode": mode, "percentage": percentage})
 
     def set_backup_preserve_percentage(self, percentage):
-        set_mode_and_backup_preserve_percentage(self.mode, percentage)
+        self.set_mode_and_backup_preserve_percentage(self.mode, percentage)
 
     def set_mode(self, mode):
-        set_mode_and_backup_preserve_percentage(mode, self.backup_preserve_percentage)
+        self.set_mode_and_backup_preserve_percentage(
+            mode, self.backup_preserve_percentage)
 
     def is_sending_to_grid(self):
         return self.grid_power < 0
 
     def is_drawing_from_grid(self):
-        return not self.sending_to_grid
+        return not self.is_sending_to_grid()
 
     def is_sending_to_battery(self):
         return self.battery_power < 0
 
     def is_drawing_from_battery(self):
-        return not self.sending_to_battery
+        return not self.is_sending_to_battery()
 
     def is_sending_to_solar(self):
         return self.solar_power < 0
 
     def is_drawing_from_solar(self):
-        return not self.sending_to_solar
+        return not self.is_sending_to_solar()
+
+    def __del__(self):
+        if self._http_session is not None:
+            self._http_session.close()
