@@ -8,6 +8,8 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
+VERSION = "0.1.3"
+
 GRID_STATUS_SYSTEM_GRID_UP = "SystemGridConnected"
 GRID_STATUS_SYSTEM_GRID_DOWN = "SystemIslandedActive"
 GRID_STATUS_SYSTEM_GRID_RESTORED_NO_SYNC = "SystemTransitionToGrid"
