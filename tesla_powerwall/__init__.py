@@ -10,7 +10,7 @@ from .responses import MetersResponse, SiteinfoResponse, SitemasterResponse, Cus
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-VERSION = "0.1.3"
+VERSION = "0.1.4"
 
 STATUS_UP = "StatusUp"
 
