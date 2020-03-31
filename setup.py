@@ -1,11 +1,13 @@
 from setuptools import setup, find_packages
 
+from tesla_powerwall import VERSION
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
     name="tesla_powerwall",
-    version="0.1.3",
+    version=VERSION,
     description="API for Tesla Powerwall",
     long_description=long_description,
     long_description_content_type="text/markdown",
