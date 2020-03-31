@@ -6,9 +6,13 @@ from urllib.parse import urljoin, urlparse, urlunparse, urlsplit, urlunsplit
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
+from .responses import MetersResponse, SiteinfoResponse, SitemasterResponse, CustomerRegistrationResponse
+
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 VERSION = "0.1.3"
+
+STATUS_UP = "StatusUp"
 
 GRID_STATUS_SYSTEM_GRID_UP = "SystemGridConnected"
 GRID_STATUS_SYSTEM_GRID_DOWN = "SystemIslandedActive"
@@ -45,29 +49,6 @@ class AccessDeniedError(Exception):
         super().__init__(msg)
 
 
-class MetersResponse:
-    JSON_ATTRS = [
-        "last_communication_time",
-        "instant_power",
-        "instant_reactive_power",
-        "instant_apparent_power",
-        "frequency",
-        "energy_exported",
-        "energy_imported",
-        "instant_average_voltage",
-        "instant_total_current",
-        "i_a_current",
-        "i_b_current",
-        "i_c_current",
-    ]
-
-    def __init__(self, response_json):
-        self.response_json = response_json
-
-        for attr in MetersResponse.JSON_ATTRS:
-            setattr(self, attr, response_json[attr])
-
-
 class PowerWall:
     def __init__(self, endpoint, timeout=10, http_session=None, verify_ssl=False):
         if endpoint.startswith("https"):
@@ -76,6 +57,13 @@ class PowerWall:
             self._endpoint = endpoint.replace("http", "https")
         else:
             self._endpoint = f"https://{endpoint}"
+
+        if not self._endpoint.endswith("api") and not self._endpoint.endswith("/"):
+            self._endpoint += "/api/"
+        elif self._endpoint.endswith("api"):
+            self._endpoint += "/"
+        elif self._endpoint.endswith("/"):
+            self._endpoint += "api/"
 
         self._timeout = timeout
         self._http_session = http_session if http_session else Session()
@@ -91,7 +79,8 @@ class PowerWall:
             except Exception:
                 raise AccessDeniedError(response.request.path_url)
             else:
-                raise AccessDeniedError(response.request.path_url, response_json["error"])
+                raise AccessDeniedError(
+                    response.request.path_url, response_json["error"])
 
         if response.status_code == 502:
             raise PowerWallUnreachableError()
@@ -128,14 +117,15 @@ class PowerWall:
 
         return self._process_response(response)
 
-    def login(self, username: str, email : str, password: str):
+    def login(self, username: str, email: str, password: str):
         if username not in ("installer", "custumer"):
             raise ValueError(
                 f"Username must be 'installer' or 'custumer' not {username}")
 
         response = self._post(
             "api/login/Basic",
-            {"username": username, "email": email, "password": password, "force_sm_off": True},
+            {"username": username, "email": email,
+                "password": password, "force_sm_off": True},
         )
 
         token = response["token"]
@@ -143,31 +133,25 @@ class PowerWall:
         self._http_session.headers["Authorization"] = "Bearer " + token
 
     def run(self):
-        self._get("api/sitemaster/run")
+        self._get("sitemaster/run", True)
+
+    def stop(self):
+        self._get("sitemaster/stop", True)
+
+    def set_run_for_commissioning(self):
+        self._post("sitemaster/run_for_commissioning", True)
 
     @property
     def charge(self):
-        return self._get("api/system_status/soe")["percentage"]
+        return self._get("system_status/soe")["percentage"]
 
     @property
     def sitemaster(self):
-        return self._get("api/sitemaster")
-
-    @property
-    def running(self):
-        return self.sitemaster["running"]
-
-    @property
-    def uptime(self):
-        return self.sitemaster["uptime"]
-
-    @property
-    def connected_to_tesla(self):
-        return self.sitemaster["connected_to_tesla"]
+        return SitemasterResponse(self._get("sitemaster"))
 
     @property
     def meters(self):
-        return self._get("api/meters/aggregates")
+        return self._get("meters/aggregates")
 
     @property
     def solar(self):
@@ -199,27 +183,38 @@ class PowerWall:
 
     @property
     def solar_detailed(self):
-        return self._get("api/meters/solar")
+        return self._get("meters/solar")
 
     @property
     def grid_status(self):
-        return self._get("api/system_status/grid_status")["grid_status"]
+        return self._get("system_status/grid_status")["grid_status"]
+
+    @property
+    def grid_services_active(self):
+        return self._get("system_status/grid_status")["grid_services_active"]
 
     @property
     def site_info(self):
-        return self._get("api/site_info")
+        return self._get("site_info")
 
     @property
     def site_info_status(self):
-        return self._get("api/site_info/status")
+        return self._get("site_info/status")
+
+    def set_site_name(self, site_name: str):
+        return self._post("site_info/site_name", {"site_name": site_name}, True)
 
     @property
     def status(self):
-        return self._get("api/status")
+        return self._get("status")
 
     @property
     def device_type(self):
-        return self._get("api/device_type")
+        return self._get("device_type")
+
+    @property
+    def customer_registration(self):
+        return CustomerRegistrationResponse(self._get("customer/registration"))
 
     @property
     def home_power(self):
@@ -239,7 +234,7 @@ class PowerWall:
 
     @property
     def operation(self):
-        return self._get("api/operation", True)
+        return self._get("operation", True)
 
     @property
     def mode(self):
@@ -250,7 +245,7 @@ class PowerWall:
         return self.operation["backup_reserve_percentage"]
 
     def set_mode_and_backup_preserve_percentage(self, mode, percentage):
-        self._post("api/operation", {"mode": mode, "percentage": percentage})
+        self._post("operation", {"mode": mode, "percentage": percentage})
 
     def set_backup_preserve_percentage(self, percentage):
         self.set_mode_and_backup_preserve_percentage(self.mode, percentage)

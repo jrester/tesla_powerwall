@@ -18,5 +18,10 @@ setup(
     ],
     install_requires=[
         "requests>=2.22.0"
-    ]
+    ],
+    tests_require=[
+        "requests>=2.22.0"
+        "responses>="
+    ],
+    test_suite="unittest"
 )

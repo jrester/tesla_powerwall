@@ -2,6 +2,8 @@
 
 Python Tesla Powerwall API
 
+> Note: This is not an official API and as such might be incomplete and fail at any time
+
 ## Usage
 
 ### Setup connection
@@ -25,6 +27,19 @@ power_wall.login("<username>", "<email>", "<password>)
 ```python3
 power_wall.charge
 #=> 70.0
+```
+
+### Sitemaster
+
+```python3
+sm = power_wall.sitemaster 
+#=> <tesla_powerwall.SiteMasterResponse ...>
+sm.status 
+#=> StatusUp
+sm.running
+#=> true
+sm.connected_to_tesla
+#=> true
 ```
 
 ### Current power supply/draw
