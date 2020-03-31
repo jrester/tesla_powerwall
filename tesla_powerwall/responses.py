@@ -2,16 +2,16 @@ class Response(object):
     def __init__(self, json_response):
         self.json_response = json_response
 
-        for attr in self.__class__.JSON_ATTRS:
+        for attr in self.__class__._JSON_ATTRS:
             if attr in json_response:
                 setattr(self, attr, json_response[attr])
             else:
                 raise ValueError(
-                    f"Missing key {attr} in response from PowerWall. Either the PowerWall sent an invalid response or the API changed!")
+                    f"Missing key {attr} in response from Powerwall. Either the Powerwall sent an invalid response or the API changed!")
 
 
 class MetersResponse(Response):
-    JSON_ATTRS = [
+    _JSON_ATTRS = [
         "last_communication_time",
         "instant_power",
         "instant_reactive_power",
@@ -29,7 +29,7 @@ class MetersResponse(Response):
 
 
 class SitemasterResponse(Response):
-    JSON_ATTRS = [
+    _JSON_ATTRS = [
         "status",
         "running",
         "connected_to_tesla"
@@ -37,7 +37,7 @@ class SitemasterResponse(Response):
 
 
 class SiteinfoResponse(Response):
-    JSON_ATTRS = [
+    _JSON_ATTRS = [
         "max_site_meter_power_kW",
         "min_site_meter_power_kW",
         "nominal_system_energy_kWh",

@@ -1,6 +1,3 @@
-import logging
-import sys
-
 import requests
 from urllib.parse import urljoin, urlparse, urlunparse, urlsplit, urlunsplit
 from requests import Session
@@ -33,12 +30,12 @@ BACKUP_RESERVE_PERCENTAGE_100 = 100
 
 class ApiError(Exception):
     def __init__(self, error):
-        super().__init__(f"Power Wall api error: {error}")
+        super().__init__(f"Powerwall api error: {error}")
 
 
-class PowerWallUnreachableError(Exception):
+class PowerwallUnreachableError(Exception):
     def __init__(self):
-        super().__init__(f"Site master or Power wall is unreachable!")
+        super().__init__(f"Site master or Powerwall is unreachable!")
 
 
 class AccessDeniedError(Exception):
@@ -49,7 +46,7 @@ class AccessDeniedError(Exception):
         super().__init__(msg)
 
 
-class PowerWall:
+class Powerwall(object):
     def __init__(self, endpoint, timeout=10, http_session=None, verify_ssl=False):
         if endpoint.startswith("https"):
             self._endpoint = endpoint
@@ -83,7 +80,7 @@ class PowerWall:
                     response.request.path_url, response_json["error"])
 
         if response.status_code == 502:
-            raise PowerWallUnreachableError()
+            raise PowerwallUnreachableError()
 
         response_json = response.json()
 
