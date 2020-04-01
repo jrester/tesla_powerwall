@@ -59,14 +59,12 @@ class Powerwall(object):
             self._endpoint += "/api/"
         elif self._endpoint.endswith("api"):
             self._endpoint += "/"
-        elif self._endpoint.endswith("/"):
+        elif self._endpoint.endswith("/") and not self._endpoint.endswith("api/"):
             self._endpoint += "api/"
 
         self._timeout = timeout
         self._http_session = http_session if http_session else Session()
         self._http_session.verify = verify_ssl
-        self._password = None
-        self._username = None
 
     def _process_response(self, response):
         if response.status_code == 401 or response.status_code == 403:

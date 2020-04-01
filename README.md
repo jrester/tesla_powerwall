@@ -4,6 +4,12 @@ Python Tesla Powerwall API
 
 > Note: This is not an official API and as such might be incomplete and fail at any time
 
+## Installation
+
+```
+$ pip install tesla_powerwall
+```
+
 ## Usage
 
 ### Setup connection
