@@ -1,53 +1,42 @@
+from typing import Union
+
 import requests
 from urllib.parse import urljoin, urlparse, urlunparse, urlsplit, urlunsplit
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
-from .responses import MetersResponse, SiteinfoResponse, SitemasterResponse, CustomerRegistrationResponse
+from .const import (
+    User,
+    GridStatus,
+    GridState,
+    LineStatus,
+    OperationMode,
+    SUPPORTED_OPERATION_MODES,
+    MeterType,
+    DeviceType,
+)
+from .error import (
+    ApiError,
+    PowerwallUnreachableError,
+    AccessDeniedError
+)
+from .responses import (
+    MetersAggregateResponse,
+    MetersResponse, 
+    SiteinfoResponse, 
+    SitemasterResponse, 
+    CustomerRegistrationResponse,
+    PowerwallStatusResponse,
+    PowerwallsStatusResponse
+)
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 VERSION = "0.1.4"
 
-STATUS_UP = "StatusUp"
-
-GRID_STATUS_SYSTEM_GRID_UP = "SystemGridConnected"
-GRID_STATUS_SYSTEM_GRID_DOWN = "SystemIslandedActive"
-GRID_STATUS_SYSTEM_GRID_RESTORED_NO_SYNC = "SystemTransitionToGrid"
-
-OPERATION_MODE_SELF_CONSUMPTION = "self_consumption"
-OPERATION_MODE_BACKUP = "backup"
-OPERATION_MODE_TIME_OF_USE = "autonomus"
-OPERATION_MODE_SCHEDULER = "scheduler"
-
-BACKUP_RESERVE_PERCENTAGE_5 = 10
-BACKUP_RESERVE_PERCENTAGE_16 = 20
-BACKUP_RESERVE_PERCENTAGE_20 = 24
-BACKUP_RESERVE_PERCENTAGE_21 = 24.6
-BACKUP_RESERVE_PERCENTAGE_30 = 33
-BACKUP_RESERVE_PERCENTAGE_100 = 100
-
-
-class ApiError(Exception):
-    def __init__(self, error):
-        super().__init__(f"Powerwall api error: {error}")
-
-
-class PowerwallUnreachableError(Exception):
-    def __init__(self):
-        super().__init__(f"Site master or Powerwall is unreachable!")
-
-
-class AccessDeniedError(Exception):
-    def __init__(self, resource, error=None):
-        msg = f"Access denied for resource {resource}"
-        if msg is not None:
-            msg = f"{msg}: {error}"
-        super().__init__(msg)
-
 
 class Powerwall(object):
-    def __init__(self, endpoint, timeout=10, http_session=None, verify_ssl=False):
+    def __init__(self, endpoint : str, timeout : int=10, http_session : requests.Session=None, verify_ssl : bool=False):
         if endpoint.startswith("https"):
             self._endpoint = endpoint
         elif endpoint.startswith("http"):
@@ -66,7 +55,10 @@ class Powerwall(object):
         self._http_session = http_session if http_session else Session()
         self._http_session.verify = verify_ssl
 
-    def _process_response(self, response):
+    def _process_response(self, response : str) -> dict:
+        if response.status_code == 404:
+            raise ApiError(f"The url {response.request.path_url} returned error 404")
+
         if response.status_code == 401 or response.status_code == 403:
             response_json = None
             try:
@@ -82,44 +74,52 @@ class Powerwall(object):
 
         response_json = response.json()
 
+        if response_json is None:
+            return {}
+
         if "error" in response_json:
             raise ApiError(response_json["error"])
 
         return response_json
 
-    def _get(self, path: str, needs_authentication=False, headers: dict = {}):
+    def _get(self, path: str, needs_authentication : bool=False, headers: dict = {}):
         if needs_authentication is True and not "Authorization" in self._http_session.headers.keys():
             raise ApiError(f"Authentication required to access {path}")
-
-        response = self._http_session.get(
-            url=urljoin(self._endpoint, path),
-            timeout=self._timeout,
-            headers=headers,
-        )
+        
+        try:
+            response = self._http_session.get(
+                url=urljoin(self._endpoint, path),
+                timeout=self._timeout,
+                headers=headers,
+            )
+        except requests.exceptions.ConnectionError:
+            raise PowerwallUnreachableError
 
         return self._process_response(response)
 
-    def _post(self, path: str, payload: dict, needs_authentication=False, headers: dict = {}):
+    def _post(self, path: str, payload: dict, needs_authentication : bool=False, headers: dict = {}):
         if needs_authentication and not "Authorization" in self._http_session.headers.keys():
             raise ApiError(f"Authentication required to access {path}")
 
-        response = self._http_session.post(
-            url=urljoin(self._endpoint, path),
-            data=payload,
-            timeout=self._timeout,
-            headers=headers,
-        )
+        try:
+            response = self._http_session.post(
+                url=urljoin(self._endpoint, path),
+                data=payload,
+                timeout=self._timeout,
+                headers=headers,
+            )
+        except requests.exceptions.ConnectionError:
+            raise PowerwallUnreachableError
 
         return self._process_response(response)
 
-    def login(self, username: str, email: str, password: str):
-        if username not in ("installer", "custumer"):
-            raise ValueError(
-                f"Username must be 'installer' or 'custumer' not {username}")
-
+    def login(self, user : Union[User, str], email : str, password : str):
+        if isinstance(user, User):
+            user = user.value
+            
         response = self._post(
-            "api/login/Basic",
-            {"username": username, "email": email,
+            "login/Basic",
+            {"username": user, "email": email,
                 "password": password, "force_sm_off": True},
         )
 
@@ -136,96 +136,77 @@ class Powerwall(object):
     def set_run_for_commissioning(self):
         self._post("sitemaster/run_for_commissioning", True)
 
-    @property
-    def charge(self):
+    def get_charge(self) -> float:
+        """Returns current charge of powerwall"""
         return self._get("system_status/soe")["percentage"]
 
-    @property
-    def sitemaster(self):
+    def get_sitemaster(self) -> SitemasterResponse:
         return SitemasterResponse(self._get("sitemaster"))
 
-    @property
-    def meters(self):
-        return self._get("meters/aggregates")
+    def get_meters(self) -> MetersAggregateResponse:
+        """Returns the different meters in a MetersAggregateResponse"""
+        return MetersAggregateResponse(self._get("meters/aggregates"))
 
-    @property
-    def solar(self):
-        return MetersResponse(self.meters["solar"])
+    def get_meter_detailed(self, meter : MeterType) -> Union[list, dict]:
+        """Returns details about a specific meter
+        
+        If their are no details available for a meter an empty dict is returned.
+        """
+        return self._get(f"meters/{meter.value}")
 
-    @property
-    def grid(self):
-        return MetersResponse(self.meters["site"])
-
-    @property
-    def load(self):
-        return MetersResponse(self.meters["load"])
-
-    @property
-    def battery(self):
-        return MetersResponse(self.meters["battery"])
-
-    @property
-    def busway(self):
-        return MetersResponse(self.meters["busway"])
-
-    @property
-    def frequency(self):
-        return MetersResponse(self.meters["frequency"])
-
-    @property
-    def generator(self):
-        return MetersResponse(self.meters["generator"])
-
-    @property
-    def solar_detailed(self):
-        return self._get("meters/solar")
-
-    @property
-    def grid_status(self):
-        return self._get("system_status/grid_status")["grid_status"]
+    def grid_status(self) -> GridStatus:
+        """Returns the current grid status."""
+        return GridStatus(self._get("system_status/grid_status")["grid_status"])
 
     @property
     def grid_services_active(self):
         return self._get("system_status/grid_status")["grid_services_active"]
 
     @property
-    def site_info(self):
-        return self._get("site_info")
+    def grid_codes(self):
+        return self._get("site_info/grid_codes")
 
     @property
-    def site_info_status(self):
-        return self._get("site_info/status")
+    def site_info(self) -> SiteinfoResponse:
+        """
+        Returns information about the powerwall site
+
+        """
+        return SiteinfoResponse(self._get("site_info"))
 
     def set_site_name(self, site_name: str):
         return self._post("site_info/site_name", {"site_name": site_name}, True)
 
-    @property
-    def status(self):
-        return self._get("status")
+    def get_status(self) -> PowerwallStatusResponse:
+        return PowerwallStatusResponse(self._get("status"))
+
+    def get_powerwalls_status(self) -> PowerwallsStatusResponse:
+        return PowerwallsStatusResponse(self._get('powerwalls/status'))
 
     @property
-    def device_type(self):
-        return self._get("device_type")
+    def device_type(self) -> DeviceType:
+        """Returns the device type of the powerwall"""
+        return DeviceType(self._get("device_type")["device_type"])
 
     @property
     def customer_registration(self):
         return CustomerRegistrationResponse(self._get("customer/registration"))
 
     @property
-    def home_power(self):
-        return self.load.instant_power
+    def load_power(self):
+        return self.meters.load.instant_power
 
     @property
-    def grid_power(self):
-        return self.grid.instant_power
+    def site_power(self):
+        return self.site.meters.instant_power
 
     @property
     def solar_power(self):
-        return self.solar.instant_power
+        return self.meters.solar.instant_power
 
     @property
     def battery_power(self):
-        return self.battery.instant_power
+        return self.meters.battery.instant_power
 
     @property
     def operation(self):
@@ -233,7 +214,7 @@ class Powerwall(object):
 
     @property
     def mode(self):
-        return self.operation["mode"]
+        return self.operation["real_mode"]
 
     @property
     def backup_preserve_percentage(self):
@@ -249,23 +230,44 @@ class Powerwall(object):
         self.set_mode_and_backup_preserve_percentage(
             mode, self.backup_preserve_percentage)
 
+    def get_phase_usage(self):
+        resp = self._get('powerwalls/phase_usages', needs_authentication=True)
+        return resp
+
+
+
+    def is_solar_active(self):
+        return not self.meters.site
+
     def is_sending_to_grid(self):
-        return self.grid_power < 0
+        return self.meters.site.instant_total_current > 0
 
     def is_drawing_from_grid(self):
         return not self.is_sending_to_grid()
 
     def is_sending_to_battery(self):
-        return self.battery_power < 0
+        return self.meters.battery.instant_total_current > 0
 
     def is_drawing_from_battery(self):
         return not self.is_sending_to_battery()
 
     def is_sending_to_solar(self):
-        return self.solar_power < 0
+        return self.meters.solar.instant_total_current > 0
 
     def is_drawing_from_solar(self):
         return not self.is_sending_to_solar()
+
+    def is_sending_to_load(self):
+        return self.meters.load.instant_total_current > 0
+
+    def power_send_to_load(self, meters=None):
+        pass
+
+    def power_send_to_grid(self, meters=None):
+        pass
+
+    def power_send_to_battery(self, meters=None):
+        pass
 
     def __del__(self):
         if self._http_session is not None:
