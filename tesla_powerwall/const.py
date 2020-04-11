@@ -7,7 +7,7 @@ class User(Enum):
     INSTALLER = "installer"
     CUSTOMER = "customer"
     ENGINEER = "engineer"
-    KIOSK = "kisok"
+    KIOSK = "kiosk"
     ADMIN = "admin"
 
 class Roles(Enum):
@@ -60,6 +60,11 @@ class DeviceType(Enum):
     GW1 = "hec"
     GW2 = "teg"
     SMC = "smc"
+
+class Unit(Enum):
+    PERCENT = 1
+    KWH = 2
+
 
 # NOTE: Those values may be incorrect
 BACKUP_RESERVE_PERCENTAGE_5 = 10

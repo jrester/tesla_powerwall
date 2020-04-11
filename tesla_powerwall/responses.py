@@ -1,12 +1,16 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+import re
 
 from .const import MeterType
+from .helpers import convert_to_kwh
 
 class Response(object):
     """Basic Response object that can be constructed from a json response"""
     def __init__(self, json_response : dict):
         self.json_response = json_response
+        self._set_attrs()
 
+    def _set_attrs(self):
         for attr in self.__class__._JSON_ATTRS:
             self._add_attr(attr)
             
@@ -17,18 +21,8 @@ class Response(object):
             raise ValueError(
                 f"Missing key {attr} in response from Powerwall. Either the Powerwall sent an invalid response or the API changed!")
 
-
-class MetersAggregateResponse(Response):
-    """
-    Response for "meters/aggregates"
-    """
-
-    def __init__(self, json_response):
-        for meter in MeterType:
-            if meter.value in json_response:
-                setattr(self, meter.value, 
-                    MetersResponse(json_response[meter.value]))
-                
+    def __repr__(self):
+        return str(self.json_response)
 
 class MetersResponse(Response):
     """Response for a single Meter
@@ -50,8 +44,50 @@ class MetersResponse(Response):
         "timeout"
     ]
 
-    def __init__(self, json_response : dict, meter=None):
+    def __init__(self, json_response : dict, meter : MeterType=None):
+        super().__init__(json_response)
         self.meter = meter
+
+    def is_sending_to(self, rounded=True):
+        if self.meter == MeterType.LOAD:
+            return convert_to_kwh(self.instant_power, rounded) > 0
+        else:
+            return convert_to_kwh(self.instant_power, rounded) < 0
+
+    def is_drawing_from(self, rounded=True):
+        if self.meter == MeterType.LOAD:
+            # Cannot draw from load
+            return False
+        else:
+            return convert_to_kwh(self.instant_power, rounded) > 0
+
+    def is_active(self, rounded=True):
+        return convert_to_kwh(self.instant_power, rounded) != 0
+
+    def get_power(self, rounded=True):
+        """Returns power sent/drawn in kWh"""
+        return convert_to_kwh(self.instant_power, rounded)
+
+class MetersAggregateResponse(Response):
+    """
+    Response for "meters/aggregates"
+    """
+
+    def __init__(self, json_response):
+        self.json_response = json_response
+        for meter in MeterType:
+            if meter.value in json_response:
+                setattr(self, meter.value, 
+                    MetersResponse(json_response[meter.value], meter))
+                
+    def get(self, meter : MeterType) -> MetersResponse:
+        return getattr(self, meter.value)
+
+
+class MeterDetailResponse(Response):
+    def __init__(self, json_response):
+        self.json_response = json_response
+        self.cached_readings = MetersResponse(json_response[0]["Cached_readings"])
 
 class SitemasterResponse(Response):
     _JSON_ATTRS = [
@@ -96,6 +132,8 @@ class CustomerRegistrationResponse(Response):
 
 class PowerwallStatusResponse(Response):
     _START_TIME_FORMAT = "%Y-%m-%d %H:%M:%S %z"
+    _UP_TIME_SECONDS_REGEX = re.compile(
+        r'((?P<hours>\d+?)h)((?P<minutes>\d+?)m)((?P<seconds>\d+?).)((?P<microseconds>\d+?)s)')
 
     _JSON_ATTRS = [
         "start_time",
@@ -106,15 +144,30 @@ class PowerwallStatusResponse(Response):
     ]
 
     def __init__(self, json_response):
-        json_response["start_time"] = datetime.strptime(
+        self.json_response = json_response
+
+        resp = json_response
+        resp["start_time"] = datetime.strptime(
             json_response["start_time"], 
             PowerwallStatusResponse._START_TIME_FORMAT
         )
-        # up_time_seconds is not realy given in seconds but rate
-        # json_response["up_time_seconds"] = datetime.strptime(
-        #     json_response["up_time_seconds"], StatusResponse._UP_TIMES_FORMAT
-        # )
-        super().__init__(json_response)
+        resp["up_time_seconds"] = self._parse_uptime_seconds(
+            json_response["up_time_seconds"]
+        )
+
+        self._set_attrs()
+
+    def _parse_uptime_seconds(self, up_time_seconds : str):
+        match = self.__class__._UP_TIME_SECONDS_REGEX.match(up_time_seconds)
+        if not match:
+            raise ValueError(f"Unable to parse up time seconds {up_time_seconds}")
+        
+        time_params = {}
+        for (name, param) in match.groupdict().items():
+            if param:
+                time_params[name] = int(param)
+        
+        return timedelta(**time_params)
 
 class PowerwallsStatusResponse(Response):
     _JSON_ATTRS = [
@@ -128,4 +181,26 @@ class PowerwallsStatusResponse(Response):
         "grid_qualifying",
         "grud_code_validating",
         "phase_detection_not_available"
+    ]
+
+class PowerwallsResponse(PowerwallsStatusResponse):
+    def __init__(self, json_response):
+        super().__init__(json_response)
+
+class SolarsResponse(Response):
+    _JSON_ATTRS = [
+        "brand",
+        "model",
+        "power_rating_watts"
+    ]
+
+class LoginResponse(Response):
+    _JSON_ATTRS = [
+        "email",
+        "firstname",
+        "lastname",
+        "roles",
+        "token",
+        "provider",
+        "loginTime"
     ]
