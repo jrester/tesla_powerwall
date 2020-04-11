@@ -127,7 +127,8 @@ class Powerwall(object):
     def is_authenticated(self) -> bool:
         return "AuthCookie" in self._http_session.cookies.keys()
 
-    def login(self, user : Union[User, str], email : str, password : str, force_sm_off : bool=False) -> LoginResponse:
+
+    def login_as(self, user : Union[User, str], email : str, password : str, force_sm_off : bool=False) -> LoginResponse:
         if isinstance(user, User):
             user = user.value
             
@@ -142,6 +143,9 @@ class Powerwall(object):
         # so there is no need to further process the response
 
         return LoginResponse(response)
+
+    def login(self, email : str, password : str, force_sm_off : bool=False) -> LoginResponse:
+        return self.login_as(User.CUSTOMER, email, password, force_sm_off)
 
     def logout(self):
         if not self.is_authenticated():

@@ -12,25 +12,40 @@ $ pip install tesla_powerwall
 
 ## Usage
 
-### Setup connection
+### Setup connection and authentication
 
 ```python3
-from tesla_powerwall import Powerwall, User
+from tesla_powerwall import Powerwall
 
 power_wall = Powerwall("<ip of your Powerwall>")
 #=> <Powerwall: ...>
-
-# Login as customer
-power_wall.login(User.CUSTOMER, "<email>", "<password>)
-#=> <LoginResponse: ...>
-
-# Check if we are really logged in 
-power_wall.is_authenticated()
-#=> True
 ```
 
 > Note: By default the API client does not verify the SSL Certificate of the Powerwall. If you want to verify the SSL Certificate you can set `verify_ssl` to `True`.
 > Also the API client suppresses warnings about an inseucre request (because we aren't verifing the certificate). If you want to enable those warnings you can set `disable_insecure_warning` to `False`
+
+### Authentication
+
+To login you can either use `login` or `login_as`. `login` logs you in as `User.CUSTOMER` whereas with `login_as` you can choose a different user:
+
+```python3
+from tesla_powerwall import User
+
+# Login as customer
+power_wall.login("<email>", "<password>)
+#=> <LoginResponse: ...>
+
+# Login with different user
+power_wall.login_as(User.INSTALLER, "<email>", "<password>")
+#=> <LoginResponse: ...>
+
+# Check if we are logged in 
+power_wall.is_authenticated()
+#=> True
+
+# Logout
+power_wall.logout()
+```
 
 ### Current battery level
 
@@ -89,7 +104,7 @@ power_wall.meter_detailed(MeterType.LOAD)
 #=> {}
 ```
 
-### Current power supply/draw
+#### Current power supply/draw
 
 Get current power supply/draw for home, solar, battery and grid. 
 
@@ -142,20 +157,26 @@ power_wall.grid_status
 #=> <GridStatus.Connected: 'SystemGridConnected'>
 ```
 
-### Powerwall Mode and backup reserve percentage
-
-Get current mode. Returns one of these: `OPERATION_MODE_SELF_CONSUMPTION`, `OPERATION_MODE_BACKUP`, `OPERATION_MODE_TIME_OF_USE`, `OPERATION_MODE_SCHEDULER`
+### Operation mode
 
 ```python3
-power_wall.mode
-#=> "self_consumption"
-
-power_wall.set_mode(tesla_powerwall.OPERATION_MODE_BACKUP)
-
-power_wall.backup_reserve_percentage
-#=> 24.6
-
-power_wall.set_backup_reserve_percentage(tesla_powerwall.BACKUP_RESERVE_PERCENTAGE_30)
-
-power_wall.set_mode_and_backup_reserve_percentage(tesla_powerwall.OPERATION_MODE_BACKUP, tesla_powerwall.BACKUP_RESERVE_PERCENTAGE_30)
+power_wall.get_operation_mode()
+#=> <OperationMode.SELF_CONSUMPTION: ...>
 ```
+
+### Powerwall status
+
+```python3
+status = power_wall.get_status()
+#=> <PowerwallStatusResponse ...>
+status.version
+#=> '1.45.2'
+```
+
+### More methods
+
+* get_vin
+* get_solars
+* get_meters_info
+* get_installer
+* get_logs
