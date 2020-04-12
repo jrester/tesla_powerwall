@@ -4,35 +4,40 @@ import re
 from .const import MeterType
 from .helpers import convert_to_kwh
 
+
 class Response(object):
     """Basic Response object that can be constructed from a json response"""
-    def __init__(self, json_response : dict):
+
+    def __init__(self, json_response: dict):
         self.json_response = json_response
         self._set_attrs()
 
     def _set_attrs(self):
         for attr in self.__class__._JSON_ATTRS:
             self._add_attr(attr)
-            
-    def _add_attr(self, attr : str):
+
+    def _add_attr(self, attr: str):
         if attr in self.json_response:
             setattr(self, attr, self.json_response[attr])
         else:
             raise ValueError(
-                f"Missing key {attr} in response from Powerwall. Either the Powerwall sent an invalid response or the API changed!")
+                f"Missing key '{attr}' in response from Powerwall. Either the Powerwall sent an invalid response or the API changed!"
+            )
 
     def __repr__(self):
         return str(self.json_response)
+
 
 class MetersResponse(Response):
     """Response for a single Meter
     Usually a nested item in the MetersAggregateResponse
     """
+
     _JSON_ATTRS = [
         "last_communication_time",
-        "instant_power",                # The power that is supplied/drawn from the meter
-        "instant_reactive_power", 
-        "instant_apparent_power",       
+        "instant_power",  # The power that is supplied/drawn from the meter
+        "instant_reactive_power",
+        "instant_apparent_power",
         "frequency",
         "energy_exported",
         "energy_imported",
@@ -41,10 +46,10 @@ class MetersResponse(Response):
         "i_a_current",
         "i_b_current",
         "i_c_current",
-        "timeout"
+        "timeout",
     ]
 
-    def __init__(self, json_response : dict, meter : MeterType=None):
+    def __init__(self, json_response: dict, meter: MeterType = None):
         super().__init__(json_response)
         self.meter = meter
 
@@ -68,6 +73,7 @@ class MetersResponse(Response):
         """Returns power sent/drawn in kWh"""
         return convert_to_kwh(self.instant_power, rounded)
 
+
 class MetersAggregateResponse(Response):
     """
     Response for "meters/aggregates"
@@ -77,24 +83,24 @@ class MetersAggregateResponse(Response):
         self.json_response = json_response
         for meter in MeterType:
             if meter.value in json_response:
-                setattr(self, meter.value, 
-                    MetersResponse(json_response[meter.value], meter))
-                
-    def get(self, meter : MeterType) -> MetersResponse:
+                setattr(
+                    self, meter.value, MetersResponse(json_response[meter.value], meter)
+                )
+
+    def get(self, meter: MeterType) -> MetersResponse:
         return getattr(self, meter.value)
 
 
-class MeterDetailResponse(Response):
+class MeterDetailsResponse(Response):
+    _JSON_ATTRS = ["id", "location", "type", "cts", "inverted", "connection"]
+
     def __init__(self, json_response):
-        self.json_response = json_response
-        self.cached_readings = MetersResponse(json_response[0]["Cached_readings"])
+        super().__init__(json_response)
+        self.cached_readings = MetersResponse(json_response["Cached_readings"])
+
 
 class SitemasterResponse(Response):
-    _JSON_ATTRS = [
-        "status",
-        "running",
-        "connected_to_tesla"
-    ]
+    _JSON_ATTRS = ["status", "running", "connected_to_tesla"]
 
 
 class SiteinfoResponse(Response):
@@ -116,7 +122,7 @@ class SiteinfoResponse(Response):
         "distributor",
         "utility",
         "retailer",
-        "region"
+        "region",
     ]
 
 
@@ -127,29 +133,24 @@ class CustomerRegistrationResponse(Response):
         "grid_services",
         "marketing",
         "registered",
-        "timed_out_registration"
+        "timed_out_registration",
     ]
+
 
 class PowerwallStatusResponse(Response):
     _START_TIME_FORMAT = "%Y-%m-%d %H:%M:%S %z"
     _UP_TIME_SECONDS_REGEX = re.compile(
-        r'((?P<hours>\d+?)h)((?P<minutes>\d+?)m)((?P<seconds>\d+?).)((?P<microseconds>\d+?)s)')
+        r"((?P<hours>\d+?)h)((?P<minutes>\d+?)m)((?P<seconds>\d+?).)((?P<microseconds>\d+?)s)"
+    )
 
-    _JSON_ATTRS = [
-        "start_time",
-        "up_time_seconds",  
-        "is_new",
-        "version",
-        "git_hash"
-    ]
+    _JSON_ATTRS = ["start_time", "up_time_seconds", "is_new", "version", "git_hash"]
 
     def __init__(self, json_response):
         self.json_response = json_response
 
         resp = json_response
         resp["start_time"] = datetime.strptime(
-            json_response["start_time"], 
-            PowerwallStatusResponse._START_TIME_FORMAT
+            json_response["start_time"], PowerwallStatusResponse._START_TIME_FORMAT
         )
         resp["up_time_seconds"] = self._parse_uptime_seconds(
             json_response["up_time_seconds"]
@@ -157,17 +158,18 @@ class PowerwallStatusResponse(Response):
 
         self._set_attrs()
 
-    def _parse_uptime_seconds(self, up_time_seconds : str):
+    def _parse_uptime_seconds(self, up_time_seconds: str):
         match = self.__class__._UP_TIME_SECONDS_REGEX.match(up_time_seconds)
         if not match:
             raise ValueError(f"Unable to parse up time seconds {up_time_seconds}")
-        
+
         time_params = {}
         for (name, param) in match.groupdict().items():
             if param:
                 time_params[name] = int(param)
-        
+
         return timedelta(**time_params)
+
 
 class PowerwallsStatusResponse(Response):
     _JSON_ATTRS = [
@@ -179,20 +181,22 @@ class PowerwallsStatusResponse(Response):
         "bubble_shedding",
         "on_grid_check_error",
         "grid_qualifying",
-        "grud_code_validating",
-        "phase_detection_not_available"
+        "grid_code_validating",
+        "phase_detection_not_available",
     ]
 
-class PowerwallsResponse(PowerwallsStatusResponse):
+
+class ListPowerwallsResponse(Response):
+    _JSON_ATTRS = ["powerwalls", "has_sync", "sync", "states"]
+
     def __init__(self, json_response):
         super().__init__(json_response)
+        self.status = PowerwallsStatusResponse(self.json_response)
+
 
 class SolarsResponse(Response):
-    _JSON_ATTRS = [
-        "brand",
-        "model",
-        "power_rating_watts"
-    ]
+    _JSON_ATTRS = ["brand", "model", "power_rating_watts"]
+
 
 class LoginResponse(Response):
     _JSON_ATTRS = [
@@ -202,5 +206,5 @@ class LoginResponse(Response):
         "roles",
         "token",
         "provider",
-        "loginTime"
+        "loginTime",
     ]

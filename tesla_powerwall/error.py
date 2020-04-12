@@ -2,6 +2,7 @@ class PowerwallError(Exception):
     def __init__(self, msg):
         super().__init__(msg)
 
+
 class ApiError(PowerwallError):
     def __init__(self, error):
         super().__init__(f"Powerwall api error: {error}")

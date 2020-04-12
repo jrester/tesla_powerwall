@@ -12,7 +12,7 @@ $ pip install tesla_powerwall
 
 ## Usage
 
-### Setup connection and authentication
+### Setup connection
 
 ```python3
 from tesla_powerwall import Powerwall
@@ -56,10 +56,10 @@ power_wall.get_charge()
 #=> 98
 ```
 
-The API also returns the exact percentage. You can get the exact percentage by passing `false` to `rounded`:
+The API also returns the exact percentage. You can get the exact percentage by passing `False` to `rounded`:
 
 ```python3
-power_wall.get_charge(rounded=false)
+power_wall.get_charge(rounded=False)
 #=> 97.59281925744594
 ```
 
@@ -86,11 +86,10 @@ sm.connected_to_tesla
 
 #### Aggregates
 
-
 ```python3 
-power_wall.get_meters()
-#=> <tesla_powerwall.MetersAggregateResponse>
-#=> 
+meters = power_wall.get_meters()
+#=> <tesla_powerwall.MetersAggregateResponse ...>
+meters.solar
 ```
 
 #### Details about meter
@@ -118,6 +117,8 @@ power_wall.is_active(MeterType.BATTERY)
 power_wall.get_power(MeterType.SOLAR)
 #=> 2.8 (in kWh)
 ```
+
+> Note: For MeterType.LOAD is_drawing_from **always** returns False because it cannot be drawn from `load`.
 
 Each of those methods are wrappers for their respective methods on `MetersResponse`. When you call those wrapper methods `get_meters()` is always called. So if you need to query multiple meters you should first retrive all meters and execute the respective methods on the response:
 
@@ -173,7 +174,38 @@ status.version
 #=> '1.45.2'
 ```
 
-### More methods
+### Powerwalls
+
+Get all powerwalls
+
+```python3
+powerwalls_resp = power_wall.get_powerwalls()
+#=> <ListPowerwallsResponse ...>
+powerwalls_resp.powerwalls
+#=> [{"Package...}]
+```
+
+Get powerwalls status when authenticated:
+
+```python3
+powerwalls_status = power_wall.get_poweralls_status()
+#=> <PowerwalllsStatusResponse ...>
+```
+For some unkown reason the response to `get_powerwalls` also includes the powerwalls status, so if you are not authenticated you can just retrive the status from the `ListPowerwallsResponse`
+
+```python3
+powerwalls_resp = power_wall.get_powerwalls()
+powerwalls_resp.status
+#=> <PowerwallsStatusResponse ...>
+```
+
+### More
+
+Most methods return a `Response` object except for those that only return a single value like `get_charge` and those that have to complex output like `get_networks`. 
+
+Most times those `Response`s reflect the json response but for most nested data objects this is not the case.
+
+Some other methods include:
 
 * get_vin
 * get_solars

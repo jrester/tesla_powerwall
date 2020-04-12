@@ -1,47 +1,55 @@
-from typing import Union
+from typing import Union, List
 
 import requests
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 from urllib.parse import urljoin, urlparse, urlunparse, urlsplit, urlunsplit
 from requests import Session
+from json.decoder import JSONDecodeError
 
 from .const import (
-    User,
+    DeviceType,
     GridStatus,
     GridState,
     LineStatus,
+    MeterType,
     OperationMode,
     SUPPORTED_OPERATION_MODES,
-    MeterType,
-    DeviceType,
-    Unit
+    SUPPORTED_POWERWALL_VERSIONS,
+    User,
 )
 from .error import (
+    AccessDeniedError,
     ApiError,
     PowerwallUnreachableError,
-    AccessDeniedError
 )
 from .helpers import convert_to_kwh
 from .responses import (
     CustomerRegistrationResponse,
+    ListPowerwallsResponse,
     LoginResponse,
     MetersAggregateResponse,
-    MetersResponse, 
-    SiteinfoResponse, 
-    SitemasterResponse, 
+    MeterDetailsResponse,
+    MetersResponse,
+    SiteinfoResponse,
+    SitemasterResponse,
     SolarsResponse,
     PowerwallStatusResponse,
-    PowerwallsStatusResponse
+    PowerwallsStatusResponse,
 )
 
 VERSION = "0.1.4"
 
+
 class Powerwall(object):
-    def __init__(self, endpoint : str, timeout : int=10, 
-                http_session : requests.Session=None, 
-                verify_ssl : bool=False,
-                disable_insecure_warning : bool=True):
+    def __init__(
+        self,
+        endpoint: str,
+        timeout: int = 10,
+        http_session: requests.Session = None,
+        verify_ssl: bool = False,
+        disable_insecure_warning: bool = True,
+    ):
 
         if disable_insecure_warning:
             disable_warnings(InsecureRequestWarning)
@@ -66,7 +74,7 @@ class Powerwall(object):
 
         self._token = None
 
-    def _process_response(self, response : str) -> dict:
+    def _process_response(self, response: str) -> dict:
         if response.status_code == 404:
             raise ApiError(f"The url {response.request.path_url} returned error 404")
 
@@ -78,12 +86,16 @@ class Powerwall(object):
                 raise AccessDeniedError(response.request.path_url)
             else:
                 raise AccessDeniedError(
-                    response.request.path_url, response_json["error"])
+                    response.request.path_url, response_json["error"]
+                )
 
         if response.status_code == 502:
             raise PowerwallUnreachableError()
 
-        response_json = response.json()
+        try:
+            response_json = response.json()
+        except JSONDecodeError:
+            raise ApiError(f"Error while decoding json of response: {response.text}")
 
         if response_json is None:
             return {}
@@ -93,10 +105,12 @@ class Powerwall(object):
 
         return response_json
 
-    def _get(self, path: str, needs_authentication : bool=False, headers: dict = {}):
+    def _get(
+        self, path: str, needs_authentication: bool = False, headers: dict = {}
+    ) -> dict:
         if needs_authentication and not self.is_authenticated():
             raise ApiError(f"Authentication required to access {path}")
-        
+
         try:
             response = self._http_session.get(
                 url=urljoin(self._endpoint, path),
@@ -108,7 +122,13 @@ class Powerwall(object):
 
         return self._process_response(response)
 
-    def _post(self, path: str, payload: dict, needs_authentication : bool=False, headers: dict = {}):
+    def _post(
+        self,
+        path: str,
+        payload: dict,
+        needs_authentication: bool = False,
+        headers: dict = {},
+    ) -> dict:
         if needs_authentication and not self.is_authenticated():
             raise ApiError(f"Authentication required to access {path}")
 
@@ -127,16 +147,25 @@ class Powerwall(object):
     def is_authenticated(self) -> bool:
         return "AuthCookie" in self._http_session.cookies.keys()
 
-
-    def login_as(self, user : Union[User, str], email : str, password : str, force_sm_off : bool=False) -> LoginResponse:
+    def login_as(
+        self,
+        user: Union[User, str],
+        email: str,
+        password: str,
+        force_sm_off: bool = False,
+    ) -> LoginResponse:
         if isinstance(user, User):
             user = user.value
-            
+
         # force_sm_off is referred to as 'shouldForceLogin' in the web source code
         response = self._post(
             "login/Basic",
-            {"username": user, "email": email,
-                "password": password, "force_sm_off": force_sm_off},
+            {
+                "username": user,
+                "email": email,
+                "password": password,
+                "force_sm_off": force_sm_off,
+            },
         )
 
         # The api returns an auth cookie which is automatically set
@@ -144,14 +173,16 @@ class Powerwall(object):
 
         return LoginResponse(response)
 
-    def login(self, email : str, password : str, force_sm_off : bool=False) -> LoginResponse:
+    def login(
+        self, email: str, password: str, force_sm_off: bool = False
+    ) -> LoginResponse:
         return self.login_as(User.CUSTOMER, email, password, force_sm_off)
 
     def logout(self):
         if not self.is_authenticated():
             raise ApiError("Must be logged in to log out")
-        # The api unsets the auth cookie and the token is 
-        self._get('logout', True)
+        # The api unsets the auth cookie and the token is invalidated
+        self._get("logout", True)
 
     def run(self):
         self._get("sitemaster/run", True)
@@ -159,10 +190,7 @@ class Powerwall(object):
     def stop(self):
         self._get("sitemaster/stop", True)
 
-    def set_run_for_commissioning(self):
-        self._post("sitemaster/run_for_commissioning", True)
-
-    def get_charge(self, rounded : bool=True) -> Union[float, int]:
+    def get_charge(self, rounded: bool = True) -> Union[float, int]:
         """Returns current charge of powerwall"""
         charge = self._get("system_status/soe")["percentage"]
         if rounded:
@@ -177,14 +205,18 @@ class Powerwall(object):
         """Returns the different meters in a MetersAggregateResponse"""
         return MetersAggregateResponse(self._get("meters/aggregates"))
 
-    def get_meter_details(self, meter : MeterType) -> Union[list, dict]:
-        """Returns details about a specific meter
-        
-        If their are no details available for a meter an empty dict is returned.
-        """
-        return self._get(f"meters/{meter.value}")
+    def get_meter_details(
+        self, meter: MeterType
+    ) -> Union[List[MeterDetailsResponse], None]:
+        """Returns details about a specific meter. 
+        If their are no details available for a meter None is returned."""
+        resp = self._get(f"meters/{meter.value}")
+        if isinstance(resp, list):
+            return [MeterDetailsResponse(item) for item in resp]
+        elif isinstance(resp, dict):
+            return None
 
-    def get_meter_readings(self):
+    def get_meter_readings(self) -> dict:
         return self._get("meter/readings", True)
 
     def get_grid_status(self) -> GridStatus:
@@ -194,7 +226,7 @@ class Powerwall(object):
     def get_grid_services_active(self) -> bool:
         return self._get("system_status/grid_status")["grid_services_active"]
 
-    def get_grid_codes(self):
+    def get_grid_codes(self) -> list:
         """Returns all available grid codes"""
         return self._get("site_info/grid_codes", needs_authentication=True)
 
@@ -209,17 +241,18 @@ class Powerwall(object):
         return PowerwallStatusResponse(self._get("status"))
 
     def get_powerwalls_status(self) -> PowerwallsStatusResponse:
-        return PowerwallsStatusResponse(self._get('powerwalls/status'))
+        return PowerwallsStatusResponse(self._get("powerwalls/status", True))
 
     def get_device_type(self) -> DeviceType:
         """Returns the device type of the powerwall"""
         return DeviceType(self._get("device_type")["device_type"])
 
-    def get_customer_registration(self):
+    def get_customer_registration(self) -> CustomerRegistrationResponse:
         return CustomerRegistrationResponse(self._get("customer/registration"))
 
-    def get_powerwalls(self):
-        return self._get("powerwalls")
+    def get_powerwalls(self) -> ListPowerwallsResponse:
+        """Returns powerwalls and status"""
+        return ListPowerwallsResponse(self._get("powerwalls"))
 
     def get_operation_mode(self) -> OperationMode:
         return OperationMode(self._get("operation", True)["real_mode"])
@@ -227,49 +260,61 @@ class Powerwall(object):
     def get_backup_preserve_percentage(self) -> float:
         return self._get("operation", True)["backup_reserve_percentage"]
 
-    def set_mode_and_backup_preserve_percentage(self, mode, percentage):
-        self._post("operation", {"mode": mode, "percentage": percentage})
+    # def set_mode_and_backup_preserve_percentage(self, mode, percentage):
+    #     self._post("operation", {"mode": mode, "percentage": percentage})
 
-    def set_backup_preserve_percentage(self, percentage):
-        self.set_mode_and_backup_preserve_percentage(self.mode, percentage)
+    # def set_backup_preserve_percentage(self, percentage):
+    #     self.set_mode_and_backup_preserve_percentage(self.mode, percentage)
 
     # def set_mode(self, mode):
     #     self.set_mode_and_backup_preserve_percentage(
     #         mode, self.backup_preserve_percentage)
 
-    def get_phase_usage(self):
-        return self._get('powerwalls/phase_usages', needs_authentication=True)
+    def get_networks(self) -> list:
+        return self._get("networks")
 
-    def get_solars(self) -> [SolarsResponse]:
-        solars = self._get('solars', needs_authentication=True)
+    def get_phase_usage(self):
+        return self._get("powerwalls/phase_usages", needs_authentication=True)
+
+    def set_run_for_commissioning(self):
+        self._post("sitemaster/run_for_commissioning", True)
+
+    def get_solars(self) -> List[SolarsResponse]:
+        solars = self._get("solars", needs_authentication=True)
         return [SolarsResponse(solar) for solar in solars]
 
-    def get_vin(self):
-        return self._get('config', needs_authentication=True)["vin"]
+    def get_vin(self) -> str:
+        return self._get("config", needs_authentication=True)["vin"]
 
-    def get_logs(self):
-        return self._get('getlogs', needs_authentication=True)
+    def get_logs(self) -> str:
+        return self._get("getlogs", needs_authentication=True)
 
-    def get_meters_info(self):
-        return self._get('meters', needs_authentication=True)
+    def get_meters_info(self) -> list:
+        return self._get("meters", needs_authentication=True)
 
-    def get_installer(self):
-        return self._get('installer', needs_authentication=True)
+    def get_installer_info(self) -> dict:
+        return self._get("installer", needs_authentication=True)
 
-    def get_solar_brands(self) -> [str]:
-        return self._get('solars/brands', needs_authentication=True)
+    def get_solar_brands(self) -> List[str]:
+        return self._get("solars/brands", needs_authentication=True)
 
-    def is_sending_to(self, meter : MeterType, rounded=True):
+    def get_version(self) -> List[str]:
+        return self.get_status().version
+
+    def is_sending_to(self, meter: MeterType, rounded=True) -> bool:
         """Wrapper method for is_sending_to"""
         return self.get_meters().get(meter).is_sending_to()
 
-    def is_drawing_from(self, meter : MeterType):
+    def is_drawing_from(self, meter: MeterType) -> bool:
         """Wrapper method for is_drawing_from"""
         return self.get_meters().get(meter).is_drawing_from()
 
-    def is_active(self, meter : MeterType):
+    def is_active(self, meter: MeterType) -> bool:
         """Wrapper method for is_active()"""
         return self.get_meters().get(meter).is_active()
 
-    def get_power(self, meter : MeterType):
+    def get_power(self, meter: MeterType) -> bool:
         return self.get_meters().get(meter).get_power()
+
+    def is_powerwall_version_supported(self) -> bool:
+        return self.get_version() in SUPPORTED_POWERWALL_VERSIONS
