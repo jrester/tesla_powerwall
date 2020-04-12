@@ -3,10 +3,11 @@
 Python Tesla Powerwall API for consuming a local endpoint.
 
 > Note: This is not an official API and as such might be incomplete and fail at any time
+> The API was tested with powerwall version 1.45.2 but 1.45.0 and 1.45.1 should also work. 
 
 ## Installation
 
-```
+```bash
 $ pip install tesla_powerwall
 ```
 
@@ -14,7 +15,7 @@ $ pip install tesla_powerwall
 
 ### Setup connection
 
-```python3
+```python
 from tesla_powerwall import Powerwall
 
 power_wall = Powerwall("<ip of your Powerwall>")
@@ -28,11 +29,11 @@ power_wall = Powerwall("<ip of your Powerwall>")
 
 To login you can either use `login` or `login_as`. `login` logs you in as `User.CUSTOMER` whereas with `login_as` you can choose a different user:
 
-```python3
+```python
 from tesla_powerwall import User
 
 # Login as customer
-power_wall.login("<email>", "<password>)
+power_wall.login("<email>", "<password>")
 #=> <LoginResponse: ...>
 
 # Login with different user
@@ -51,29 +52,32 @@ power_wall.logout()
 
 Get charge in percent:
 
-```python3
+```python
 power_wall.get_charge()
 #=> 98
 ```
 
 The API also returns the exact percentage. You can get the exact percentage by passing `False` to `rounded`:
 
-```python3
+```python
 power_wall.get_charge(rounded=False)
 #=> 97.59281925744594
 ```
 
 ### Powerwall Status
 
-```python3
-power_wall.get_status()
+```python
+status = power_wall.get_status()
+#=> <PowerwallStatusResponse ...>
+status.version
+#=> '1.45.2'
 ```
 
 ### Sitemaster
 
-```python3
+```python
 sm = power_wall.sitemaster 
-#=> <tesla_powerwall.SiteMasterResponse ...>
+#=> <SiteMasterResponse ...>
 sm.status 
 #=> StatusUp
 sm.running
@@ -82,32 +86,44 @@ sm.connected_to_tesla
 #=> true
 ```
 
+### Siteinfo
+
+```python
+info = power_wall.get_site_info()
+#=> <SiteInfoResponse ...>
+info.site_name
+#=> Tesla Home
+info.country
+#=> Germany
+```
+
 ### Meters
 
 #### Aggregates
 
-```python3 
+```python
 meters = power_wall.get_meters()
-#=> <tesla_powerwall.MetersAggregateResponse ...>
+#=> <MetersAggregateResponse ...>
 meters.solar
+#=> <MetersResponse ...>
 ```
 
 #### Details about meter
 
-Returns details about the meter. When no details are available an empty dict is returned.
+Returns details about the meter. When no details are available `None` is returned.
 
-```python3
+```python
 power_wall.meter_detailed(MeterType.SOLAR)
-#=> [{'id': ...}, ...]
+#=> [<MeterDetailsResponse ...>]
 power_wall.meter_detailed(MeterType.LOAD)
-#=> {}
+#=> None
 ```
 
 #### Current power supply/draw
 
 Get current power supply/draw for home, solar, battery and grid. 
 
-```python3
+```python
 power_wall.is_drawing_from(MeterType.SOLAR)
 #=> True
 power_wall.is_sending_to(MeterType.LOAD)
@@ -118,11 +134,11 @@ power_wall.get_power(MeterType.SOLAR)
 #=> 2.8 (in kWh)
 ```
 
-> Note: For MeterType.LOAD is_drawing_from **always** returns False because it cannot be drawn from `load`.
+> Note: For MeterType.LOAD is_drawing_from **always** returns `False` because it cannot be drawn from `load`.
 
 Each of those methods are wrappers for their respective methods on `MetersResponse`. When you call those wrapper methods `get_meters()` is always called. So if you need to query multiple meters you should first retrive all meters and execute the respective methods on the response:
 
-```python3
+```python
 meters = power_wall.get_meters()
 meters.solar.is_drawing_from()
 #=> True
@@ -136,7 +152,7 @@ meters.solar.get_power()
 
 `get_power` is just a convenience method which is equivalent to:
 
-```python3
+```python
 from tesla_powerwall.helpers import convert_to_kwh
 
 convert_to_kwh(meters.solar.instant_power, True)
@@ -144,7 +160,7 @@ convert_to_kwh(meters.solar.instant_power, True)
 
 ### Device Type
 
-```python3
+```python
 power_wall.device_type
 #=> <DeviceType.GW1: 'hec'>
 ```
@@ -153,24 +169,30 @@ power_wall.device_type
 
 Get current grid status. 
 
-```python3
-power_wall.grid_status
+```python
+power_wall.get_grid_status()
 #=> <GridStatus.Connected: 'SystemGridConnected'>
+power_wall.get_grid_services_active()
+#=> False
 ```
 
 ### Operation mode
 
-```python3
+```python
 power_wall.get_operation_mode()
 #=> <OperationMode.SELF_CONSUMPTION: ...>
 ```
 
 ### Powerwall status
 
-```python3
+```python
 status = power_wall.get_status()
 #=> <PowerwallStatusResponse ...>
 status.version
+#=> '1.45.2'
+
+# If you just need the version you can also use `get_version`
+power_wall.get_version()
 #=> '1.45.2'
 ```
 
@@ -178,7 +200,7 @@ status.version
 
 Get all powerwalls
 
-```python3
+```python
 powerwalls_resp = power_wall.get_powerwalls()
 #=> <ListPowerwallsResponse ...>
 powerwalls_resp.powerwalls
@@ -187,13 +209,13 @@ powerwalls_resp.powerwalls
 
 Get powerwalls status when authenticated:
 
-```python3
+```python
 powerwalls_status = power_wall.get_poweralls_status()
 #=> <PowerwalllsStatusResponse ...>
 ```
 For some unkown reason the response to `get_powerwalls` also includes the powerwalls status, so if you are not authenticated you can just retrive the status from the `ListPowerwallsResponse`
 
-```python3
+```python
 powerwalls_resp = power_wall.get_powerwalls()
 powerwalls_resp.status
 #=> <PowerwallsStatusResponse ...>
@@ -207,8 +229,10 @@ Most times those `Response`s reflect the json response but for most nested data 
 
 Some other methods include:
 
-* get_vin
-* get_solars
-* get_meters_info
-* get_installer
-* get_logs
+* `get_vin`
+* `get_solars`
+* `get_meters_info`
+* `get_installer_info`
+* `get_meter_readings`
+* `get_meters_info`
+* `get_phase_usage`

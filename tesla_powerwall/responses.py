@@ -103,7 +103,7 @@ class SitemasterResponse(Response):
     _JSON_ATTRS = ["status", "running", "connected_to_tesla"]
 
 
-class SiteinfoResponse(Response):
+class SiteInfoResponse(Response):
     _JSON_ATTRS = [
         "max_site_meter_power_kW",
         "min_site_meter_power_kW",

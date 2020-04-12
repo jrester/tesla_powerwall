@@ -31,7 +31,7 @@ from .responses import (
     MetersAggregateResponse,
     MeterDetailsResponse,
     MetersResponse,
-    SiteinfoResponse,
+    SiteInfoResponse,
     SitemasterResponse,
     SolarsResponse,
     PowerwallStatusResponse,
@@ -230,9 +230,9 @@ class Powerwall(object):
         """Returns all available grid codes"""
         return self._get("site_info/grid_codes", needs_authentication=True)
 
-    def get_site_info(self) -> SiteinfoResponse:
+    def get_site_info(self) -> SiteInfoResponse:
         """Returns information about the powerwall site"""
-        return SiteinfoResponse(self._get("site_info"))
+        return SiteInfoResponse(self._get("site_info"))
 
     def set_site_name(self, site_name: str):
         return self._post("site_info/site_name", {"site_name": site_name}, True)
@@ -298,7 +298,7 @@ class Powerwall(object):
     def get_solar_brands(self) -> List[str]:
         return self._get("solars/brands", needs_authentication=True)
 
-    def get_version(self) -> List[str]:
+    def get_version(self) -> str:
         return self.get_status().version
 
     def is_sending_to(self, meter: MeterType, rounded=True) -> bool:
