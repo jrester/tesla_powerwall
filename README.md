@@ -153,9 +153,9 @@ meters.solar.get_power()
 `get_power` is just a convenience method which is equivalent to:
 
 ```python
-from tesla_powerwall.helpers import convert_to_kwh
+from tesla_powerwall.helpers import convert_to_kw
 
-convert_to_kwh(meters.solar.instant_power, True)
+convert_to_kw(meters.solar.instant_power, True)
 ```
 
 ### Device Type

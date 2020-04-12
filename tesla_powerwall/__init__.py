@@ -23,7 +23,7 @@ from .error import (
     ApiError,
     PowerwallUnreachableError,
 )
-from .helpers import convert_to_kwh
+from .helpers import convert_to_kw
 from .responses import (
     CustomerRegistrationResponse,
     ListPowerwallsResponse,

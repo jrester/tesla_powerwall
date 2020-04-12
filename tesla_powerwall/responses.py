@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import re
 
 from .const import MeterType
-from .helpers import convert_to_kwh
+from .helpers import convert_to_kw
 
 
 class Response(object):
@@ -55,23 +55,23 @@ class MetersResponse(Response):
 
     def is_sending_to(self, rounded=True):
         if self.meter == MeterType.LOAD:
-            return convert_to_kwh(self.instant_power, rounded) > 0
+            return convert_to_kw(self.instant_power, rounded) > 0
         else:
-            return convert_to_kwh(self.instant_power, rounded) < 0
+            return convert_to_kw(self.instant_power, rounded) < 0
 
     def is_drawing_from(self, rounded=True):
         if self.meter == MeterType.LOAD:
             # Cannot draw from load
             return False
         else:
-            return convert_to_kwh(self.instant_power, rounded) > 0
+            return convert_to_kw(self.instant_power, rounded) > 0
 
     def is_active(self, rounded=True):
-        return convert_to_kwh(self.instant_power, rounded) != 0
+        return convert_to_kw(self.instant_power, rounded) != 0
 
     def get_power(self, rounded=True):
         """Returns power sent/drawn in kWh"""
-        return convert_to_kwh(self.instant_power, rounded)
+        return convert_to_kw(self.instant_power, rounded)
 
 
 class MetersAggregateResponse(Response):
