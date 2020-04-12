@@ -19,7 +19,7 @@ $ pip install tesla_powerwall
 from tesla_powerwall import Powerwall
 
 power_wall = Powerwall("<ip of your Powerwall>")
-#=> <Powerwall: ...>
+#=> <Powerwall ...>
 ```
 
 > Note: By default the API client does not verify the SSL Certificate of the Powerwall. If you want to verify the SSL Certificate you can set `verify_ssl` to `True`.
@@ -34,11 +34,11 @@ from tesla_powerwall import User
 
 # Login as customer
 power_wall.login("<email>", "<password>")
-#=> <LoginResponse: ...>
+#=> <LoginResponse ...>
 
 # Login with different user
 power_wall.login_as(User.INSTALLER, "<email>", "<password>")
-#=> <LoginResponse: ...>
+#=> <LoginResponse ...>
 
 # Check if we are logged in 
 power_wall.is_authenticated()

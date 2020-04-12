@@ -1,7 +1,4 @@
-from typing import Union
-
-
-def convert_to_kwh(value, rounded=True):
+def convert_to_kwh(value, rounded=True) -> float:
     """Converts watt hours to kilo watt hours and optionally round the value"""
     temp = value / 1000
     if rounded:
