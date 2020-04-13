@@ -155,7 +155,7 @@ meters.solar.get_power()
 ```python
 from tesla_powerwall.helpers import convert_to_kw
 
-convert_to_kw(meters.solar.instant_power, True)
+convert_to_kw(meters.solar.instant_power, precision=1)
 ```
 
 ### Device Type

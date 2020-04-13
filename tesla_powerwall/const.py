@@ -2,6 +2,8 @@ from enum import Enum
 
 SUPPORTED_POWERWALL_VERSIONS = ["1.45.0", "1.45.1", "1.45.2"]
 
+DEFAULT_KW_ROUND_PERSICION = 1
+
 
 class User(Enum):
     INSTALLER = "installer"

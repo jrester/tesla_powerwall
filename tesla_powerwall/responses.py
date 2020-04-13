@@ -1,7 +1,7 @@
-from datetime import datetime, timedelta
 import re
+from datetime import datetime, timedelta
 
-from .const import MeterType
+from .const import DEFAULT_KW_ROUND_PERSICION, MeterType
 from .helpers import convert_to_kw
 
 
@@ -53,25 +53,25 @@ class MetersResponse(Response):
         super().__init__(json_response)
         self.meter = meter
 
-    def is_sending_to(self, rounded=True):
+    def is_sending_to(self, precision=DEFAULT_KW_ROUND_PERSICION):
         if self.meter == MeterType.LOAD:
-            return convert_to_kw(self.instant_power, rounded) > 0
+            return convert_to_kw(self.instant_power, precision) > 0
         else:
-            return convert_to_kw(self.instant_power, rounded) < 0
+            return convert_to_kw(self.instant_power, precision) < 0
 
-    def is_drawing_from(self, rounded=True):
+    def is_drawing_from(self, precision=DEFAULT_KW_ROUND_PERSICION):
         if self.meter == MeterType.LOAD:
             # Cannot draw from load
             return False
         else:
-            return convert_to_kw(self.instant_power, rounded) > 0
+            return convert_to_kw(self.instant_power, precision) > 0
 
-    def is_active(self, rounded=True):
-        return convert_to_kw(self.instant_power, rounded) != 0
+    def is_active(self, precision=DEFAULT_KW_ROUND_PERSICION):
+        return convert_to_kw(self.instant_power, precision) != 0
 
-    def get_power(self, rounded=True):
+    def get_power(self, precision=DEFAULT_KW_ROUND_PERSICION):
         """Returns power sent/drawn in kWh"""
-        return convert_to_kw(self.instant_power, rounded)
+        return convert_to_kw(self.instant_power, precision)
 
 
 class MetersAggregateResponse(Response):

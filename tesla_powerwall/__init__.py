@@ -1,41 +1,38 @@
-from typing import Union, List
+from json.decoder import JSONDecodeError
+from typing import List, Union
+from urllib.parse import urljoin, urlparse, urlsplit, urlunparse, urlunsplit
 
 import requests
+from requests import Session
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
-from urllib.parse import urljoin, urlparse, urlunparse, urlsplit, urlunsplit
-from requests import Session
-from json.decoder import JSONDecodeError
 
 from .const import (
+    DEFAULT_KW_ROUND_PERSICION,
+    SUPPORTED_OPERATION_MODES,
+    SUPPORTED_POWERWALL_VERSIONS,
     DeviceType,
-    GridStatus,
     GridState,
+    GridStatus,
     LineStatus,
     MeterType,
     OperationMode,
-    SUPPORTED_OPERATION_MODES,
-    SUPPORTED_POWERWALL_VERSIONS,
     User,
 )
-from .error import (
-    AccessDeniedError,
-    ApiError,
-    PowerwallUnreachableError,
-)
+from .error import AccessDeniedError, ApiError, PowerwallUnreachableError
 from .helpers import convert_to_kw
 from .responses import (
     CustomerRegistrationResponse,
     ListPowerwallsResponse,
     LoginResponse,
-    MetersAggregateResponse,
     MeterDetailsResponse,
+    MetersAggregateResponse,
     MetersResponse,
+    PowerwallsStatusResponse,
+    PowerwallStatusResponse,
     SiteInfoResponse,
     SitemasterResponse,
     SolarsResponse,
-    PowerwallStatusResponse,
-    PowerwallsStatusResponse,
 )
 
 VERSION = "0.2.2"

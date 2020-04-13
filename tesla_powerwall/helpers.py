@@ -1,7 +1,7 @@
-def convert_to_kw(value, rounded=True) -> float:
-    """Converts watt to kilowatt and optionally round the value"""
-    temp = value / 1000
-    if rounded:
-        return round(temp, 1)
+def convert_to_kw(value : float, precision : int=1) -> float:
+    """Converts watt to kilowatt and rounds to precision"""
+    # Don't round if precision is -1
+    if precision == -1:
+        return value / 1000
     else:
-        return temp
+        return round(value / 1000, precision)
