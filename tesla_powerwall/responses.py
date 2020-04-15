@@ -11,7 +11,7 @@ class Response(object):
 
     # A list of attributes that should be in the json_response
     _JSON_ATTRS = []
-    # A list of attributes that may be in the json_response but aren't required
+    # A list of attributes that may be in the json_response but aren"t required
     _OPTIONAL_JSON_ATTRS = []
 
     def __init__(self, json_response: dict, no_check: bool = False):
@@ -235,12 +235,18 @@ class PowerwallsStatusResponse(Response):
     ]
 
 
+
+
 class ListPowerwallsResponse(Response):
+    class PowerwallResponse(Response):
+        _JSON_ATTRS = ["PackagePartNumber", "PackageSerialNumber", "type", "grid_state", "grid_reconnection_time_seconds", "under_phase_detection", "updating", "commissioning_diagnostic", "update_diagnostic"]
+    
     _JSON_ATTRS = ["powerwalls", "has_sync", "sync", "states"]
 
     def __init__(self, json_response):
         super().__init__(json_response)
         self.status = PowerwallsStatusResponse(self.json_response)
+        self.powerwalls = [ListPowerwallsResponse.PowerwallResponse(powerwall) for powerwall in self.powerwalls]
 
 
 class SolarsResponse(Response):

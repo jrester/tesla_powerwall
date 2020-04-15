@@ -251,6 +251,9 @@ class Powerwall(object):
         """Returns powerwalls and status"""
         return ListPowerwallsResponse(self._get("powerwalls"))
 
+    def get_serial_numbers(self) -> List[str]:
+        return [powerwall.PackageSerialNumber for powerwall in self.get_powerwalls().powerwalls]
+
     def get_operation_mode(self) -> OperationMode:
         return OperationMode(self._get("operation", True)["real_mode"])
 
