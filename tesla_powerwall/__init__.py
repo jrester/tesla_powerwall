@@ -298,6 +298,9 @@ class Powerwall(object):
     def get_version(self) -> str:
         return self.get_status().version
 
+    def get_git_hash(self) -> str:
+        return self.get_status().git_hash
+
     def is_sending_to(self, meter: MeterType, rounded=True) -> bool:
         """Wrapper method for is_sending_to"""
         return self.get_meters().get(meter).is_sending_to()

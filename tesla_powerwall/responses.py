@@ -3,26 +3,45 @@ from datetime import datetime, timedelta
 
 from .const import DEFAULT_KW_ROUND_PERSICION, MeterType
 from .helpers import convert_to_kw
+from .error import APIChangedError
 
 
 class Response(object):
     """Basic Response object that can be constructed from a json response"""
 
-    def __init__(self, json_response: dict):
+    def __init__(self, json_response: dict, no_check=False):
         self.json_response = json_response
-        self._set_attrs()
+        self._set_attrs(no_check)
 
-    def _set_attrs(self):
+    def _set_attrs(self, no_check=False):
+        """Set attributes from _JSON_ATTRS as object properties. 
+        Also checks wether the response is valid. 
+        This can be disabled by passing no_check=True"""
+        missing_attrs = []
         for attr in self.__class__._JSON_ATTRS:
-            self._add_attr(attr)
+            self._add_attr(attr, missing_attrs)
 
-    def _add_attr(self, attr: str):
-        if attr in self.json_response:
-            setattr(self, attr, self.json_response[attr])
-        else:
-            raise ValueError(
-                f"Missing key '{attr}' in response from Powerwall. Either the Powerwall sent an invalid response or the API changed!"
-            )
+        if not no_check:
+            added_attrs = self._get_added_attrs()
+
+        # We are missing some attributes in the json_response
+        if not no_check and len(missing_attrs) > 0:
+            raise APIChangedError(self.__class__, self.json_response, added_attrs, missing_attrs)
+
+    def _add_attr(self, attr, missing_attrs):
+            # Make sure the attribute also exist in the json_response
+            if isinstance(attr, str):
+                if attr in self.json_response:
+                    setattr(self, attr, self.json_response[attr])
+                else:
+                    missing_attrs.append(attr)
+
+    def _get_added_attrs(self):
+        added_attrs = []
+        for attr in self.json_response.keys():
+            if attr not in self.__class__._JSON_ATTRS:
+                added_attrs.append(attr)
+        return added_attrs
 
     def __repr__(self):
         return str(self.json_response)
@@ -119,8 +138,8 @@ class SiteInfoResponse(Response):
         "grid_phase_setting",
         "country",
         "state",
-        "distributor",
-        "utility",
+        "distributor", 
+        "utility", 
         "retailer",
         "region",
     ]
