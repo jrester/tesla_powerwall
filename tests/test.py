@@ -1,19 +1,19 @@
-import unittest
 import json
 import os
+import unittest
 
 import requests
 import responses
-from responses import add, Response, GET, POST
+from responses import GET, POST, Response, add
 
 from tesla_powerwall import (
-    Powerwall,
     AccessDeniedError,
-    PowerwallUnreachableError,
     ApiError,
     MetersAggregateResponse,
     MetersResponse,
     MeterType,
+    Powerwall,
+    PowerwallUnreachableError,
 )
 
 ENDPOINT = "https://1.1.1.1/api/"
@@ -79,6 +79,44 @@ METERS_RESPONSE = {
         "i_c_current": 0,
         "timeout": 1500000000,
     },
+}
+
+SITE_INFO_RESPONSE_WITHOUT_OPTIONS = {
+    "max_site_meter_power_kW": 1000000000,
+    "min_site_meter_power_kW": -1000000000,
+    "nominal_system_energy_kWh": 13.5,
+    "nominal_system_power_kW": 5,
+    "max_system_energy_kWh": 0,
+    "max_system_power_kW": 0,
+    "site_name": "Test",
+    "timezone": "Europe/Rome",
+    "grid_code": "50Hz_230V_1_CEI-021:2016_Italy",
+    "grid_voltage_setting": 230,
+    "grid_freq_setting": 50,
+    "grid_phase_setting": "Single",
+    "country": "Italy",
+    "state": "*",
+    "region": "CEI-021",
+}
+SITE_INFO_RESPONSE_WITH_OPTIONS = {
+    "max_site_meter_power_kW": 1000000000,
+    "min_site_meter_power_kW": -1000000000,
+    "nominal_system_energy_kWh": 13.5,
+    "nominal_system_power_kW": 10,
+    "max_system_energy_kWh": 0,
+    "max_system_power_kW": 0,
+    "site_name": "Test",
+    "timezone": "Europe/Berlin",
+    "grid_code": "50Hz_230V_1_VDE4105:2011_Germany",
+    "grid_voltage_setting": 230,
+    "grid_freq_setting": 50,
+    "grid_phase_setting": "Single",
+    "country": "Germany",
+    "state": "*",
+    "distributor": "*",
+    "utility": "*",
+    "retailer": "*",
+    "region": "VDE4105",
 }
 
 
@@ -184,3 +222,32 @@ class TestPowerWall(unittest.TestCase):
         self.assertEqual(meters.load.is_sending_to(), True)
         self.assertEqual(meters.load.is_drawing_from(), False)
         self.assertEqual(meters.load.is_active(), True)
+
+    @responses.activate
+    def test_optional_json_attrs(self):
+        add(
+            Response(
+                responses.GET,
+                url=f"{ENDPOINT}site_info",
+                json=SITE_INFO_RESPONSE_WITHOUT_OPTIONS,
+            )
+        )
+
+        add(
+            Response(
+                responses.GET,
+                url=f"{ENDPOINT}site_info",
+                json=SITE_INFO_RESPONSE_WITH_OPTIONS,
+            )
+        )
+
+        site_info = self.powerwall.get_site_info()
+        self.assertEqual(site_info.has_optional_attrs_set(), False)
+        self.assertEqual(site_info.has_key("utility"), False)
+        self.assertEqual(site_info.grid_voltage_setting, 230)
+        self.assertEqual(site_info.has_optional_attrs(), True)
+
+        site_info = self.powerwall.get_site_info()
+        self.assertEqual(site_info.has_optional_attrs_set(), True)
+        self.assertEqual(site_info.has_key("utility"), True)
+        self.assertEqual(site_info.retailer, "*")

@@ -2,18 +2,23 @@ import re
 from datetime import datetime, timedelta
 
 from .const import DEFAULT_KW_ROUND_PERSICION, MeterType
-from .helpers import convert_to_kw
 from .error import APIChangedError
+from .helpers import convert_to_kw
 
 
 class Response(object):
     """Basic Response object that can be constructed from a json response"""
 
-    def __init__(self, json_response: dict, no_check=False):
+    # A list of attributes that should be in the json_response
+    _JSON_ATTRS = []
+    # A list of attributes that may be in the json_response but aren't required
+    _OPTIONAL_JSON_ATTRS = []
+
+    def __init__(self, json_response: dict, no_check: bool = False):
         self.json_response = json_response
         self._set_attrs(no_check)
 
-    def _set_attrs(self, no_check=False):
+    def _set_attrs(self, no_check: bool = False) -> None:
         """Set attributes from _JSON_ATTRS as object properties. 
         Also checks wether the response is valid. 
         This can be disabled by passing no_check=True"""
@@ -21,29 +26,55 @@ class Response(object):
         for attr in self.__class__._JSON_ATTRS:
             self._add_attr(attr, missing_attrs)
 
+        if len(self.__class__._OPTIONAL_JSON_ATTRS) > 0:
+            for attr in self.__class__._OPTIONAL_JSON_ATTRS:
+                self._add_attr(attr)
+
         if not no_check:
             added_attrs = self._get_added_attrs()
 
         # We are missing some attributes in the json_response
         if not no_check and len(missing_attrs) > 0:
-            raise APIChangedError(self.__class__, self.json_response, added_attrs, missing_attrs)
+            raise APIChangedError(
+                self.__class__, self.json_response, added_attrs, missing_attrs
+            )
 
-    def _add_attr(self, attr, missing_attrs):
-            # Make sure the attribute also exist in the json_response
-            if isinstance(attr, str):
-                if attr in self.json_response:
-                    setattr(self, attr, self.json_response[attr])
-                else:
-                    missing_attrs.append(attr)
+    def _add_attr(self, attr, missing_attrs=[]) -> None:
+        # Make sure the attribute also exist in the json_response
+        if attr in self.json_response:
+            setattr(self, attr, self.json_response[attr])
+        else:
+            missing_attrs.append(attr)
 
-    def _get_added_attrs(self):
+    def _get_added_attrs(self) -> list:
         added_attrs = []
         for attr in self.json_response.keys():
             if attr not in self.__class__._JSON_ATTRS:
                 added_attrs.append(attr)
         return added_attrs
 
-    def __repr__(self):
+    # Helper methods to make interaction with optional json attributes easier
+
+    def has_optional_attrs(self) -> bool:
+        return len(self.__class__._OPTIONAL_JSON_ATTRS) > 0
+
+    def has_optional_attrs_set(self) -> bool:
+        """Checks wether all optional attributes are present in the json response"""
+        return set(
+            self.__class__._OPTIONAL_JSON_ATTRS + self.__class__._JSON_ATTRS
+        ) == set(self.json_response.keys())
+
+    def get(self, key, default=None):
+        """Equavivalent to dict.get"""
+        return self.json_response.get(key, default)
+
+    def has_key(self, key) -> bool:
+        return key in self.json_response.keys()
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __repr__(self) -> str:
         return str(self.json_response)
 
 
@@ -138,11 +169,10 @@ class SiteInfoResponse(Response):
         "grid_phase_setting",
         "country",
         "state",
-        "distributor", 
-        "utility", 
-        "retailer",
         "region",
     ]
+
+    _OPTIONAL_JSON_ATTRS = ["distributor", "utility", "retailer"]
 
 
 class CustomerRegistrationResponse(Response):
