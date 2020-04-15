@@ -35,7 +35,7 @@ from .responses import (
     SolarsResponse,
 )
 
-VERSION = "0.2.3"
+VERSION = "0.2.4"
 
 
 class Powerwall(object):
