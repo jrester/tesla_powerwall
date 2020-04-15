@@ -25,6 +25,14 @@ power_wall = Powerwall("<ip of your Powerwall>")
 > Note: By default the API client does not verify the SSL Certificate of the Powerwall. If you want to verify the SSL Certificate you can set `verify_ssl` to `True`.
 > Also the API client suppresses warnings about an inseucre request (because we aren't verifing the certificate). If you want to enable those warnings you can set `disable_insecure_warning` to `False`
 
+It can also happen that the API is sending different responses than what was expected. Those responses would normally produce an `APIChangedPowerwall` indicating what exactly changed. If this happens please open an Issue to report this error. If you need to cotinue to use the API you can disable the response validation:
+
+```python
+power_wall = Powerwall("<ip of your Powerwall>", dont_validate_response=True)
+# If you need to change the original setting
+power_wall.set_dont_validate_response(False)
+```
+
 ### Authentication
 
 To login you can either use `login` or `login_as`. `login` logs you in as `User.CUSTOMER` whereas with `login_as` you can choose a different user:
@@ -219,13 +227,15 @@ For some unkown reason the response to `get_powerwalls` also includes the powerw
 powerwalls_resp = power_wall.get_powerwalls()
 powerwalls_resp.status
 #=> <PowerwallsStatusResponse ...>
+power_wall.get_serial_numbers()
+#=> ["...", "...", ...]
 ```
 
 ### More
 
 Most methods return a `Response` object except for those that only return a single value like `get_charge` and those that have to complex output like `get_networks`. 
 
-Most times those `Response`s reflect the json response but for most nested data objects this is not the case.
+Most times those `Response`s reflect the json response but for most nested data objects this is not the case. You can access the original response using `<Response>.json_response`.
 
 Some other methods include:
 

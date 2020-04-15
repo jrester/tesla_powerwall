@@ -46,6 +46,7 @@ class Powerwall(object):
         http_session: requests.Session = None,
         verify_ssl: bool = False,
         disable_insecure_warning: bool = True,
+        dont_validate_response: bool = True,
     ):
 
         if disable_insecure_warning:
@@ -68,6 +69,7 @@ class Powerwall(object):
         self._timeout = timeout
         self._http_session = http_session if http_session else Session()
         self._http_session.verify = verify_ssl
+        self._dont_validate_response = dont_validate_response
 
         self._token = None
 
@@ -168,7 +170,7 @@ class Powerwall(object):
         # The api returns an auth cookie which is automatically set
         # so there is no need to further process the response
 
-        return LoginResponse(response)
+        return LoginResponse(response, no_check=self._dont_validate_response)
 
     def login(
         self, email: str, password: str, force_sm_off: bool = False
@@ -196,11 +198,15 @@ class Powerwall(object):
             return charge
 
     def get_sitemaster(self) -> SitemasterResponse:
-        return SitemasterResponse(self._get("sitemaster"))
+        return SitemasterResponse(
+            self._get("sitemaster"), no_check=self._dont_validate_response
+        )
 
     def get_meters(self) -> MetersAggregateResponse:
         """Returns the different meters in a MetersAggregateResponse"""
-        return MetersAggregateResponse(self._get("meters/aggregates"))
+        return MetersAggregateResponse(
+            self._get("meters/aggregates"), no_check=self._dont_validate_response
+        )
 
     def get_meter_details(
         self, meter: MeterType
@@ -209,7 +215,10 @@ class Powerwall(object):
         If their are no details available for a meter None is returned."""
         resp = self._get(f"meters/{meter.value}")
         if isinstance(resp, list):
-            return [MeterDetailsResponse(item) for item in resp]
+            return [
+                MeterDetailsResponse(item, no_check=self._dont_validate_response)
+                for item in resp
+            ]
         elif isinstance(resp, dict):
             return None
 
@@ -229,30 +238,43 @@ class Powerwall(object):
 
     def get_site_info(self) -> SiteInfoResponse:
         """Returns information about the powerwall site"""
-        return SiteInfoResponse(self._get("site_info"))
+        return SiteInfoResponse(
+            self._get("site_info"), no_check=self._dont_validate_response
+        )
 
     def set_site_name(self, site_name: str):
         return self._post("site_info/site_name", {"site_name": site_name}, True)
 
     def get_status(self) -> PowerwallStatusResponse:
-        return PowerwallStatusResponse(self._get("status"))
+        return PowerwallStatusResponse(
+            self._get("status"), no_check=self._dont_validate_response
+        )
 
     def get_powerwalls_status(self) -> PowerwallsStatusResponse:
-        return PowerwallsStatusResponse(self._get("powerwalls/status", True))
+        return PowerwallsStatusResponse(
+            self._get("powerwalls/status", True), no_check=self._dont_validate_response
+        )
 
     def get_device_type(self) -> DeviceType:
         """Returns the device type of the powerwall"""
         return DeviceType(self._get("device_type")["device_type"])
 
     def get_customer_registration(self) -> CustomerRegistrationResponse:
-        return CustomerRegistrationResponse(self._get("customer/registration"))
+        return CustomerRegistrationResponse(
+            self._get("customer/registration"), no_check=self._dont_validate_response
+        )
 
     def get_powerwalls(self) -> ListPowerwallsResponse:
         """Returns powerwalls and status"""
-        return ListPowerwallsResponse(self._get("powerwalls"))
+        return ListPowerwallsResponse(
+            self._get("powerwalls"), no_check=self._dont_validate_response
+        )
 
     def get_serial_numbers(self) -> List[str]:
-        return [powerwall.PackageSerialNumber for powerwall in self.get_powerwalls().powerwalls]
+        return [
+            powerwall.PackageSerialNumber
+            for powerwall in self.get_powerwalls().powerwalls
+        ]
 
     def get_operation_mode(self) -> OperationMode:
         return OperationMode(self._get("operation", True)["real_mode"])
@@ -281,7 +303,10 @@ class Powerwall(object):
 
     def get_solars(self) -> List[SolarsResponse]:
         solars = self._get("solars", needs_authentication=True)
-        return [SolarsResponse(solar) for solar in solars]
+        return [
+            SolarsResponse(solar, no_check=self._dont_validate_response)
+            for solar in solars
+        ]
 
     def get_vin(self) -> str:
         return self._get("config", needs_authentication=True)["vin"]
@@ -321,3 +346,6 @@ class Powerwall(object):
 
     def is_powerwall_version_supported(self) -> bool:
         return self.get_version() in SUPPORTED_POWERWALL_VERSIONS
+
+    def set_dont_validate_response(self, value):
+        self._dont_validate_response = value

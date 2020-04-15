@@ -17,6 +17,7 @@ class Response(object):
     def __init__(self, json_response: dict, no_check: bool = False):
         self.json_response = json_response
         self._set_attrs(no_check)
+        self.response_validated = not no_check
 
     def _set_attrs(self, no_check: bool = False) -> None:
         """Set attributes from _JSON_ATTRS as object properties. 
@@ -99,8 +100,8 @@ class MetersResponse(Response):
         "timeout",
     ]
 
-    def __init__(self, json_response: dict, meter: MeterType = None):
-        super().__init__(json_response)
+    def __init__(self, json_response: dict, meter: MeterType = None, no_check=False):
+        super().__init__(json_response, no_check=no_check)
         self.meter = meter
 
     def is_sending_to(self, precision=DEFAULT_KW_ROUND_PERSICION):
@@ -129,12 +130,14 @@ class MetersAggregateResponse(Response):
     Response for "meters/aggregates"
     """
 
-    def __init__(self, json_response):
+    def __init__(self, json_response, no_check=False):
         self.json_response = json_response
         for meter in MeterType:
             if meter.value in json_response:
                 setattr(
-                    self, meter.value, MetersResponse(json_response[meter.value], meter)
+                    self,
+                    meter.value,
+                    MetersResponse(json_response[meter.value], meter, no_check),
                 )
 
     def get(self, meter: MeterType) -> MetersResponse:
@@ -144,9 +147,11 @@ class MetersAggregateResponse(Response):
 class MeterDetailsResponse(Response):
     _JSON_ATTRS = ["id", "location", "type", "cts", "inverted", "connection"]
 
-    def __init__(self, json_response):
-        super().__init__(json_response)
-        self.cached_readings = MetersResponse(json_response["Cached_readings"])
+    def __init__(self, json_response, no_check=False):
+        super().__init__(json_response, no_check)
+        self.cached_readings = MetersResponse(
+            json_response["Cached_readings"], no_check=no_check
+        )
 
 
 class SitemasterResponse(Response):
@@ -194,7 +199,7 @@ class PowerwallStatusResponse(Response):
 
     _JSON_ATTRS = ["start_time", "up_time_seconds", "is_new", "version", "git_hash"]
 
-    def __init__(self, json_response):
+    def __init__(self, json_response, no_check=False):
         self.json_response = json_response
 
         resp = json_response
@@ -235,18 +240,29 @@ class PowerwallsStatusResponse(Response):
     ]
 
 
-
-
 class ListPowerwallsResponse(Response):
     class PowerwallResponse(Response):
-        _JSON_ATTRS = ["PackagePartNumber", "PackageSerialNumber", "type", "grid_state", "grid_reconnection_time_seconds", "under_phase_detection", "updating", "commissioning_diagnostic", "update_diagnostic"]
-    
+        _JSON_ATTRS = [
+            "PackagePartNumber",
+            "PackageSerialNumber",
+            "type",
+            "grid_state",
+            "grid_reconnection_time_seconds",
+            "under_phase_detection",
+            "updating",
+            "commissioning_diagnostic",
+            "update_diagnostic",
+        ]
+
     _JSON_ATTRS = ["powerwalls", "has_sync", "sync", "states"]
 
-    def __init__(self, json_response):
-        super().__init__(json_response)
-        self.status = PowerwallsStatusResponse(self.json_response)
-        self.powerwalls = [ListPowerwallsResponse.PowerwallResponse(powerwall) for powerwall in self.powerwalls]
+    def __init__(self, json_response, no_check=False):
+        super().__init__(json_response, no_check)
+        self.status = PowerwallsStatusResponse(self.json_response, no_check=no_check)
+        self.powerwalls = [
+            ListPowerwallsResponse.PowerwallResponse(powerwall, no_check=no_check)
+            for powerwall in self.powerwalls
+        ]
 
 
 class SolarsResponse(Response):
