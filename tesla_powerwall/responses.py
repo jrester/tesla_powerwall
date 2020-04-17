@@ -198,6 +198,7 @@ class PowerwallStatusResponse(Response):
     )
 
     _JSON_ATTRS = ["start_time", "up_time_seconds", "is_new", "version", "git_hash"]
+    _OPTIONAL_JSON_ATTRS = ["device_type", "commission_count", "sync_type"]
 
     def __init__(self, json_response, no_check=False):
         self.json_response = json_response

@@ -6,6 +6,7 @@ import requests
 from requests import Session
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
+from packaging import version
 
 from .const import (
     DEFAULT_KW_ROUND_PERSICION,
@@ -18,6 +19,7 @@ from .const import (
     MeterType,
     OperationMode,
     User,
+    Version
 )
 from .error import AccessDeniedError, ApiError, PowerwallUnreachableError
 from .helpers import convert_to_kw
@@ -47,6 +49,7 @@ class Powerwall(object):
         verify_ssl: bool = False,
         disable_insecure_warning: bool = True,
         dont_validate_response: bool = True,
+        pin_version: str = None
     ):
 
         if disable_insecure_warning:
@@ -72,6 +75,11 @@ class Powerwall(object):
         self._dont_validate_response = dont_validate_response
 
         self._token = None
+
+        if pin_version is not None:
+            self._pin_version = version.parse(pin_version)
+        else:
+            self._pin_version = None
 
     def _process_response(self, response: str) -> dict:
         if response.status_code == 404:
@@ -257,7 +265,10 @@ class Powerwall(object):
 
     def get_device_type(self) -> DeviceType:
         """Returns the device type of the powerwall"""
-        return DeviceType(self._get("device_type")["device_type"])
+        if self._pin_version is None or self._pin_version >= VERSION.v1_46_0:
+            return DeviceType(self.get_status().device_type)
+        else:
+            return DeviceType(self._get("device_type")["device_type"])
 
     def get_customer_registration(self) -> CustomerRegistrationResponse:
         return CustomerRegistrationResponse(
@@ -349,3 +360,19 @@ class Powerwall(object):
 
     def set_dont_validate_response(self, value):
         self._dont_validate_response = value
+
+    def detect_and_pin_version(self):
+        self.set_dont_validate_response(True)
+        status = self.get_status()
+        if status.has_key("version"):
+            version = status.get("version")
+        else:
+            raise ApiError("Could not detect version because the status response does not return the version")
+        self.set_dont_validate_response(False)
+
+        self.pin_version(version)
+
+    def pin_version(self, vers: Union[str, version.Version]):
+        if isinstance(vers, str)
+            vers = version.parse(vers)
+        self._pin_version = vers

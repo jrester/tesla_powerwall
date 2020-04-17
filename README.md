@@ -3,7 +3,7 @@
 Python Tesla Powerwall API for consuming a local endpoint.
 
 > Note: This is not an official API and as such might be incomplete and fail at any time
-> The API was tested with powerwall version 1.45.2 but 1.45.0 and 1.45.1 should also work. 
+> The API was tested with powerwall version 1.45.2 but 1.45.0 and 1.45.1 should also work.
 
 ## Installation
 
@@ -54,6 +54,25 @@ power_wall.is_authenticated()
 
 # Logout
 power_wall.logout()
+```
+
+### API versioning
+
+The powerwall API versioning sadly is inconsitent across different versions. This is way some versions may return different responses. If no version is specified the **newest known** version is assumed.
+
+If you are sure which version your powerwall has you can pin the Powerwall object to a version:
+
+```python
+# Pin powerwall object
+power_wall = Powerwall("<powerwall-ip>", pin_version="1.46.0")
+
+# 
+power_wall.pin_version("1.46.0")
+```
+
+Otherwise you can let the API try to detect the version and pin it. This method should be prefered over the manual detection and pinning of the version:
+```python
+power_wall.detect_and_pin_version()
 ```
 
 ### Current battery level
