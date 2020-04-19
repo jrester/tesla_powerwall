@@ -19,7 +19,7 @@ from .const import (
     MeterType,
     OperationMode,
     User,
-    Version
+    Version,
 )
 from .error import AccessDeniedError, ApiError, PowerwallUnreachableError
 from .helpers import convert_to_kw
@@ -265,7 +265,7 @@ class Powerwall(object):
 
     def get_device_type(self) -> DeviceType:
         """Returns the device type of the powerwall"""
-        if self._pin_version is None or self._pin_version >= VERSION.v1_46_0:
+        if self._pin_version is None or self._pin_version >= Version.v1_46_0:
             return DeviceType(self.get_status().device_type)
         else:
             return DeviceType(self._get("device_type")["device_type"])
@@ -373,6 +373,6 @@ class Powerwall(object):
         self.pin_version(version)
 
     def pin_version(self, vers: Union[str, version.Version]):
-        if isinstance(vers, str)
+        if isinstance(vers, str):
             vers = version.parse(vers)
         self._pin_version = vers

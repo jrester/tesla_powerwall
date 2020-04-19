@@ -28,6 +28,7 @@ class GridStatus(Enum):
     CONNECTED = "SystemGridConnected"
     ISLANEDED_READY = "SystemIslandedReady"
     ISLANEDED = "SystemIslandedActive"
+    TRANSITION_TO_GRID = "SystemTransitionToGrid"   # Used in version 1.46.0
 
 
 class GridState(Enum):

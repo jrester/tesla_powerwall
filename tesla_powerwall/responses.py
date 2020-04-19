@@ -255,6 +255,8 @@ class ListPowerwallsResponse(Response):
             "update_diagnostic",
         ]
 
+        _OPTIONAL_JSON_ATTRS = ["Type", "bc_type"]
+
     _JSON_ATTRS = ["powerwalls", "has_sync", "sync", "states"]
 
     def __init__(self, json_response, no_check=False):

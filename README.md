@@ -3,7 +3,12 @@
 Python Tesla Powerwall API for consuming a local endpoint.
 
 > Note: This is not an official API and as such might be incomplete and fail at any time
-> The API was tested with powerwall version 1.45.2 but 1.45.0 and 1.45.1 should also work.
+
+Supported Powerwall Software versions:
+* 1.45.X
+* 1.46.0
+
+> For more information about versioning see [API versiooning](#api-versioning).
 
 ## Installation
 
