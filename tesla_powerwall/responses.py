@@ -42,7 +42,6 @@ class Response(object):
             )
 
     def _add_attr(self, attr, missing_attrs=[]) -> None:
-        # Make sure the attribute also exist in the json_response
         if isinstance(attr, tuple):
             key, constructor = attr
             if key in self.json_response:
@@ -55,7 +54,10 @@ class Response(object):
                         ),
                     )
                 else:
-                    setattr(self, key, constructor(self.json_response[key]))
+                    if self.json_response[key] is not None:
+                        setattr(self, key, constructor(self.json_response[key]))
+                    else:
+                        setattr(self, key, self.json_response[key])
             else:
                 missing_attrs.append(key)
         else:
