@@ -3,39 +3,23 @@ from typing import List, Union
 from urllib.parse import urljoin, urlparse, urlsplit, urlunparse, urlunsplit
 
 import requests
+from packaging import version
 from requests import Session
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
-from packaging import version
 
-from .const import (
-    DEFAULT_KW_ROUND_PERSICION,
-    SUPPORTED_OPERATION_MODES,
-    SUPPORTED_POWERWALL_VERSIONS,
-    DeviceType,
-    GridState,
-    GridStatus,
-    LineStatus,
-    MeterType,
-    OperationMode,
-    User,
-    Version,
-)
+from .const import (DEFAULT_KW_ROUND_PERSICION, SUPPORTED_OPERATION_MODES,
+                    SUPPORTED_POWERWALL_VERSIONS, DeviceType, GridState,
+                    GridStatus, LineStatus, MeterType, OperationMode, User,
+                    Version)
 from .error import AccessDeniedError, ApiError, PowerwallUnreachableError
 from .helpers import convert_to_kw
-from .responses import (
-    CustomerRegistrationResponse,
-    ListPowerwallsResponse,
-    LoginResponse,
-    MeterDetailsResponse,
-    MetersAggregateResponse,
-    MetersResponse,
-    PowerwallsStatusResponse,
-    PowerwallStatusResponse,
-    SiteInfoResponse,
-    SitemasterResponse,
-    SolarsResponse,
-)
+from .responses import (CustomerRegistrationResponse, ListPowerwallsResponse,
+                        LoginResponse, MeterDetailsResponse,
+                        MetersAggregateResponse, MetersResponse,
+                        PowerwallsStatusResponse, PowerwallStatusResponse,
+                        SiteInfoResponse, SitemasterResponse, SolarsResponse,
+                        UpdateStatusResponse)
 
 VERSION = "0.2.5"
 
@@ -49,7 +33,7 @@ class Powerwall(object):
         verify_ssl: bool = False,
         disable_insecure_warning: bool = True,
         dont_validate_response: bool = True,
-        pin_version: str = None
+        pin_version: str = None,
     ):
 
         if disable_insecure_warning:
@@ -265,8 +249,8 @@ class Powerwall(object):
 
     def get_device_type(self) -> DeviceType:
         """Returns the device type of the powerwall"""
-        if self._pin_version is None or self._pin_version >= Version.v1_46_0:
-            return DeviceType(self.get_status().device_type)
+        if self._pin_version is None or self._pin_version >= Version.v1_46_0.value:
+            return self.get_status().device_type
         else:
             return DeviceType(self._get("device_type")["device_type"])
 
@@ -340,6 +324,9 @@ class Powerwall(object):
     def get_git_hash(self) -> str:
         return self.get_status().git_hash
 
+    def get_update_status(self) -> UpdateStatusResponse:
+        return UpdateStatusResponse(self._get("system/update/status", needs_authentication=True))
+
     def is_sending_to(self, meter: MeterType, rounded=True) -> bool:
         """Wrapper method for is_sending_to"""
         return self.get_meters().get(meter).is_sending_to()
@@ -367,12 +354,16 @@ class Powerwall(object):
         if status.has_key("version"):
             version = status.get("version")
         else:
-            raise ApiError("Could not detect version because the status response does not return the version")
+            raise ApiError(
+                "Could not detect version because the status response does not return the version"
+            )
         self.set_dont_validate_response(False)
 
         self.pin_version(version)
 
-    def pin_version(self, vers: Union[str, version.Version]):
+    def pin_version(self, vers: Union[str, version.Version, Version]):
         if isinstance(vers, str):
             vers = version.parse(vers)
+        elif isinstance(vers, Version):
+            self._pin_version = vers.value
         self._pin_version = vers

@@ -68,11 +68,12 @@ The powerwall API versioning sadly is inconsitent across different versions. Thi
 If you are sure which version your powerwall has you can pin the Powerwall object to a version:
 
 ```python
+from tesla_powerwall import Version
 # Pin powerwall object
 power_wall = Powerwall("<powerwall-ip>", pin_version="1.46.0")
 
-# 
-power_wall.pin_version("1.46.0")
+# You can also pin a version after the powerwall object was created
+power_wall.pin_version(Version.v1_46_0)
 ```
 
 Otherwise you can let the API try to detect the version and pin it. This method should be prefered over the manual detection and pinning of the version:

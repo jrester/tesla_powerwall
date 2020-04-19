@@ -1,7 +1,8 @@
 import re
 from datetime import datetime, timedelta
 
-from .const import DEFAULT_KW_ROUND_PERSICION, MeterType
+from .const import (DEFAULT_KW_ROUND_PERSICION, DeviceType, MeterType,
+                    SyncType, UpdateState)
 from .error import APIChangedError
 from .helpers import convert_to_kw
 
@@ -42,10 +43,26 @@ class Response(object):
 
     def _add_attr(self, attr, missing_attrs=[]) -> None:
         # Make sure the attribute also exist in the json_response
-        if attr in self.json_response:
-            setattr(self, attr, self.json_response[attr])
+        if isinstance(attr, tuple):
+            key, constructor = attr
+            if key in self.json_response:
+                if isinstance(constructor, Response):
+                    setattr(
+                        self,
+                        key,
+                        constructor(
+                            self.json_response[key], not self.response_validated
+                        ),
+                    )
+                else:
+                    setattr(self, key, constructor(self.json_response[key]))
+            else:
+                missing_attrs.append(key)
         else:
-            missing_attrs.append(attr)
+            if attr in self.json_response:
+                setattr(self, attr, self.json_response[attr])
+            else:
+                missing_attrs.append(attr)
 
     def _get_added_attrs(self) -> list:
         added_attrs = []
@@ -197,24 +214,9 @@ class PowerwallStatusResponse(Response):
         r"((?P<hours>\d+?)h)((?P<minutes>\d+?)m)((?P<seconds>\d+?).)((?P<microseconds>\d+?)s)"
     )
 
-    _JSON_ATTRS = ["start_time", "up_time_seconds", "is_new", "version", "git_hash"]
-    _OPTIONAL_JSON_ATTRS = ["device_type", "commission_count", "sync_type"]
-
-    def __init__(self, json_response, no_check=False):
-        self.json_response = json_response
-
-        resp = json_response
-        resp["start_time"] = datetime.strptime(
-            json_response["start_time"], PowerwallStatusResponse._START_TIME_FORMAT
-        )
-        resp["up_time_seconds"] = self._parse_uptime_seconds(
-            json_response["up_time_seconds"]
-        )
-
-        self._set_attrs()
-
-    def _parse_uptime_seconds(self, up_time_seconds: str):
-        match = self.__class__._UP_TIME_SECONDS_REGEX.match(up_time_seconds)
+    @staticmethod
+    def _parse_uptime_seconds(up_time_seconds: str):
+        match = PowerwallStatusResponse._UP_TIME_SECONDS_REGEX.match(up_time_seconds)
         if not match:
             raise ValueError(f"Unable to parse up time seconds {up_time_seconds}")
 
@@ -224,6 +226,23 @@ class PowerwallStatusResponse(Response):
                 time_params[name] = int(param)
 
         return timedelta(**time_params)
+
+    @staticmethod
+    def _parse_start_time(start_time: str):
+        return datetime.strptime(start_time, PowerwallStatusResponse._START_TIME_FORMAT)
+
+    _JSON_ATTRS = [
+        ("start_time", _parse_start_time.__func__),
+        ("up_time_seconds", _parse_uptime_seconds.__func__),
+        "is_new",
+        "version",
+        "git_hash",
+    ]
+    _OPTIONAL_JSON_ATTRS = [
+        ("device_type", DeviceType),
+        "commission_count",
+        "sync_type",
+    ]
 
 
 class PowerwallsStatusResponse(Response):
@@ -257,7 +276,7 @@ class ListPowerwallsResponse(Response):
 
         _OPTIONAL_JSON_ATTRS = ["Type", "bc_type"]
 
-    _JSON_ATTRS = ["powerwalls", "has_sync", "sync", "states"]
+    _JSON_ATTRS = ["powerwalls", "has_sync", ("sync", SyncType), "states"]
 
     def __init__(self, json_response, no_check=False):
         super().__init__(json_response, no_check)
@@ -282,3 +301,19 @@ class LoginResponse(Response):
         "provider",
         "loginTime",
     ]
+
+
+class UpdateStatusResponse(Response):
+    _JSON_ATTRS = [
+        ("state", UpdateState),
+        "info",
+        "current_time",
+        "last_status_time",
+        "version",
+        "offline_updating",
+        "offline_update_error",
+        "estimated_bytes_per_second",
+    ]
+
+    def __init__(self, json_response, no_check=False):
+        super().__init__(json_response, no_check=no_check)

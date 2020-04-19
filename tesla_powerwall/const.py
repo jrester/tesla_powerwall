@@ -1,13 +1,16 @@
 from enum import Enum
+
 from packaging import version
 
 SUPPORTED_POWERWALL_VERSIONS = ["1.45.0", "1.45.1", "1.45.2", "1.46.0"]
 
 DEFAULT_KW_ROUND_PERSICION = 1
 
+
 class Version(Enum):
     v1_45_2 = version.parse("1.45.2")
     v1_46_0 = version.parse("1.46.0")
+
 
 class User(Enum):
     INSTALLER = "installer"
@@ -28,7 +31,7 @@ class GridStatus(Enum):
     CONNECTED = "SystemGridConnected"
     ISLANEDED_READY = "SystemIslandedReady"
     ISLANEDED = "SystemIslandedActive"
-    TRANSITION_TO_GRID = "SystemTransitionToGrid"   # Used in version 1.46.0
+    TRANSITION_TO_GRID = "SystemTransitionToGrid"  # Used in version 1.46.0
 
 
 class GridState(Enum):
@@ -82,3 +85,24 @@ class DeviceType(Enum):
     GW1 = "hec"
     GW2 = "teg"
     SMC = "smc"
+
+
+class SyncType(Enum):
+    V1 = "v1"
+    V2 = "v2"
+    V2_1 = "v2.1"
+
+
+class UpdateState(Enum):
+    CHECKING = "/clear_update_status"
+    SUCCEEDED = "/update_succeeded"
+    FAILED = "/update_failed"
+    STAGED = "/update_staged"
+    DOWNLOAD = "/download"
+    DOWNLOADED = "/update_downloaded"
+    UNKNOWN = "/update_unknown"
+
+class UpdateStatus(Enum):
+    IGNORING = "ignoring"
+    ERROR = "error"
+    NONACTIONABLE = "nonactionable"
