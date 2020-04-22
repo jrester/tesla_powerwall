@@ -278,7 +278,7 @@ class ListPowerwallsResponse(Response):
 
         _OPTIONAL_JSON_ATTRS = ["Type", "bc_type"]
 
-    _JSON_ATTRS = ["powerwalls", "has_sync", ("sync", SyncType), "states"]
+    _JSON_ATTRS = ["powerwalls", "has_sync", "sync", "states"]
 
     def __init__(self, json_response, no_check=False):
         super().__init__(json_response, no_check)
