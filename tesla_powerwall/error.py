@@ -3,12 +3,12 @@ class PowerwallError(Exception):
         super().__init__(msg)
 
 
-class ApiError(PowerwallError):
+class APIError(PowerwallError):
     def __init__(self, error):
         super().__init__(f"Powerwall api error: {error}")
 
 
-class APIChangedError(ApiError):
+class APIChangedError(APIError):
     def __init__(self, response_class, json_response, added_attrs=[], removed_attrs=[]):
         self.json_response = json_response
         self.response_class = response_class
@@ -20,7 +20,7 @@ class APIChangedError(ApiError):
         super().__init__(msg)
 
     def _construct_msg(self):
-        msg = f"It seems like the Powerwall API changed for {self.response_class}"
+        msg = f"It seems like the Powerwall API changed for '{self.response_class}''"
         if len(self.added_attrs) > 0:
             if len(self.removed_attrs) > 0:
                 msg = f"{msg}: Attributes added: {self.added_attrs}, removed attributes {self.removed_attrs}"

@@ -1,9 +1,10 @@
 from json.decoder import JSONDecodeError
 from typing import List, Union
 from urllib.parse import urljoin, urlparse, urlsplit, urlunparse, urlunsplit
+from packaging import version
+from contextlib import contextmanager
 
 import requests
-from packaging import version
 from requests import Session
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
@@ -12,7 +13,7 @@ from .const import (DEFAULT_KW_ROUND_PERSICION, SUPPORTED_OPERATION_MODES,
                     SUPPORTED_POWERWALL_VERSIONS, DeviceType, GridState,
                     GridStatus, LineStatus, MeterType, OperationMode, User,
                     Version)
-from .error import AccessDeniedError, ApiError, PowerwallUnreachableError
+from .error import AccessDeniedError, APIError, PowerwallUnreachableError, APIChangedError, PowerwallError
 from .helpers import convert_to_kw
 from .responses import (CustomerRegistrationResponse, ListPowerwallsResponse,
                         LoginResponse, MeterDetailsResponse,
@@ -60,14 +61,11 @@ class Powerwall(object):
 
         self._token = None
 
-        if pin_version is not None:
-            self._pin_version = version.parse(pin_version)
-        else:
-            self._pin_version = None
+        self.pin_version(pin_version)
 
     def _process_response(self, response: str) -> dict:
         if response.status_code == 404:
-            raise ApiError(f"The url {response.request.path_url} returned error 404")
+            raise APIError(f"The url {response.request.path_url} returned error 404")
 
         if response.status_code == 401 or response.status_code == 403:
             response_json = None
@@ -86,13 +84,13 @@ class Powerwall(object):
         try:
             response_json = response.json()
         except JSONDecodeError:
-            raise ApiError(f"Error while decoding json of response: {response.text}")
+            raise APIError(f"Error while decoding json of response: {response.text}")
 
         if response_json is None:
             return {}
 
         if "error" in response_json:
-            raise ApiError(response_json["error"])
+            raise APIError(response_json["error"])
 
         return response_json
 
@@ -100,7 +98,7 @@ class Powerwall(object):
         self, path: str, needs_authentication: bool = False, headers: dict = {}
     ) -> dict:
         if needs_authentication and not self.is_authenticated():
-            raise ApiError(f"Authentication required to access {path}")
+            raise APIError(f"Authentication required to access {path}")
 
         try:
             response = self._http_session.get(
@@ -108,7 +106,7 @@ class Powerwall(object):
                 timeout=self._timeout,
                 headers=headers,
             )
-        except requests.exceptions.ConnectionError as e:
+        except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout) as e:
             raise PowerwallUnreachableError(e)
 
         return self._process_response(response)
@@ -121,7 +119,7 @@ class Powerwall(object):
         headers: dict = {},
     ) -> dict:
         if needs_authentication and not self.is_authenticated():
-            raise ApiError(f"Authentication required to access {path}")
+            raise APIError(f"Authentication required to access {path}")
 
         try:
             response = self._http_session.post(
@@ -130,7 +128,7 @@ class Powerwall(object):
                 timeout=self._timeout,
                 headers=headers,
             )
-        except requests.exceptions.ConnectionError as e:
+        except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout) as e:
             raise PowerwallUnreachableError(e)
 
         return self._process_response(response)
@@ -171,7 +169,7 @@ class Powerwall(object):
 
     def logout(self):
         if not self.is_authenticated():
-            raise ApiError("Must be logged in to log out")
+            raise APIError("Must be logged in to log out")
         # The api unsets the auth cookie and the token is invalidated
         self._get("logout", True)
 
@@ -348,22 +346,39 @@ class Powerwall(object):
     def set_dont_validate_response(self, value):
         self._dont_validate_response = value
 
-    def detect_and_pin_version(self):
+    @contextmanager
+    def no_verify(self):
         self.set_dont_validate_response(True)
-        status = self.get_status()
-        if status.has_key("version"):
-            version = status.get("version")
-        else:
-            raise ApiError(
-                "Could not detect version because the status response does not return the version"
-            )
-        self.set_dont_validate_response(False)
+        try:
+            yield
+        finally:
+            self.set_dont_validate_response(False)
+
+
+    def detect_and_pin_version(self) -> str:
+        """Does an unferified request to get powerwall version and pins it"""
+        with self.no_verify():
+            status = self.get_status()
+            if status.has_key("version"):
+                version = status.get("version")
+            else:
+                raise APIError(
+                    "Could not detect version because the status response does not return the version"
+                )
 
         self.pin_version(version)
 
     def pin_version(self, vers: Union[str, version.Version, Version]):
-        if isinstance(vers, str):
-            vers = version.parse(vers)
-        elif isinstance(vers, Version):
-            self._pin_version = vers.value
-        self._pin_version = vers
+        if vers is None:
+            self._pin_version = None
+        else:
+            if isinstance(vers, str):
+                self._pin_version = version.parse(vers)
+            elif isinstance(vers, Version):
+                self._pin_version = vers.value
+            else:
+                self._pin_version = vers
+
+    def get_pinned_version(self) -> version.Version:
+        return self._pin_version
+
