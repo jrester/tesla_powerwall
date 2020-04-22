@@ -8,7 +8,7 @@ from responses import GET, POST, Response, add
 
 from tesla_powerwall import (
     AccessDeniedError,
-    ApiError,
+    APIError,
     MetersAggregateResponse,
     MetersResponse,
     MeterType,
@@ -161,7 +161,7 @@ class TestPowerWall(unittest.TestCase):
 
         res.status_code = 200
         res._content = b'{"error": "test_error"}'
-        with self.assertRaises(ApiError):
+        with self.assertRaises(APIError):
             self.powerwall._process_response(res)
 
         res._content = b'{"response": "ok"}'
