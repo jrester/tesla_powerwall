@@ -45,7 +45,7 @@ class Powerwall(object):
         elif endpoint.startswith("http"):
             self._endpoint = endpoint.replace("http", "https")
         else:
-            self._endpoint = f"https://{endpoint}"
+            self._endpoint = "https://{}".format(endpoint)
 
         if not self._endpoint.endswith("api") and not self._endpoint.endswith("/"):
             self._endpoint += "/api/"
@@ -65,7 +65,7 @@ class Powerwall(object):
 
     def _process_response(self, response: str) -> dict:
         if response.status_code == 404:
-            raise APIError(f"The url {response.request.path_url} returned error 404")
+            raise APIError("The url {} returned error 404".format(response.request.path_url))
 
         if response.status_code == 401 or response.status_code == 403:
             response_json = None
@@ -84,7 +84,7 @@ class Powerwall(object):
         try:
             response_json = response.json()
         except JSONDecodeError:
-            raise APIError(f"Error while decoding json of response: {response.text}")
+            raise APIError("Error while decoding json of response: {}".format(response.text))
 
         if response_json is None:
             return {}
@@ -98,7 +98,7 @@ class Powerwall(object):
         self, path: str, needs_authentication: bool = False, headers: dict = {}
     ) -> dict:
         if needs_authentication and not self.is_authenticated():
-            raise APIError(f"Authentication required to access {path}")
+            raise APIError("Authentication required to access {}".format(path))
 
         try:
             response = self._http_session.get(
@@ -119,7 +119,7 @@ class Powerwall(object):
         headers: dict = {},
     ) -> dict:
         if needs_authentication and not self.is_authenticated():
-            raise APIError(f"Authentication required to access {path}")
+            raise APIError("Authentication required to access {}".format(path))
 
         try:
             response = self._http_session.post(
@@ -203,7 +203,7 @@ class Powerwall(object):
     ) -> Union[List[MeterDetailsResponse], None]:
         """Returns details about a specific meter. 
         If their are no details available for a meter None is returned."""
-        resp = self._get(f"meters/{meter.value}")
+        resp = self._get("meters/{}".format(meter.value))
         if isinstance(resp, list):
             return [
                 MeterDetailsResponse(item, no_check=self._dont_validate_response)

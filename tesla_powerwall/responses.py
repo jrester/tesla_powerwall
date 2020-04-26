@@ -220,7 +220,7 @@ class PowerwallStatusResponse(Response):
     def _parse_uptime_seconds(up_time_seconds: str):
         match = PowerwallStatusResponse._UP_TIME_SECONDS_REGEX.match(up_time_seconds)
         if not match:
-            raise ValueError(f"Unable to parse up time seconds {up_time_seconds}")
+            raise ValueError("Unable to parse up time seconds {}".format(up_time_seconds))
 
         time_params = {}
         for (name, param) in match.groupdict().items():

@@ -5,7 +5,7 @@ class PowerwallError(Exception):
 
 class APIError(PowerwallError):
     def __init__(self, error):
-        super().__init__(f"Powerwall api error: {error}")
+        super().__init__("Powerwall api error: {}".format(error))
 
 
 class APIChangedError(APIError):
@@ -20,23 +20,23 @@ class APIChangedError(APIError):
         super().__init__(msg)
 
     def _construct_msg(self):
-        msg = f"It seems like the Powerwall API changed for '{self.response_class}''"
+        msg = "It seems like the Powerwall API changed for '{}''".format(self.response_class)
         if len(self.added_attrs) > 0:
             if len(self.removed_attrs) > 0:
-                msg = f"{msg}: Attributes added: {self.added_attrs}, removed attributes {self.removed_attrs}"
+                msg = "{}: Attributes added: {}, removed attributes {}".format(msg, self.added_attrs, self.removed_attrs)
             else:
-                msg = f"{msg}: Some attributes where added to the response: {self.added_attrs}"
+                msg = "{}: Some attributes where added to the response: {}".format(msg, self.added_attrs)
         elif len(self.removed_attrs) > 0:
-            msg = f"{msg}: Some attributes where removed from the response: {self.removed_attrs}"
+            msg = "{}: Some attributes where removed from the response: {}".format(msg, self.removed_attrs)
         return msg
 
 
 class PowerwallUnreachableError(PowerwallError):
     def __init__(self, reason=None):
-        msg = f"Powerwall is unreachable"
+        msg = "Powerwall is unreachable"
         self.reason = reason
         if reason is not None:
-            msg = f"{msg}: {reason}"
+            msg = "{}: {}".format(msg, reason)
         super().__init__(msg)
 
 
@@ -44,7 +44,7 @@ class AccessDeniedError(PowerwallError):
     def __init__(self, resource, error=None):
         self.resource = resource
         self.error = error
-        msg = f"Access denied for resource {resource}"
+        msg = "Access denied for resource {}".format(resource)
         if error is not None:
-            msg = f"{msg}: {error}"
+            msg = "{}: {}".format(msg, error)
         super().__init__(msg)
