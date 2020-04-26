@@ -22,7 +22,7 @@ from .responses import (CustomerRegistrationResponse, ListPowerwallsResponse,
                         SiteInfoResponse, SitemasterResponse, SolarsResponse,
                         UpdateStatusResponse)
 
-VERSION = "0.2.8"
+VERSION = "0.2.9"
 
 
 class Powerwall(object):
@@ -45,6 +45,7 @@ class Powerwall(object):
         elif endpoint.startswith("http"):
             self._endpoint = endpoint.replace("http", "https")
         else:
+            # Use str.format instead of f'strings to be backwards compatible
             self._endpoint = "https://{}".format(endpoint)
 
         if not self._endpoint.endswith("api") and not self._endpoint.endswith("/"):
