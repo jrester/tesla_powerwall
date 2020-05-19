@@ -25,9 +25,9 @@ class APIChangedError(APIError):
             if len(self.removed_attrs) > 0:
                 msg = "{}: Attributes added: {}, removed attributes {}".format(msg, self.added_attrs, self.removed_attrs)
             else:
-                msg = "{}: Some attributes where added to the response: {}".format(msg, self.added_attrs)
+                msg = "{}: Some attributes have been added to the response: {}".format(msg, self.added_attrs)
         elif len(self.removed_attrs) > 0:
-            msg = "{}: Some attributes where removed from the response: {}".format(msg, self.removed_attrs)
+            msg = "{}: Some attributes have been removed from the response: {}".format(msg, self.removed_attrs)
         return msg
 
 

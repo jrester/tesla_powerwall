@@ -193,10 +193,9 @@ class SiteInfoResponse(Response):
         "grid_phase_setting",
         "country",
         "state",
-        "region",
     ]
 
-    _OPTIONAL_JSON_ATTRS = ["distributor", "utility", "retailer"]
+    _OPTIONAL_JSON_ATTRS = ["distributor", "utility", "retailer", "region"]
 
 
 class CustomerRegistrationResponse(Response):

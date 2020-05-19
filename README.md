@@ -28,7 +28,7 @@ power_wall = Powerwall("<ip of your Powerwall>")
 ```
 
 > Note: By default the API client does not verify the SSL Certificate of the Powerwall. If you want to verify the SSL Certificate you can set `verify_ssl` to `True`.
-> Also the API client suppresses warnings about an inseucre request (because we aren't verifing the certificate). If you want to enable those warnings you can set `disable_insecure_warning` to `False`
+> Also the API client suppresses warnings about an inseucre request (because we aren't verifing the certificate). If you want to enable those warnings you can set `disable_insecure_warning` to `False`.
 
 It can also happen that the API is sending different responses than what was expected. Those responses would normally produce an `APIChangedError` indicating what exactly changed. If this happens please open an Issue to report this error. If you need to cotinue to use the API you can disable the response validation:
 
@@ -67,7 +67,7 @@ power_wall.logout()
 
 ### API versioning
 
-The powerwall API is inconsitent across different versions. This is way some versions may return different responses. If no version is specified the **newest known** version is assumed.
+The powerwall API is inconsitent across different versions. This is why some versions may return different responses. If no version is specified the **newest known** version is assumed.
 
 If you are sure which version your powerwall has you can pin the Powerwall object to a version:
 
