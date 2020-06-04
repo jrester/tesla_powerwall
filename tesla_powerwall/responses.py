@@ -1,8 +1,13 @@
 import re
 from datetime import datetime, timedelta
 
-from .const import (DEFAULT_KW_ROUND_PERSICION, DeviceType, MeterType,
-                    SyncType, UpdateState)
+from .const import (
+    DEFAULT_KW_ROUND_PERSICION,
+    DeviceType,
+    MeterType,
+    SyncType,
+    UpdateState,
+)
 from .error import APIChangedError
 from .helpers import convert_to_kw
 
@@ -188,14 +193,19 @@ class SiteInfoResponse(Response):
         "site_name",
         "timezone",
         "grid_code",
+    ]
+
+    _OPTIONAL_JSON_ATTRS = [
+        "distributor",
+        "utility",
+        "retailer",
+        "region",
         "grid_voltage_setting",
         "grid_freq_setting",
         "grid_phase_setting",
         "country",
         "state",
     ]
-
-    _OPTIONAL_JSON_ATTRS = ["distributor", "utility", "retailer", "region"]
 
 
 class CustomerRegistrationResponse(Response):
@@ -219,7 +229,9 @@ class PowerwallStatusResponse(Response):
     def _parse_uptime_seconds(up_time_seconds: str):
         match = PowerwallStatusResponse._UP_TIME_SECONDS_REGEX.match(up_time_seconds)
         if not match:
-            raise ValueError("Unable to parse up time seconds {}".format(up_time_seconds))
+            raise ValueError(
+                "Unable to parse up time seconds {}".format(up_time_seconds)
+            )
 
         time_params = {}
         for (name, param) in match.groupdict().items():
