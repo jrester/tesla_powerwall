@@ -174,7 +174,11 @@ class MeterDetailsResponse(Response):
 
 
 class SitemasterResponse(Response):
-    _JSON_ATTRS = ["status", "running", "connected_to_tesla"]
+
+    def __init__(self, status, running, connected_to_tesla):
+        self.status = status
+        self.running = running
+        self.connected_to_tesla = connected_to_tesla
 
 
 class SiteInfoResponse(Response):

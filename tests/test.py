@@ -14,6 +14,7 @@ from tesla_powerwall import (
     MeterType,
     Powerwall,
     PowerwallUnreachableError,
+    API,
 )
 
 ENDPOINT = "https://1.1.1.1/api/"
@@ -126,16 +127,16 @@ class TestPowerWall(unittest.TestCase):
 
     def test_endpoint_setup(self):
         test_endpoint_1 = "1.1.1.1"
-        pw = Powerwall(test_endpoint_1)
-        self.assertEqual(pw._endpoint, f"https://{test_endpoint_1}/api/")
+        api = API(test_endpoint_1)
+        self.assertEqual(api._endpoint, f"https://{test_endpoint_1}/api/")
 
         test_endpoint_2 = "http://1.1.1.1"
         pw = Powerwall(test_endpoint_2)
-        self.assertEqual(pw._endpoint, f"https://1.1.1.1/api/")
+        self.assertEqual(api._endpoint, f"https://1.1.1.1/api/")
 
         test_endpoint_3 = "https://1.1.1.1/api/"
         pw = Powerwall(test_endpoint_3)
-        self.assertEqual(pw._endpoint, test_endpoint_3)
+        self.assertEqual(api._endpoint, test_endpoint_3)
 
     @responses.activate
     def test_get_charge(self):
@@ -153,25 +154,25 @@ class TestPowerWall(unittest.TestCase):
         res.request = requests.Request(method="GET", url=f"{ENDPOINT}test").prepare()
         res.status_code = 401
         with self.assertRaises(AccessDeniedError):
-            self.powerwall._process_response(res)
+            self.powerwall._api._process_response(res)
 
         res.status_code = 502
         with self.assertRaises(PowerwallUnreachableError):
-            self.powerwall._process_response(res)
+            self.powerwall._api._process_response(res)
 
         res.status_code = 200
         res._content = b'{"error": "test_error"}'
         with self.assertRaises(APIError):
-            self.powerwall._process_response(res)
+            self.powerwall._api._process_response(res)
 
         res._content = b'{"response": "ok"}'
-        self.assertEqual(self.powerwall._process_response(res), {"response": "ok"})
+        self.assertEqual(self.powerwall._api._process_response(res), {"response": "ok"})
 
     @responses.activate
     def test_get(self):
         add(Response(GET, url=f"{ENDPOINT}test_get", json={"test_get": True}))
 
-        self.assertEqual(self.powerwall._get("test_get"), {"test_get": True})
+        self.assertEqual(self.powerwall._api.get("test_get"), {"test_get": True})
 
     @responses.activate
     def test_post(self):
@@ -187,7 +188,7 @@ class TestPowerWall(unittest.TestCase):
             content_type="application/json",
         )
 
-        resp = self.powerwall._post("test_post", {"test": True})
+        resp = self.powerwall._api.post("test_post", {"test": True})
 
         self.assertIsInstance(resp, dict)
         self.assertEqual(resp, {"test_post": True})
