@@ -3,6 +3,8 @@ import requests
 from urllib.parse import urljoin, urlparse, urlsplit, urlunparse, urlunsplit
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
+from packaging.version import Version
+from typing import List
 
 from .error import (
     AccessDeniedError,
@@ -17,7 +19,8 @@ class API(object):
         http_session: requests.Session = None,
         verify_ssl: bool = False,
         disable_insecure_warning: bool = True,
-        dont_validate_response: bool = False):
+        dont_validate_response: bool = False
+    ) -> None:
 
         if disable_insecure_warning:
             disable_warnings(InsecureRequestWarning)
@@ -27,7 +30,6 @@ class API(object):
         self._http_session = http_session if http_session else requests.Session()
         self._http_session.verify = verify_ssl
         self._dont_validate_response = dont_validate_response
-
 
     def _parse_endpoint(self, endpoint: str) -> str:
         if endpoint.startswith("https"):
@@ -119,3 +121,85 @@ class API(object):
 
     def is_authenticated(self) -> bool:
         return "AuthCookie" in self._http_session.cookies.keys()
+
+    def login(self, 
+        username: str, 
+        email: str, 
+        password: str, 
+        force_sm_off: bool = False
+    ) -> dict:
+
+        # force_sm_off is referred to as 'shouldForceLogin' in the web source code
+        return self.post("login/Basic", {
+            "username": username,
+            "email": email,
+            "password": password,
+            "force_sm_off": force_sm_off,
+        })
+
+    def logout(self):
+        if not self.is_authenticated():
+            raise APIError("Must be logged in to log out")
+        # The api unsets the auth cookie and the token is invalidated
+        self.get("logout", True)
+
+    def get_system_status_soe(self) -> dict:
+        return self.get("system_status/soe")
+
+    def get_meters_aggregates(self) -> dict:
+        return self.get("meters/aggregates")
+
+    def get_sitemater_run(self):
+        return self.get("sitemaster/run", True)
+
+    def get_sitemaster_stop(self):
+        return self.get("sitemaster/stop", True)
+
+    def get_sitemaster(self) -> dict:
+        return self.get("sitemaster")
+
+    def get_status(self) -> dict:
+        return self.get("status")
+
+    # Endpoint not available in 1.46 and up
+    def get_device_type(self):
+        return self.get("device_type")
+
+    def get_customer_registration(self):
+        return self.get("customer/registration")
+
+    def get_powerwalls(self):
+        return self.get("powerwalls")
+
+    def get_operation(self):
+        return self.get("operation")
+
+    def get_networks(self) -> list:
+        return self.get("networks")
+
+    def get_phase_usage(self):
+        return self.get("powerwalls/phase_usages", needs_authentication=True)
+
+    def post_sitemaster_run_for_commissioning(self):
+        return self.post("sitemaster/run_for_commissioning", payload={}, needs_authentication=True)
+
+    def get_solars(self):
+        return self.get("solars", needs_authentication=True)
+
+    def get_config(self):
+        return self.get("config", needs_authentication=True)
+
+    def get_logs(self):
+        return self.get("getlogs", needs_authentication=True)
+
+    def get_meters(self) -> list:
+        return self.get("meters", needs_authentication=True)
+
+    def get_installer(self) -> dict:
+        return self.get("installer", needs_authentication=True)
+
+    def get_solar_brands(self) -> List[str]:
+        return self.get("solars/brands", needs_authentication=True)
+
+    def get_system_update_status(self):
+        return self.get("system/update/status", needs_authentication=True)

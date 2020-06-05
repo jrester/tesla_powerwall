@@ -49,7 +49,6 @@ class Powerwall(object):
             dont_validate_response
         )
 
-        self.pin_version(pin_version)
 
     def login_as(
         self,
@@ -61,17 +60,12 @@ class Powerwall(object):
         if isinstance(user, User):
             user = user.value
 
-        # force_sm_off is referred to as 'shouldForceLogin' in the web source code
-        response = self._api._post(
-            "login/Basic",
-            {
-                "username": user,
-                "email": email,
-                "password": password,
-                "force_sm_off": force_sm_off,
-            },
+        self._api.login(
+            user,
+            email,
+            password,
+            force_sm_off
         )
-
         # The api returns an auth cookie which is automatically set
         # so there is no need to further process the response
 
@@ -83,20 +77,17 @@ class Powerwall(object):
         return self.login_as(User.CUSTOMER, email, password, force_sm_off)
 
     def logout(self):
-        if not self.is_authenticated():
-            raise APIError("Must be logged in to log out")
-        # The api unsets the auth cookie and the token is invalidated
-        self._api.get("logout", True)
+        self._api.logout()
 
     def run(self):
-        self._api.get("sitemaster/run", True)
+        self._api.get_sitemater_run()
 
     def stop(self):
-        self._api.get("sitemaster/stop", True)
+        self._api.get_sitemaster_stop()
 
     def get_charge(self, rounded: bool = True) -> Union[float, int]:
         """Returns current charge of powerwall"""
-        charge = self._api.get("system_status/soe")["percentage"]
+        charge = self._api.get_system_status_soe()["percentage"]
         if rounded:
             return round(charge)
         else:
@@ -200,15 +191,6 @@ class Powerwall(object):
     #     self.set_mode_and_backup_preserve_percentage(
     #         mode, self.backup_preserve_percentage)
 
-    def get_networks(self) -> list:
-        return self._api.get("networks")
-
-    def get_phase_usage(self):
-        return self._api.get("powerwalls/phase_usages", needs_authentication=True)
-
-    def set_run_for_commissioning(self):
-        self._api.post("sitemaster/run_for_commissioning", True)
-
     def get_solars(self) -> List[SolarsResponse]:
         solars = self._api.get("solars", needs_authentication=True)
         return [
@@ -217,28 +199,17 @@ class Powerwall(object):
         ]
 
     def get_vin(self) -> str:
-        return self._api.get("config", needs_authentication=True)["vin"]
-
-    def get_logs(self) -> str:
-        return self._api.get("getlogs", needs_authentication=True)
-
-    def get_meters_info(self) -> list:
-        return self._api.get("meters", needs_authentication=True)
-
-    def get_installer_info(self) -> dict:
-        return self._api.get("installer", needs_authentication=True)
-
-    def get_solar_brands(self) -> List[str]:
-        return self._api.get("solars/brands", needs_authentication=True)
+        return self._api.get_config()["vin"]
 
     def get_version(self) -> str:
-        return self.get_status().version
+        status = self._api.get_status()
+        return assert_attribute(status, 'version')
 
     def get_git_hash(self) -> str:
         return self.get_status().git_hash
 
     def get_update_status(self) -> UpdateStatusResponse:
-        return UpdateStatusResponse(self._api.get("system/update/status", needs_authentication=True))
+        return UpdateStatusResponse()
 
     def is_sending_to(self, meter: MeterType, rounded=True) -> bool:
         """Wrapper method for is_sending_to"""
@@ -297,14 +268,25 @@ class Powerwall(object):
     def get_pinned_version(self) -> version.Version:
         return self._pin_version
 
-# class Meter(object):
-#     def __init__(self):
-        
+class Meter(object):
+    def __init__(self, meter: MeterType, api: API):
+        self.meter = meter
+        self._api = api
 
-#     def get_power(self):
+    def _get_instant_power(self):
+        self._instant_power = self._api.get_instant_power()
 
-#     def is_active(self):
+    def get_power(self, precision=DEFAULT_KW_ROUND_PERSICION):
+        return convert_to_kw(self._instant_power, precision)
 
-#     def is_drawing_from(self):
+    def is_active(self, precision=DEFAULT_KW_ROUND_PERSICION) -> bool:
+        self.get_power(precision) != 0
 
-#     def is_sending_to(self):
+    def is_drawing_from(self, precision=DEFAULT_KW_ROUND_PERSICION) -> bool:
+        if self.meter == MeterType.LOAD:
+            # Cannot draw from load
+            return False
+        else:
+            return self.get_power(precision) > 0
+
+    def is_sending_to(self):

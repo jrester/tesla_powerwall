@@ -7,6 +7,11 @@ from .error import APIChangedError
 from .helpers import convert_to_kw
 
 
+def assert_attribute(response: dict, attribute: str):
+    value = response.get(attribute)
+    if value is None:
+        raise A
+
 class Response(object):
     """Basic Response object that can be constructed from a json response"""
 
