@@ -374,7 +374,7 @@ class Powerwall(object):
             self._pin_version = None
         else:
             if isinstance(vers, str):
-                self._pin_version = version.parse(vers)
+                self._pin_version = version.parse(vers.split('-')[0])
             elif isinstance(vers, Version):
                 self._pin_version = vers.value
             else:
