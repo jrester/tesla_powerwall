@@ -222,7 +222,7 @@ class CustomerRegistrationResponse(Response):
 class PowerwallStatusResponse(Response):
     _START_TIME_FORMAT = "%Y-%m-%d %H:%M:%S %z"
     _UP_TIME_SECONDS_REGEX = re.compile(
-        r"((?P<hours>\d+?)h)((?P<minutes>\d+?)m)((?P<seconds>\d+?).)((?P<microseconds>\d+?)s)"
+        r"((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?).)((?P<microseconds>\d+?)s)"
     )
 
     @staticmethod
