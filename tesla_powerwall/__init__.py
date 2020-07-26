@@ -22,7 +22,7 @@ from .responses import (CustomerRegistrationResponse, ListPowerwallsResponse,
                         SiteInfoResponse, SitemasterResponse, SolarsResponse,
                         UpdateStatusResponse)
 
-VERSION = "0.2.11"
+VERSION = "0.2.12"
 
 
 class Powerwall(object):
