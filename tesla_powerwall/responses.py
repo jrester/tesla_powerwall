@@ -109,19 +109,22 @@ class MetersResponse(Response):
     """
 
     _JSON_ATTRS = [
-        "last_communication_time",
         "instant_power",  # The power that is supplied/drawn from the meter
-        "instant_reactive_power",
-        "instant_apparent_power",
         "frequency",
         "energy_exported",
         "energy_imported",
-        "instant_average_voltage",
+        "instant_average_voltage"
+    ]
+
+    _OPTIONAL_JSON_ATTRS = [
+        "last_communication_time",
+        "instant_reactive_power",
+        "instant_apparent_power",
+        "timeout",
         "instant_total_current",
         "i_a_current",
         "i_b_current",
-        "i_c_current",
-        "timeout",
+        "i_c_current"
     ]
 
     def __init__(self, json_response: dict, meter: MeterType = None, no_check=False):
