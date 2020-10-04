@@ -8,28 +8,43 @@ class APIError(PowerwallError):
         super().__init__("Powerwall api error: {}".format(error))
 
 
+# class APIChangedError(APIError):
+#     def __init__(self, response_class, json_response, added_attrs=[], removed_attrs=[]):
+#         self.json_response = json_response
+#         self.response_class = response_class
+#         self.added_attrs = added_attrs
+#         self.removed_attrs = removed_attrs
+
+#         msg = self._construct_msg()
+
+#         super().__init__(msg)
+
+#     def _construct_msg(self):
+#         msg = "It seems like the Powerwall API changed for '{}''".format(self.response_class)
+#         if len(self.added_attrs) > 0:
+#             if len(self.removed_attrs) > 0:
+#                 msg = "{}: Attributes added: {}, removed attributes {}".format(msg, self.added_attrs, self.removed_attrs)
+#             else:
+#                 msg = "{}: Some attributes have been added to the response: {}".format(msg, self.added_attrs)
+#         elif len(self.removed_attrs) > 0:
+#             msg = "{}: Some attributes have been removed from the response: {}".format(msg, self.removed_attrs)
+#         return msg
+
 class APIChangedError(APIError):
-    def __init__(self, response_class, json_response, added_attrs=[], removed_attrs=[]):
-        self.json_response = json_response
-        self.response_class = response_class
-        self.added_attrs = added_attrs
-        self.removed_attrs = removed_attrs
+    def __init__(self, attribute: str, response: dict, endpoint: str):
+        self.attribute = attribute
+        self.endpoint = endpoint
+        self.response = response
+        if len(endpoint) > 0:
+            super().__init__("It seems like the Powerwall API has changed for '{}': The attribute '{}' has been removed from the response".format(endpoint, attribute))
+        else:
+            super().__init__("It seems like the Powerwall API has changed: The attribute '{}' is no longer included in the response".format(attribute))
 
-        msg = self._construct_msg()
-
-        super().__init__(msg)
-
-    def _construct_msg(self):
-        msg = "It seems like the Powerwall API changed for '{}''".format(self.response_class)
-        if len(self.added_attrs) > 0:
-            if len(self.removed_attrs) > 0:
-                msg = "{}: Attributes added: {}, removed attributes {}".format(msg, self.added_attrs, self.removed_attrs)
-            else:
-                msg = "{}: Some attributes have been added to the response: {}".format(msg, self.added_attrs)
-        elif len(self.removed_attrs) > 0:
-            msg = "{}: Some attributes have been removed from the response: {}".format(msg, self.removed_attrs)
-        return msg
-
+class MissingAttributeError(APIError):
+    def __init__(self, response: dict, attribute: str, endpoint: str):
+        self.response = response
+        self.attribute = attribute
+        self.endpoint = endpoint
 
 class PowerwallUnreachableError(PowerwallError):
     def __init__(self, reason=None):

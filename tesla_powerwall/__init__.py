@@ -1,5 +1,5 @@
 from json.decoder import JSONDecodeError
-from typing import List, Union
+from typing import List, Union, Dict
 from urllib.parse import urljoin, urlparse, urlsplit, urlunparse, urlunsplit
 from packaging import version
 from contextlib import contextmanager
@@ -20,7 +20,7 @@ from .responses import (CustomerRegistrationResponse, ListPowerwallsResponse,
                         MetersAggregateResponse, MetersResponse,
                         PowerwallsStatusResponse, PowerwallStatusResponse,
                         SiteInfoResponse, SitemasterResponse, SolarsResponse,
-                        UpdateStatusResponse)
+                        UpdateStatusResponse, assert_attribute)
 from .api import API
 
 
@@ -60,7 +60,7 @@ class Powerwall(object):
         if isinstance(user, User):
             user = user.value
 
-        self._api.login(
+        response = self._api.login(
             user,
             email,
             password,
@@ -69,7 +69,7 @@ class Powerwall(object):
         # The api returns an auth cookie which is automatically set
         # so there is no need to further process the response
 
-        return LoginResponse(response, no_check=self._api._dont_validate_response)
+        return LoginResponse(response)
 
     def login(
         self, email: str, password: str, force_sm_off: bool = False
@@ -94,15 +94,20 @@ class Powerwall(object):
             return charge
 
     def get_sitemaster(self) -> SitemasterResponse:
-        return SitemasterResponse(
-            self._api.get("sitemaster"), no_check=self._api._dont_validate_response
-        )
+        return SitemasterResponse(self._api.get_sitemaster())
 
-    def get_meters(self) -> MetersAggregateResponse:
-        """Returns the different meters in a MetersAggregateResponse"""
-        return MetersAggregateResponse(
-            self._api.get("meters/aggregates"), no_check=self._api._dont_validate_response
-        )
+    def get_available_meter_types(self) -> List[MeterType]:
+        """Returns the different meters """
+        return [MeterType(meter) for meter in self._api.get_meters_aggregates().keys]
+
+    def get_meters(self) -> Dict[MeterType, Meter]:
+        aggregates = self._api.get_meters_aggregates()
+        meters = {}
+        for meter in aggregates.keys():
+            if meter in MeterType:
+                meters[meter] = Meter(meter, self._api)
+            else:
+                raise ValueError("Unknown meter type")
 
     def get_meter_details(
         self, meter: MeterType
@@ -123,27 +128,31 @@ class Powerwall(object):
 
     def get_grid_status(self) -> GridStatus:
         """Returns the current grid status."""
-        return GridStatus(self._api.get("system_status/grid_status")["grid_status"])
+        status = assert_attribute(
+            self._api.get_system_status_grid_status(),
+            'grid_status'
+        )
+        if status in GridStatus:
+            return GridStatus(status)
+        else:
+            raise ValueError("Unknown grid status")
 
     def get_grid_services_active(self) -> bool:
-        return self._api.get("system_status/grid_status")["grid_services_active"]
-
-    def get_grid_codes(self) -> list:
-        """Returns all available grid codes"""
-        return self._api.get("site_info/grid_codes", needs_authentication=True)
+        return assert_attribute(
+            self._api.get_system_status_grid_status, 
+            'grid_services_active'
+        )
 
     def get_site_info(self) -> SiteInfoResponse:
         """Returns information about the powerwall site"""
-        return SiteInfoResponse(
-            self._api.get("site_info"), no_check=self._api._dont_validate_response
-        )
+        return SiteInfoResponse(self._api.get_site_info())
 
     def set_site_name(self, site_name: str):
-        return self._api.post("site_info/site_name", {"site_name": site_name}, True)
+        return self._api.post_site_info_site_name({"site_name": site_name})
 
     def get_status(self) -> PowerwallStatusResponse:
-        return PowerwallStatusResponse(
-            self._api.get("status"), no_check=self._api._dont_validate_response
+        return PowerwallStatus(
+            self._api.get_status()
         )
 
     def get_powerwalls_status(self) -> PowerwallsStatusResponse:
@@ -156,6 +165,7 @@ class Powerwall(object):
         if self._pin_version is None or self._pin_version >= Version.v1_46_0.value:
             return self.get_status().device_type
         else:
+            assert_attribute(self.get_device_type(), 'device_type')
             return DeviceType(self._api.get("device_type")["device_type"])
 
     def get_customer_registration(self) -> CustomerRegistrationResponse:
@@ -178,8 +188,8 @@ class Powerwall(object):
     def get_operation_mode(self) -> OperationMode:
         return OperationMode(self._api.get("operation", True)["real_mode"])
 
-    def get_backup_preserve_percentage(self) -> float:
-        return self._api.get("operation", True)["backup_reserve_percentage"]
+    def get_backup_reserved_percentage(self) -> float:
+        return self._api.get("operation", True)["backup_reserved_percent"]
 
     # def set_mode_and_backup_preserve_percentage(self, mode, percentage):
     #     self._api.post("operation", {"mode": mode, "percentage": percentage})
@@ -199,11 +209,11 @@ class Powerwall(object):
         ]
 
     def get_vin(self) -> str:
-        return self._api.get_config()["vin"]
+        return assert_attribute(self._api.get_config(), 'vin', 'config')
 
     def get_version(self) -> str:
         status = self._api.get_status()
-        return assert_attribute(status, 'version')
+        return assert_attribute(self._api.get_status(), 'version')
 
     def get_git_hash(self) -> str:
         return self.get_status().git_hash
@@ -289,4 +299,9 @@ class Meter(object):
         else:
             return self.get_power(precision) > 0
 
-    def is_sending_to(self):
+    def is_sending_to(self, precision=DEFAULT_KW_ROUND_PERSICION):
+        if self.meter == MeterType.LOAD:
+            # For load the power is always positiv
+            return self.get_power(precision) > 0
+        else:
+            return self.get_power(precision) < 0

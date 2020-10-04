@@ -106,8 +106,3 @@ class UpdateStatus(Enum):
     IGNORING = "ignoring"
     ERROR = "error"
     NONACTIONABLE = "nonactionable"
-
-
-ROUTES = [
-    
-]

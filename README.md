@@ -85,6 +85,40 @@ Otherwise you can let the API try to detect the version and pin it. This method 
 power_wall.detect_and_pin_version()
 ```
 
+### General
+
+The API object directly maps the REAT endpoints with a python method in the form of `<verb>_<path>`. So if you need the raw json responses you can use the API object. It can be either created manually or from an existing `Powerwall`:
+
+```python
+from tesla_powerwall import API
+
+# Manually create API object
+api = API('https://<ip>/')
+# Perform get on 'system_status/soe'
+api.get_system_status_soe()
+
+
+# From existing powerwall
+powerwall._api.get_system_status_soe()
+```
+
+The `Powerwall` provides a wrapper around the API and exposes common methods:
+
+
+#### Errors
+
+As the powerwall REST API varies widley between version and country it may happen that an attribute may not be included in your response. If that is the case a `MissingAttributeError` will be thrown indicating what attribute wasn't available. 
+
+Attributes that are known to be optional in the responses may be listed in an Response object. But this is not an exhaustive list.
+
+
+```python
+
+status = powerwall.get_status()
+status.get_device_type()
+
+```
+
 ### Current battery level
 
 Get charge in percent:

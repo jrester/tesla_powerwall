@@ -12,6 +12,7 @@ from .error import (
     PowerwallUnreachableError,
 )
 
+
 class API(object):
     def __init__(self, 
         endpoint: str, 
@@ -143,6 +144,9 @@ class API(object):
         # The api unsets the auth cookie and the token is invalidated
         self.get("logout", True)
 
+    # Although this could be done dynamically it is more descriptive
+    # Most endpoints are mapped to one method by <verb>_<path> so they can be easily accessed   
+
     def get_system_status_soe(self) -> dict:
         return self.get("system_status/soe")
 
@@ -201,5 +205,17 @@ class API(object):
     def get_solar_brands(self) -> List[str]:
         return self.get("solars/brands", needs_authentication=True)
 
-    def get_system_update_status(self):
+    def get_system_update_status(self) -> dict:
         return self.get("system/update/status", needs_authentication=True)
+
+    def get_system_status_grid_status(self) -> dict:
+        return self.get("system_status/grid_status")
+
+    def get_site_info(self) -> dict:
+        return self.get("site_info")
+
+    def get_site_info_grid_codes(self) -> list:
+        return self.get("site_info/grid_codes", needs_authentication=True)
+
+    def post_site_info_site_name(self, body: dict) -> dict:
+        return self.post("site_info/site_name", body, needs_authentication=True)

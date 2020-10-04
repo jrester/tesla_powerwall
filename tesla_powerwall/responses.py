@@ -7,100 +7,27 @@ from .error import APIChangedError
 from .helpers import convert_to_kw
 
 
-def assert_attribute(response: dict, attribute: str):
-    value = response.get(attribute)
-    if value is None:
-        raise A
+# Looks for attribute in responses and throws APIChangedError if it was not found
+def assert_attribute(response: dict, attribute: str, endpoint: str=''):
+        value = response.get(attribute)
+        if value is None:
+            if len(endpoint) > 0:
+                raise APIChangedError(attribute, response, endpoint)
+            else:
+                raise APIChangedError(attribute, response, endpoint)
+        return value
 
 class Response(object):
-    """Basic Response object that can be constructed from a json response"""
+    ENDPOINT = ''
 
-    # A list of attributes that should be in the json_response
-    _JSON_ATTRS = []
-    # A list of attributes that may be in the json_response but aren"t required
-    _OPTIONAL_JSON_ATTRS = []
+    def __init__(self, response: dict):
+        self.response = response
 
-    def __init__(self, json_response: dict, no_check: bool = False):
-        self.json_response = json_response
-        self._set_attrs(no_check)
-        self.response_validated = not no_check
+    def assert_attribute(self, attribute: str):
+        assert_attribute(self.response, attribute, self.ENDPOINT)
 
-    def _set_attrs(self, no_check: bool = False) -> None:
-        """Set attributes from _JSON_ATTRS as object properties. 
-        Also checks wether the response is valid. 
-        This can be disabled by passing no_check=True"""
-        missing_attrs = []
-        for attr in self.__class__._JSON_ATTRS:
-            self._add_attr(attr, missing_attrs)
-
-        if len(self.__class__._OPTIONAL_JSON_ATTRS) > 0:
-            for attr in self.__class__._OPTIONAL_JSON_ATTRS:
-                self._add_attr(attr)
-
-        if not no_check:
-            added_attrs = self._get_added_attrs()
-
-        # We are missing some attributes in the json_response
-        if not no_check and len(missing_attrs) > 0:
-            raise APIChangedError(
-                self.__class__, self.json_response, added_attrs, missing_attrs
-            )
-
-    def _add_attr(self, attr, missing_attrs=[]) -> None:
-        if isinstance(attr, tuple):
-            key, constructor = attr
-            if key in self.json_response:
-                if isinstance(constructor, Response):
-                    setattr(
-                        self,
-                        key,
-                        constructor(
-                            self.json_response[key], not self.response_validated
-                        ),
-                    )
-                else:
-                    if self.json_response[key] is not None:
-                        setattr(self, key, constructor(self.json_response[key]))
-                    else:
-                        setattr(self, key, self.json_response[key])
-            else:
-                missing_attrs.append(key)
-        else:
-            if attr in self.json_response:
-                setattr(self, attr, self.json_response[attr])
-            else:
-                missing_attrs.append(attr)
-
-    def _get_added_attrs(self) -> list:
-        added_attrs = []
-        for attr in self.json_response.keys():
-            if attr not in self.__class__._JSON_ATTRS:
-                added_attrs.append(attr)
-        return added_attrs
-
-    # Helper methods to make interaction with optional json attributes easier
-
-    def has_optional_attrs(self) -> bool:
-        return len(self.__class__._OPTIONAL_JSON_ATTRS) > 0
-
-    def has_optional_attrs_set(self) -> bool:
-        """Checks wether all optional attributes are present in the json response"""
-        return set(
-            self.__class__._OPTIONAL_JSON_ATTRS + self.__class__._JSON_ATTRS
-        ) == set(self.json_response.keys())
-
-    def get(self, key, default=None):
-        """Equavivalent to dict.get"""
-        return self.json_response.get(key, default)
-
-    def has_key(self, key) -> bool:
-        return key in self.json_response.keys()
-
-    def __getitem__(self, key):
-        return getattr(self, key)
-
-    def __repr__(self) -> str:
-        return str(self.json_response)
+    def __getattr__(self, attribute):
+        return self.assert_attribute(attribute)
 
 
 class MetersResponse(Response):
@@ -179,11 +106,19 @@ class MeterDetailsResponse(Response):
 
 
 class SitemasterResponse(Response):
+    """
+    Attributes:
+    * running
+    * connectd_to_tesla
+    * status
+    """
+    ENDPOINT = 'sitemaster'
+     
+    def is_running(self):
+        return self.assert_attribute('running')
 
-    def __init__(self, status, running, connected_to_tesla):
-        self.status = status
-        self.running = running
-        self.connected_to_tesla = connected_to_tesla
+    def is_connected_to_tesla(self):
+        return self.assert_attribute('connected_to_tesla')
 
 
 class SiteInfoResponse(Response):
@@ -217,15 +152,13 @@ class CustomerRegistrationResponse(Response):
         "timed_out_registration",
     ]
 
-
-class PowerwallStatusResponse(Response):
+class PowerwallStatus(Response):
     _START_TIME_FORMAT = "%Y-%m-%d %H:%M:%S %z"
     _UP_TIME_SECONDS_REGEX = re.compile(
         r"((?P<hours>\d+?)h)((?P<minutes>\d+?)m)((?P<seconds>\d+?).)((?P<microseconds>\d+?)s)"
     )
 
-    @staticmethod
-    def _parse_uptime_seconds(up_time_seconds: str):
+    def _parse_uptime_seconds(self, up_time_seconds: str):
         match = PowerwallStatusResponse._UP_TIME_SECONDS_REGEX.match(up_time_seconds)
         if not match:
             raise ValueError("Unable to parse up time seconds {}".format(up_time_seconds))
@@ -237,13 +170,20 @@ class PowerwallStatusResponse(Response):
 
         return timedelta(**time_params)
 
-    @staticmethod
-    def _parse_start_time(start_time: str):
-        return datetime.strptime(start_time, PowerwallStatusResponse._START_TIME_FORMAT)
+    def get_up_time_seconds(self):
+        return self._parse_uptime_seconds(self.up_time_seconds)
 
+    def get_start_time(self):
+        return datetime.strptime(self.start_time, self._START_TIME_FORMAT)
+
+
+        
+
+
+class PowerwallStatusResponse(Response):
     _JSON_ATTRS = [
-        ("start_time", _parse_start_time.__func__),
-        ("up_time_seconds", _parse_uptime_seconds.__func__),
+        "start_time",
+        "up_time_seconds",
         "is_new",
         "version",
         "git_hash",
@@ -251,7 +191,7 @@ class PowerwallStatusResponse(Response):
     _OPTIONAL_JSON_ATTRS = [
         ("device_type", DeviceType),
         "commission_count",
-        "sync_type",
+        "sync_type"
     ]
 
 
@@ -298,7 +238,15 @@ class ListPowerwallsResponse(Response):
 
 
 class SolarsResponse(Response):
-    _JSON_ATTRS = ["brand", "model", "power_rating_watts"]
+    # _JSON_ATTRS = ["brand", "model", "power_rating_watts"]
+    def get_brand(self):
+        return self.brand
+
+    def get_model(self):
+        return self.model
+
+    def get_power_raing_watts(self):
+        return self.power_rating_watts
 
 
 class LoginResponse(Response):
