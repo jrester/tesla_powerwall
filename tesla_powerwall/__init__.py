@@ -22,7 +22,7 @@ from .responses import (CustomerRegistrationResponse, ListPowerwallsResponse,
                         SiteInfoResponse, SitemasterResponse, SolarsResponse,
                         UpdateStatusResponse)
 
-VERSION = "0.2.12"
+VERSION = "0.2.13"
 
 
 class Powerwall(object):
@@ -273,8 +273,8 @@ class Powerwall(object):
     def get_operation_mode(self) -> OperationMode:
         return OperationMode(self._get("operation", True)["real_mode"])
 
-    def get_backup_preserve_percentage(self) -> float:
-        return self._get("operation", True)["backup_reserve_percentage"]
+    def get_backup_reserved_percentage(self) -> float:
+        return self._get("operation", True)["backup_reserved_percent"]
 
     # def set_mode_and_backup_preserve_percentage(self, mode, percentage):
     #     self._post("operation", {"mode": mode, "percentage": percentage})

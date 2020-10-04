@@ -8,6 +8,8 @@ Supported Powerwall Software versions:
 * 1.45.X
 * 1.46.0
 * 1.47.0
+* 1.48.0
+* 1.49.0
 
 > For more information about versioning see [API versiooning](#api-versioning).
 
