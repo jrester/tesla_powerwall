@@ -7,230 +7,158 @@ from .const import (
     MeterType,
     SyncType,
     UpdateState,
+    Roles,
 )
-from .error import APIChangedError
-from .helpers import convert_to_kw
+from .helpers import convert_to_kw, assert_attribute
+
+class Response:
+    def __init__(self, response: dict):
+        self.response = response
+
+    def assert_attribute(self, attr: str):
+        return assert_attribute(self.response, attr)
+
+    def __repr__(self):
+        return str(self.response)
 
 
-class Response(object):
-    """Basic Response object that can be constructed from a json response"""
-
-    # A list of attributes that should be in the json_response
-    _JSON_ATTRS = []
-    # A list of attributes that may be in the json_response but aren"t required
-    _OPTIONAL_JSON_ATTRS = []
-
-    def __init__(self, json_response: dict, no_check: bool = False):
-        self.json_response = json_response
-        self._set_attrs(no_check)
-        self.response_validated = not no_check
-
-    def _set_attrs(self, no_check: bool = False) -> None:
-        """Set attributes from _JSON_ATTRS as object properties. 
-        Also checks wether the response is valid. 
-        This can be disabled by passing no_check=True"""
-        missing_attrs = []
-        for attr in self.__class__._JSON_ATTRS:
-            self._add_attr(attr, missing_attrs)
-
-        if len(self.__class__._OPTIONAL_JSON_ATTRS) > 0:
-            for attr in self.__class__._OPTIONAL_JSON_ATTRS:
-                self._add_attr(attr)
-
-        if not no_check:
-            added_attrs = self._get_added_attrs()
-
-        # We are missing some attributes in the json_response
-        if not no_check and len(missing_attrs) > 0:
-            raise APIChangedError(
-                self.__class__, self.json_response, added_attrs, missing_attrs
-            )
-
-    def _add_attr(self, attr, missing_attrs=[]) -> None:
-        if isinstance(attr, tuple):
-            key, constructor = attr
-            if key in self.json_response:
-                if isinstance(constructor, Response):
-                    setattr(
-                        self,
-                        key,
-                        constructor(
-                            self.json_response[key], not self.response_validated
-                        ),
-                    )
-                else:
-                    if self.json_response[key] is not None:
-                        setattr(self, key, constructor(self.json_response[key]))
-                    else:
-                        setattr(self, key, self.json_response[key])
-            else:
-                missing_attrs.append(key)
-        else:
-            if attr in self.json_response:
-                setattr(self, attr, self.json_response[attr])
-            else:
-                missing_attrs.append(attr)
-
-    def _get_added_attrs(self) -> list:
-        added_attrs = []
-        for attr in self.json_response.keys():
-            if attr not in self.__class__._JSON_ATTRS:
-                added_attrs.append(attr)
-        return added_attrs
-
-    # Helper methods to make interaction with optional json attributes easier
-
-    def has_optional_attrs(self) -> bool:
-        return len(self.__class__._OPTIONAL_JSON_ATTRS) > 0
-
-    def has_optional_attrs_set(self) -> bool:
-        """Checks wether all optional attributes are present in the json response"""
-        return set(
-            self.__class__._OPTIONAL_JSON_ATTRS + self.__class__._JSON_ATTRS
-        ) == set(self.json_response.keys())
-
-    def get(self, key, default=None):
-        """Equavivalent to dict.get"""
-        return self.json_response.get(key, default)
-
-    def has_key(self, key) -> bool:
-        return key in self.json_response.keys()
-
-    def __getitem__(self, key):
-        return getattr(self, key)
-
-    def __repr__(self) -> str:
-        return str(self.json_response)
-
-
-class MetersResponse(Response):
-    """Response for a single Meter
-    Usually a nested item in the MetersAggregateResponse
+class Meter(Response):
+    """
+    Attributes:
+    - last_communication_time
+    - instant_power
+    - instant_reactive_power
+    - instant_apparent_power
+    - frequency
+    - energy_exported
+    - energy_imported
+    - instant_average_voltage
+    - instant_total_current
+    - i_a_current
+    - i_b_current
+    - i_c_current
+    - timeout
     """
 
-    _JSON_ATTRS = [
-        "instant_power",  # The power that is supplied/drawn from the meter
-        "frequency",
-        "energy_exported",
-        "energy_imported",
-        "instant_average_voltage"
-    ]
-
-    _OPTIONAL_JSON_ATTRS = [
-        "last_communication_time",
-        "instant_reactive_power",
-        "instant_apparent_power",
-        "timeout",
-        "instant_total_current",
-        "i_a_current",
-        "i_b_current",
-        "i_c_current"
-    ]
-
-    def __init__(self, json_response: dict, meter: MeterType = None, no_check=False):
-        super().__init__(json_response, no_check=no_check)
+    def __init__(self, meter: MeterType, response):
         self.meter = meter
+        super().__init__(response)
 
-    def is_sending_to(self, precision=DEFAULT_KW_ROUND_PERSICION):
-        if self.meter == MeterType.LOAD:
-            return convert_to_kw(self.instant_power, precision) > 0
-        else:
-            return convert_to_kw(self.instant_power, precision) < 0
+    @property
+    def instant_power(self):
+        return assert_attribute(self.response, "instant_power")
 
-    def is_drawing_from(self, precision=DEFAULT_KW_ROUND_PERSICION):
+    @property
+    def last_communication_time(self):
+        return assert_attribute(self.response, "last_communication_time")
+
+    def get_power(self, precision=DEFAULT_KW_ROUND_PERSICION):
+        return convert_to_kw(self.instant_power, precision)
+
+    def is_active(self, precision=DEFAULT_KW_ROUND_PERSICION) -> bool:
+        return self.get_power(precision) != 0
+
+    def is_drawing_from(self, precision=DEFAULT_KW_ROUND_PERSICION) -> bool:
         if self.meter == MeterType.LOAD:
             # Cannot draw from load
             return False
         else:
-            return convert_to_kw(self.instant_power, precision) > 0
+            return self.get_power(precision) > 0
 
-    def is_active(self, precision=DEFAULT_KW_ROUND_PERSICION):
-        return convert_to_kw(self.instant_power, precision) != 0
+    def is_sending_to(self, precision=DEFAULT_KW_ROUND_PERSICION):
+        if self.meter == MeterType.LOAD:
+            # For load the power is always positiv
+            return self.get_power(precision) > 0
+        else:
+            return self.get_power(precision) < 0
 
-    def get_power(self, precision=DEFAULT_KW_ROUND_PERSICION):
-        """Returns power sent/drawn in kWh"""
-        return convert_to_kw(self.instant_power, precision)
 
+class MetersAggregates(Response):
+    def __init__(self, response):
+        super().__init__(response)
+        for meter_type in MeterType:
+            meter = Meter(meter_type, self.assert_attribute(meter_type.value))
+            setattr(self, meter_type.value, meter)
 
-class MetersAggregateResponse(Response):
-    """
-    Response for "meters/aggregates"
-    """
-
-    def __init__(self, json_response, no_check=False):
-        self.json_response = json_response
-        for meter in MeterType:
-            if meter.value in json_response:
-                setattr(
-                    self,
-                    meter.value,
-                    MetersResponse(json_response[meter.value], meter, no_check),
-                )
-
-    def get(self, meter: MeterType) -> MetersResponse:
+    def get_meter(self, meter: MeterType) -> Meter:
         return getattr(self, meter.value)
 
 
-class MeterDetailsResponse(Response):
-    _JSON_ATTRS = ["id", "location", "type", "cts", "inverted", "connection"]
+class SiteMaster(Response):
+    """
+    Attributes:
+    - running
+    - connected_to_tesla
+    - status
+    - power_supply_mode
+    """
 
-    def __init__(self, json_response, no_check=False):
-        super().__init__(json_response, no_check)
-        self.cached_readings = MetersResponse(
-            json_response["Cached_readings"], no_check=no_check
-        )
+    def __init__(self, response):
+        super().__init__(response)
 
+    @property
+    def status(self):
+        return self.assert_attribute("status")
 
-class SitemasterResponse(Response):
-    _JSON_ATTRS = ["status", "running", "connected_to_tesla"]
+    @property
+    def is_running(self):
+        return self.assert_attribute("running")
 
-
-class SiteInfoResponse(Response):
-    _JSON_ATTRS = [
-        "max_site_meter_power_kW",
-        "min_site_meter_power_kW",
-        "nominal_system_energy_kWh",
-        "nominal_system_power_kW",
-        "max_system_energy_kWh",
-        "max_system_power_kW",
-        "site_name",
-        "timezone",
-        "grid_code",
-    ]
-
-    _OPTIONAL_JSON_ATTRS = [
-        "distributor",
-        "utility",
-        "retailer",
-        "region",
-        "grid_voltage_setting",
-        "grid_freq_setting",
-        "grid_phase_setting",
-        "country",
-        "state",
-    ]
+    @property
+    def is_connected_to_tesla(self):
+        return self.assert_attribute("connected_to_tesla")
 
 
-class CustomerRegistrationResponse(Response):
-    _JSON_ATTRS = [
-        "privacy_notice",
-        "limited_warranty",
-        "grid_services",
-        "marketing",
-        "registered",
-        "timed_out_registration",
-    ]
+class SiteInfo(Response):
+    """
+    Attributes:
+    - max_site_meter_power_kW
+    - min_site_meter_power_kW
+    - nominal_system_energy_kWh
+    - nominal_system_power_kW
+    - max_system_energy_kWh
+    - max_system_power_kW
+    - site_name
+    - timezone
+    - grid_code
+    """
+
+    def __init__(self, response):
+        super().__init__(response)
 
 
-class PowerwallStatusResponse(Response):
+    @property
+    def nominal_system_energy(self):
+        return self.assert_attribute("nominal_system_energy_kWh")
+
+    @property
+    def site_name(self):
+        return self.assert_attribute("site_name")
+
+    @property
+    def timezone(self):
+        return self.assert_attribute("timezone")
+
+
+class PowerwallStatus(Response):
+    """
+    Attributes:
+    * start_time
+    * up_time_seconds
+    * version
+    * device_type
+    * commission_count
+    * sync_type
+    * git_hash
+    """
+
     _START_TIME_FORMAT = "%Y-%m-%d %H:%M:%S %z"
     _UP_TIME_SECONDS_REGEX = re.compile(
         r"((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?).)((?P<microseconds>\d+?)s)"
     )
 
-    @staticmethod
-    def _parse_uptime_seconds(up_time_seconds: str):
-        match = PowerwallStatusResponse._UP_TIME_SECONDS_REGEX.match(up_time_seconds)
+    def _parse_uptime_seconds(self, up_time_seconds: str):
+        match = PowerwallStatus._UP_TIME_SECONDS_REGEX.match(up_time_seconds)
         if not match:
             raise ValueError(
                 "Unable to parse up time seconds {}".format(up_time_seconds)
@@ -243,93 +171,74 @@ class PowerwallStatusResponse(Response):
 
         return timedelta(**time_params)
 
-    @staticmethod
-    def _parse_start_time(start_time: str):
-        return datetime.strptime(start_time, PowerwallStatusResponse._START_TIME_FORMAT)
+    @property
+    def up_time_seconds(self):
+        up_time_seconds = assert_attribute(self.response, "up_time_seconds")
+        return self._parse_uptime_seconds(up_time_seconds)
 
-    _JSON_ATTRS = [
-        ("start_time", _parse_start_time.__func__),
-        ("up_time_seconds", _parse_uptime_seconds.__func__),
-        "is_new",
-        "version",
-        "git_hash",
-    ]
-    _OPTIONAL_JSON_ATTRS = [
-        ("device_type", DeviceType),
-        "commission_count",
-        "sync_type",
-    ]
+    @property
+    def start_time(self):
+        start_time = assert_attribute(self.response, "start_time")
+        return datetime.strptime(start_time, self._START_TIME_FORMAT)
 
+    @property
+    def version(self):
+        return self.assert_attribute("version")
 
-class PowerwallsStatusResponse(Response):
-    _JSON_ATTRS = [
-        "enumerating",
-        "updating",
-        "checking_if_offgrid",
-        "running_phase_detection",
-        "phase_detection_last_error",
-        "bubble_shedding",
-        "on_grid_check_error",
-        "grid_qualifying",
-        "grid_code_validating",
-        "phase_detection_not_available",
-    ]
-
-
-class ListPowerwallsResponse(Response):
-    class PowerwallResponse(Response):
-        _JSON_ATTRS = [
-            "PackagePartNumber",
-            "PackageSerialNumber",
-            "type",
-            "grid_state",
-            "grid_reconnection_time_seconds",
-            "under_phase_detection",
-            "updating",
-            "commissioning_diagnostic",
-            "update_diagnostic",
-        ]
-
-        _OPTIONAL_JSON_ATTRS = ["Type", "bc_type"]
-
-    _JSON_ATTRS = ["powerwalls", "has_sync", "sync", "states"]
-
-    def __init__(self, json_response, no_check=False):
-        super().__init__(json_response, no_check)
-        self.status = PowerwallsStatusResponse(self.json_response, no_check=no_check)
-        self.powerwalls = [
-            ListPowerwallsResponse.PowerwallResponse(powerwall, no_check=no_check)
-            for powerwall in self.powerwalls
-        ]
-
-
-class SolarsResponse(Response):
-    _JSON_ATTRS = ["brand", "model", "power_rating_watts"]
+    @property
+    def device_type(self):
+        return DeviceType(self.assert_attribute("device_type"))
 
 
 class LoginResponse(Response):
-    _JSON_ATTRS = [
-        "email",
-        "firstname",
-        "lastname",
-        "roles",
-        "token",
-        "provider",
-        "loginTime",
-    ]
+    """
+    Attributes
+    - email
+    - firstname
+    - lastname
+    - roles
+    - token
+    - provider
+    - loginTime
+    """
+
+    @property
+    def firstname(self):
+        return self.assert_attribute("firstname")
+
+    @property
+    def lastname(self):
+        return self.assert_attribute("lastname")
+
+    @property
+    def token(self):
+        return self.assert_attribute("token")
+
+    @property
+    def roles(self):
+        return [Roles(role) for role in self.assert_attribute("roles")]
+
+    @property
+    def login_time(self):
+        return self.assert_attribute("login_time")
 
 
-class UpdateStatusResponse(Response):
-    _JSON_ATTRS = [
-        ("state", UpdateState),
-        "info",
-        "current_time",
-        "last_status_time",
-        "version",
-        "offline_updating",
-        "offline_update_error",
-        "estimated_bytes_per_second",
-    ]
+class Solar(Response):
+    """
+    Attributes
+    - brand
+    - model
+    - power_rating_watts
+    """
 
-    def __init__(self, json_response, no_check=False):
-        super().__init__(json_response, no_check=no_check)
+    @property
+    def brand(self):
+        return self.assert_attribute("brand")
+
+    @property
+    def model(self):
+        return self.assert_attribute("model")
+
+    @property
+    def power_rating_watts(self):
+        return self.assert_attribute("power_rating_watts")

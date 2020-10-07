@@ -9,11 +9,12 @@ from responses import GET, POST, Response, add
 from tesla_powerwall import (
     AccessDeniedError,
     APIError,
-    MetersAggregateResponse,
-    MetersResponse,
+    Meter,
+    MetersAggregates,
     MeterType,
     Powerwall,
     PowerwallUnreachableError,
+    API,
 )
 
 ENDPOINT = "https://1.1.1.1/api/"
@@ -126,16 +127,16 @@ class TestPowerWall(unittest.TestCase):
 
     def test_endpoint_setup(self):
         test_endpoint_1 = "1.1.1.1"
-        pw = Powerwall(test_endpoint_1)
-        self.assertEqual(pw._endpoint, f"https://{test_endpoint_1}/api/")
+        api = API(test_endpoint_1)
+        self.assertEqual(api._endpoint, f"https://{test_endpoint_1}/api/")
 
         test_endpoint_2 = "http://1.1.1.1"
         pw = Powerwall(test_endpoint_2)
-        self.assertEqual(pw._endpoint, f"https://1.1.1.1/api/")
+        self.assertEqual(api._endpoint, f"https://1.1.1.1/api/")
 
         test_endpoint_3 = "https://1.1.1.1/api/"
         pw = Powerwall(test_endpoint_3)
-        self.assertEqual(pw._endpoint, test_endpoint_3)
+        self.assertEqual(api._endpoint, test_endpoint_3)
 
     @responses.activate
     def test_get_charge(self):
@@ -144,8 +145,7 @@ class TestPowerWall(unittest.TestCase):
                 GET, url=f"{ENDPOINT}system_status/soe", json={"percentage": 53.123423}
             )
         )
-        self.assertEqual(self.powerwall.get_charge(), 53)
-        self.assertEqual(self.powerwall.get_charge(rounded=False), 53.123423)
+        self.assertEqual(self.powerwall.get_charge(), 53.123423)
 
     @responses.activate
     def test_process_response(self):
@@ -153,25 +153,25 @@ class TestPowerWall(unittest.TestCase):
         res.request = requests.Request(method="GET", url=f"{ENDPOINT}test").prepare()
         res.status_code = 401
         with self.assertRaises(AccessDeniedError):
-            self.powerwall._process_response(res)
+            self.powerwall._api._process_response(res)
 
         res.status_code = 502
         with self.assertRaises(PowerwallUnreachableError):
-            self.powerwall._process_response(res)
+            self.powerwall._api._process_response(res)
 
         res.status_code = 200
         res._content = b'{"error": "test_error"}'
         with self.assertRaises(APIError):
-            self.powerwall._process_response(res)
+            self.powerwall._api._process_response(res)
 
         res._content = b'{"response": "ok"}'
-        self.assertEqual(self.powerwall._process_response(res), {"response": "ok"})
+        self.assertEqual(self.powerwall._api._process_response(res), {"response": "ok"})
 
     @responses.activate
     def test_get(self):
         add(Response(GET, url=f"{ENDPOINT}test_get", json={"test_get": True}))
 
-        self.assertEqual(self.powerwall._get("test_get"), {"test_get": True})
+        self.assertEqual(self.powerwall._api.get("test_get"), {"test_get": True})
 
     @responses.activate
     def test_post(self):
@@ -187,7 +187,7 @@ class TestPowerWall(unittest.TestCase):
             content_type="application/json",
         )
 
-        resp = self.powerwall._post("test_post", {"test": True})
+        resp = self.powerwall._api.post("test_post", {"test": True})
 
         self.assertIsInstance(resp, dict)
         self.assertEqual(resp, {"test_post": True})
@@ -200,12 +200,12 @@ class TestPowerWall(unittest.TestCase):
             )
         )
         meters = self.powerwall.get_meters()
-        self.assertIsInstance(meters, MetersAggregateResponse)
+        self.assertIsInstance(meters, MetersAggregates)
 
-        self.assertIsInstance(meters.site, MetersResponse)
-        self.assertIsInstance(meters.solar, MetersResponse)
-        self.assertIsInstance(meters.battery, MetersResponse)
-        self.assertIsInstance(meters.load, MetersResponse)
+        self.assertIsInstance(meters.site, Meter)
+        self.assertIsInstance(meters.solar, Meter)
+        self.assertIsInstance(meters.battery, Meter)
+        self.assertIsInstance(meters.load, Meter)
 
     @responses.activate
     def test_is_sending(self):
@@ -222,32 +222,3 @@ class TestPowerWall(unittest.TestCase):
         self.assertEqual(meters.load.is_sending_to(), True)
         self.assertEqual(meters.load.is_drawing_from(), False)
         self.assertEqual(meters.load.is_active(), True)
-
-    @responses.activate
-    def test_optional_json_attrs(self):
-        add(
-            Response(
-                responses.GET,
-                url=f"{ENDPOINT}site_info",
-                json=SITE_INFO_RESPONSE_WITHOUT_OPTIONS,
-            )
-        )
-
-        add(
-            Response(
-                responses.GET,
-                url=f"{ENDPOINT}site_info",
-                json=SITE_INFO_RESPONSE_WITH_OPTIONS,
-            )
-        )
-
-        site_info = self.powerwall.get_site_info()
-        self.assertEqual(site_info.has_optional_attrs_set(), False)
-        self.assertEqual(site_info.has_key("utility"), False)
-        self.assertEqual(site_info.grid_voltage_setting, 230)
-        self.assertEqual(site_info.has_optional_attrs(), True)
-
-        site_info = self.powerwall.get_site_info()
-        self.assertEqual(site_info.has_optional_attrs_set(), True)
-        self.assertEqual(site_info.has_key("utility"), True)
-        self.assertEqual(site_info.retailer, "*")
