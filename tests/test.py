@@ -9,8 +9,8 @@ from responses import GET, POST, Response, add
 from tesla_powerwall import (
     AccessDeniedError,
     APIError,
-    MetersAggregateResponse,
-    MetersResponse,
+    Meter,
+    MetersAggregates,
     MeterType,
     Powerwall,
     PowerwallUnreachableError,
@@ -145,8 +145,7 @@ class TestPowerWall(unittest.TestCase):
                 GET, url=f"{ENDPOINT}system_status/soe", json={"percentage": 53.123423}
             )
         )
-        self.assertEqual(self.powerwall.get_charge(), 53)
-        self.assertEqual(self.powerwall.get_charge(rounded=False), 53.123423)
+        self.assertEqual(self.powerwall.get_charge(), 53.123423)
 
     @responses.activate
     def test_process_response(self):
@@ -201,12 +200,12 @@ class TestPowerWall(unittest.TestCase):
             )
         )
         meters = self.powerwall.get_meters()
-        self.assertIsInstance(meters, MetersAggregateResponse)
+        self.assertIsInstance(meters, MetersAggregates)
 
-        self.assertIsInstance(meters.site, MetersResponse)
-        self.assertIsInstance(meters.solar, MetersResponse)
-        self.assertIsInstance(meters.battery, MetersResponse)
-        self.assertIsInstance(meters.load, MetersResponse)
+        self.assertIsInstance(meters.site, Meter)
+        self.assertIsInstance(meters.solar, Meter)
+        self.assertIsInstance(meters.battery, Meter)
+        self.assertIsInstance(meters.load, Meter)
 
     @responses.activate
     def test_is_sending(self):
@@ -223,32 +222,3 @@ class TestPowerWall(unittest.TestCase):
         self.assertEqual(meters.load.is_sending_to(), True)
         self.assertEqual(meters.load.is_drawing_from(), False)
         self.assertEqual(meters.load.is_active(), True)
-
-    @responses.activate
-    def test_optional_json_attrs(self):
-        add(
-            Response(
-                responses.GET,
-                url=f"{ENDPOINT}site_info",
-                json=SITE_INFO_RESPONSE_WITHOUT_OPTIONS,
-            )
-        )
-
-        add(
-            Response(
-                responses.GET,
-                url=f"{ENDPOINT}site_info",
-                json=SITE_INFO_RESPONSE_WITH_OPTIONS,
-            )
-        )
-
-        site_info = self.powerwall.get_site_info()
-        self.assertEqual(site_info.has_optional_attrs_set(), False)
-        self.assertEqual(site_info.has_key("utility"), False)
-        self.assertEqual(site_info.grid_voltage_setting, 230)
-        self.assertEqual(site_info.has_optional_attrs(), True)
-
-        site_info = self.powerwall.get_site_info()
-        self.assertEqual(site_info.has_optional_attrs_set(), True)
-        self.assertEqual(site_info.has_key("utility"), True)
-        self.assertEqual(site_info.retailer, "*")

@@ -14,13 +14,13 @@ from .error import (
 
 
 class API(object):
-    def __init__(self, 
-        endpoint: str, 
-        timeout: int = 10, 
+    def __init__(
+        self,
+        endpoint: str,
+        timeout: int = 10,
         http_session: requests.Session = None,
         verify_ssl: bool = False,
         disable_insecure_warning: bool = True,
-        dont_validate_response: bool = False
     ) -> None:
 
         if disable_insecure_warning:
@@ -30,7 +30,6 @@ class API(object):
         self._timeout = timeout
         self._http_session = http_session if http_session else requests.Session()
         self._http_session.verify = verify_ssl
-        self._dont_validate_response = dont_validate_response
 
     def _parse_endpoint(self, endpoint: str) -> str:
         if endpoint.startswith("https"):
@@ -52,7 +51,9 @@ class API(object):
 
     def _process_response(self, response: str) -> dict:
         if response.status_code == 404:
-            raise APIError("The url {} returned error 404".format(response.request.path_url))
+            raise APIError(
+                "The url {} returned error 404".format(response.request.path_url)
+            )
 
         if response.status_code == 401 or response.status_code == 403:
             response_json = None
@@ -71,7 +72,9 @@ class API(object):
         try:
             response_json = response.json()
         except JSONDecodeError:
-            raise APIError("Error while decoding json of response: {}".format(response.text))
+            raise APIError(
+                "Error while decoding json of response: {}".format(response.text)
+            )
 
         if response_json is None:
             return {}
@@ -81,6 +84,9 @@ class API(object):
 
         return response_json
 
+    def url(self, path: str):
+        return urljoin(self._endpoint, path)
+
     def get(
         self, path: str, needs_authentication: bool = False, headers: dict = {}
     ) -> dict:
@@ -89,11 +95,12 @@ class API(object):
 
         try:
             response = self._http_session.get(
-                url=urljoin(self._endpoint, path),
-                timeout=self._timeout,
-                headers=headers,
+                url=self.url(path), timeout=self._timeout, headers=headers,
             )
-        except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout) as e:
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ReadTimeout,
+        ) as e:
             raise PowerwallUnreachableError(e)
 
         return self._process_response(response)
@@ -110,12 +117,15 @@ class API(object):
 
         try:
             response = self._http_session.post(
-                url=urljoin(self._endpoint, path),
+                url=self.url(path),
                 data=payload,
                 timeout=self._timeout,
                 headers=headers,
             )
-        except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout) as e:
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ReadTimeout,
+        ) as e:
             raise PowerwallUnreachableError(e)
 
         return self._process_response(response)
@@ -123,20 +133,20 @@ class API(object):
     def is_authenticated(self) -> bool:
         return "AuthCookie" in self._http_session.cookies.keys()
 
-    def login(self, 
-        username: str, 
-        email: str, 
-        password: str, 
-        force_sm_off: bool = False
+    def login(
+        self, username: str, email: str, password: str, force_sm_off: bool = False
     ) -> dict:
 
         # force_sm_off is referred to as 'shouldForceLogin' in the web source code
-        return self.post("login/Basic", {
-            "username": username,
-            "email": email,
-            "password": password,
-            "force_sm_off": force_sm_off,
-        })
+        return self.post(
+            "login/Basic",
+            {
+                "username": username,
+                "email": email,
+                "password": password,
+                "force_sm_off": force_sm_off,
+            },
+        )
 
     def logout(self):
         if not self.is_authenticated():
@@ -145,7 +155,7 @@ class API(object):
         self.get("logout", True)
 
     # Although this could be done dynamically it is more descriptive
-    # Most endpoints are mapped to one method by <verb>_<path> so they can be easily accessed   
+    # Endpoints are mapped to one method by <verb>_<path> so they can be easily accessed
 
     def get_system_status_soe(self) -> dict:
         return self.get("system_status/soe")
@@ -176,7 +186,7 @@ class API(object):
         return self.get("powerwalls")
 
     def get_operation(self):
-        return self.get("operation")
+        return self.get("operation", True)
 
     def get_networks(self) -> list:
         return self.get("networks")
@@ -185,7 +195,9 @@ class API(object):
         return self.get("powerwalls/phase_usages", needs_authentication=True)
 
     def post_sitemaster_run_for_commissioning(self):
-        return self.post("sitemaster/run_for_commissioning", payload={}, needs_authentication=True)
+        return self.post(
+            "sitemaster/run_for_commissioning", payload={}, needs_authentication=True
+        )
 
     def get_solars(self):
         return self.get("solars", needs_authentication=True)

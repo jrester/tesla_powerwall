@@ -1,14 +1,41 @@
-# Python Tesla Powerwall API
+# Python Tesla Powerwall API <!-- omit in TOC -->
 
-Python Tesla Powerwall API for consuming a local endpoint.
+![Licence](https://img.shields.io/github/license/jrester/tesla_powerwall?style=for-the-badge)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/tesla_powerwall?color=blue&style=for-the-badge)
+![PyPI](https://img.shields.io/pypi/v/tesla_powerwall?style=for-the-badge)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tesla_powerwall?style=for-the-badge)
 
-> Note: This is not an official API provided by Tesla and as such might be incomplete and fail at any time
+Python Tesla Powerwall API for consuming a local endpoint. The API is by no means complete and mainly features methods which are considered to be of common use. If you feel like methods should be included you are welcome to open an Issue or create a Pull Request.
 
-Supported Powerwall Software versions:
-* 1.45.X
-* 1.46.0
+> Note: This is not an official API provided by Tesla and as such might fail at any time.
+
+Powerwall Software versions from 1.45.0 to 1.49.0 are supported, but others will probably work too. 
 
 > For more information about versioning see [API versiooning](#api-versioning).
+
+
+# Table of Contents <!-- omit in TOC -->
+
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Setup](#setup)
+  - [Authentication](#authentication)
+  - [General](#general)
+    - [API versioning](#api-versioning)
+    - [Errors](#errors)
+    - [Response](#response)
+  - [Battery level](#battery-level)
+  - [Powerwall Status](#powerwall-status)
+  - [Sitemaster](#sitemaster)
+  - [Siteinfo](#siteinfo)
+  - [Meters](#meters)
+    - [Aggregates](#aggregates)
+    - [Current power supply/draw](#current-power-supplydraw)
+  - [Device Type](#device-type)
+  - [Grid Status](#grid-status)
+  - [Operation mode](#operation-mode)
+  - [Powerwalls Serial Numbers](#powerwalls-serial-numbers)
+  - [VIN](#vin)
 
 ## Installation
 
@@ -18,31 +45,31 @@ $ pip install tesla_powerwall
 
 ## Usage
 
-### Setup connection
+### Setup
 
 ```python
 from tesla_powerwall import Powerwall
 
-power_wall = Powerwall("<ip of your Powerwall>")
+powerwall = Powerwall("<ip of your Powerwall>")
+#=> <Powerwall ...>
+
+powerwall = Powerwall(
+    endpoint="<ip of your powerwall>",
+    timeout=10,
+    http_sesion=None,
+    verify_ssl=False,
+    disable_insecure_warning=True,
+    pin_version=None
+)
 #=> <Powerwall ...>
 ```
 
-> Note: By default the API client does not verify the SSL Certificate of the Powerwall. If you want to verify the SSL Certificate you can set `verify_ssl` to `True`.
-> Also the API client suppresses warnings about an inseucre request (because we aren't verifing the certificate). If you want to enable those warnings you can set `disable_insecure_warning` to `False`.
-
-It can also happen that the API is sending different responses than what was expected. Those responses would normally produce an `APIChangedError` indicating what exactly changed. If this happens please open an Issue to report this error. If you need to cotinue to use the API you can disable the response validation:
-
-```python
-power_wall = Powerwall("<ip of your Powerwall>", dont_validate_response=True)
-# If you need to change the original setting
-power_wall.set_dont_validate_response(False)
-
-# Using a context manager if you only need to change it for some methods
-with power_wall.no_verify():
-    power_wall.get_status()
-```
+> Note: By default the API client does not verify the SSL certificate of the Powerwall. If you want to verify the SSL certificate you can set `verify_ssl` to `True`.
+> The API client suppresses warnings about an inseucre request (because we aren't verifing the certificate). If you want to enable those warnings you can set `disable_insecure_warning` to `False`.
 
 ### Authentication
+
+Logging in is not required for most methods. When a method requires you to log in an `AccessDeniedError` is thrown.
 
 To login you can either use `login` or `login_as`. `login` logs you in as `User.CUSTOMER` whereas with `login_as` you can choose a different user:
 
@@ -50,44 +77,24 @@ To login you can either use `login` or `login_as`. `login` logs you in as `User.
 from tesla_powerwall import User
 
 # Login as customer
-power_wall.login("<email>", "<password>")
+powerwall.login("<email>", "<password>")
 #=> <LoginResponse ...>
 
 # Login with different user
-power_wall.login_as(User.INSTALLER, "<email>", "<password>")
+powerwall.login_as(User.INSTALLER, "<email>", "<password>")
 #=> <LoginResponse ...>
 
 # Check if we are logged in 
-power_wall.is_authenticated()
+powerwall.is_authenticated()
 #=> True
 
 # Logout
-power_wall.logout()
-```
-
-### API versioning
-
-The powerwall API is inconsitent across different versions. This is why some versions may return different responses. If no version is specified the **newest known** version is assumed.
-
-If you are sure which version your powerwall has you can pin the Powerwall object to a version:
-
-```python
-from tesla_powerwall import Version
-# Pin powerwall object
-power_wall = Powerwall("<powerwall-ip>", pin_version="1.46.0")
-
-# You can also pin a version after the powerwall object was created
-power_wall.pin_version(Version.v1_46_0)
-```
-
-Otherwise you can let the API try to detect the version and pin it. This method should be prefered over the manual detection and pinning of the version:
-```python
-power_wall.detect_and_pin_version()
+powerwall.logout()
 ```
 
 ### General
 
-The API object directly maps the REAT endpoints with a python method in the form of `<verb>_<path>`. So if you need the raw json responses you can use the API object. It can be either created manually or from an existing `Powerwall`:
+The API object directly maps the REAT endpoints with a python method in the form of `<verb>_<path>`. So if you need the raw json responses you can use the API object. It can be either created manually or retrived from an existing `Powerwall`:
 
 ```python
 from tesla_powerwall import API
@@ -96,59 +103,86 @@ from tesla_powerwall import API
 api = API('https://<ip>/')
 # Perform get on 'system_status/soe'
 api.get_system_status_soe()
+#=> {'percentage': 97.59281925744594}
 
 
 # From existing powerwall
-powerwall._api.get_system_status_soe()
+api = powerwall.get_api()
+api.get_system_status_soe()
 ```
 
-The `Powerwall` provides a wrapper around the API and exposes common methods:
+The `Powerwall` objet provides a wrapper around the API and exposes common methods.
 
+#### API versioning
+
+The powerwall API is inconsistent across different versions. This is why some versions may return different responses. If no version is specified the newest version is assumed.
+
+If you are sure which version your powerwall has you can pin the Powerwall object to a version:
+
+```python
+from tesla_powerwall import Version
+# Pin powerwall object
+powerwall = Powerwall("<powerwall-ip>", pin_version="1.46.0")
+
+# You can also pin a version after the powerwall object was created
+powerwall.pin_version("1.46.0")
+```
+
+Otherwise you can let the API try to detect the version and pin it. This method should be prefered over the manual detection and pinning of the version:
+```python
+powerwall.detect_and_pin_version()
+```
 
 #### Errors
 
 As the powerwall REST API varies widley between version and country it may happen that an attribute may not be included in your response. If that is the case a `MissingAttributeError` will be thrown indicating what attribute wasn't available. 
 
-Attributes that are known to be optional in the responses may be listed in an Response object. But this is not an exhaustive list.
+#### Response
 
+Responses are usally wrapped inside a `Response` object to provide convenience methods. An Example is the `Meter` class which is a sublass of `Response`. Each `Response` object includes the `response` member which consists of the plain json response. 
 
 ```python
+from helpers import assert_attribute
 
 status = powerwall.get_status()
-status.get_device_type()
+#=> <PowerwallStatus ...>
 
+status.version
+# is the same as
+assert_attribute(status.response, "version")
+# or
+status.assert_attribute("version)
 ```
 
-### Current battery level
+### Battery level
 
 Get charge in percent:
 
 ```python
-power_wall.get_charge()
-#=> 98
-```
-
-The API also returns the exact percentage. You can get the exact percentage by passing `False` to `rounded`:
-
-```python
-power_wall.get_charge(rounded=False)
+powerwall.get_charge()
 #=> 97.59281925744594
 ```
 
 ### Powerwall Status
 
 ```python
-status = power_wall.get_status()
-#=> <PowerwallStatusResponse ...>
+status = powerwall.get_status()
+#=> <PowerwallStatus ...>
 status.version
-#=> '1.45.2'
+#=> '1.49.0'
+status.up_time_seconds
+#=> datetime.timedelta(days=13, seconds=63287, microseconds=146455)
+status.start_time
+#=> datetime.datetime(2020, 9, 23, 23, 31, 16, tzinfo=datetime.timezone(datetime.timedelta(seconds=28800)))
+status.device_type
+#=> DeviceType.GW2
 ```
 
 ### Sitemaster
 
 ```python
-sm = power_wall.sitemaster 
-#=> <SiteMasterResponse ...>
+sm = powerwall.sitemaster 
+#=> <SiteMaster ...>
 sm.status 
 #=> StatusUp
 sm.running
@@ -160,12 +194,16 @@ sm.connected_to_tesla
 ### Siteinfo
 
 ```python
-info = power_wall.get_site_info()
-#=> <SiteInfoResponse ...>
+info = powerwall.get_site_info()
+#=> <SiteInfo ...>
 info.site_name
-#=> Tesla Home
+#=> 'Tesla Home'
 info.country
-#=> Germany
+#=> 'Germany'
+info.nominal_system_energy
+#=> 13.5
+info.timezone
+#=> 'Europe/Berlin'
 ```
 
 ### Meters
@@ -173,55 +211,44 @@ info.country
 #### Aggregates
 
 ```python
-meters = power_wall.get_meters()
-#=> <MetersAggregateResponse ...>
+from tesla_powerwall import MeterType
+
+meters = powerwall.get_meters()
+#=> <MetersAggregates ...>
 meters.solar
-#=> <MetersResponse ...>
+#=> <Meter ...>
+
+meters.get_meter(MeterType.SOLAR)
+#=> <Meter ...>
 ```
 
-#### Details about meter
-
-Returns details about the meter. When no details are available `None` is returned.
-
-```python
-power_wall.meter_detailed(MeterType.SOLAR)
-#=> [<MeterDetailsResponse ...>]
-power_wall.meter_detailed(MeterType.LOAD)
-#=> None
-```
+Available meters are: `solar`, `site`, `load` and `battery`
 
 #### Current power supply/draw
 
-Get current power supply/draw for home, solar, battery and grid. 
+`Meter` provides different methods for checking current power supply/draw:
 
 ```python
-power_wall.is_drawing_from(MeterType.SOLAR)
-#=> True
-power_wall.is_sending_to(MeterType.LOAD)
-#=> True
-power_wall.is_active(MeterType.BATTERY)
-#=> False
-power_wall.get_power(MeterType.SOLAR)
-#=> 2.8 (in kWh)
-```
-
-> Note: For MeterType.LOAD is_drawing_from **always** returns `False` because it cannot be drawn from `load`.
-
-Each of those methods are wrappers for their respective methods on `MetersResponse`. When you call those wrapper methods `get_meters()` is always called. So if you need to query multiple meters you should first retrive all meters and execute the respective methods on the response:
-
-```python
-meters = power_wall.get_meters()
+meters = powerwall.get_meters()
+meters.solar.get_power()
+#=> 0.4 (in kWh)
+meters.solar.instant_power
+#=> 409.941801071167 (in watts)
 meters.solar.is_drawing_from()
 #=> True
 meters.load.is_sending_to()
 #=> True
 meters.battery.is_active()
 #=> False
-meters.solar.get_power()
-#=> 2.8 (in kWh)
+
+# Different precision settings might return different results
+meters.battery.is_active(precision=5)
+#=> True
 ```
 
-`get_power` is just a convenience method which is equivalent to:
+> Note: For MeterType.LOAD `is_drawing_from` **always** returns `False` because it cannot be drawn from `load`.
+
+`Meter.get_power` is just a convenience method which is equivalent to:
 
 ```python
 from tesla_powerwall.helpers import convert_to_kw
@@ -232,7 +259,7 @@ convert_to_kw(meters.solar.instant_power, precision=1)
 ### Device Type
 
 ```python
-power_wall.device_type
+powerwall.get_devie_type()
 #=> <DeviceType.GW1: 'hec'>
 ```
 
@@ -241,71 +268,30 @@ power_wall.device_type
 Get current grid status. 
 
 ```python
-power_wall.get_grid_status()
+powerwall.get_grid_status()
 #=> <GridStatus.Connected: 'SystemGridConnected'>
-power_wall.get_grid_services_active()
+powerwall.get_grid_services_active()
 #=> False
 ```
 
 ### Operation mode
 
 ```python
-power_wall.get_operation_mode()
+powerwall.get_operation_mode()
 #=> <OperationMode.SELF_CONSUMPTION: ...>
+powerwall.get_backup_reserved_percentage()
+#=> 5.000019999999999
 ```
 
-### Powerwall status
+### Powerwalls Serial Numbers
 
 ```python
-status = power_wall.get_status()
-#=> <PowerwallStatusResponse ...>
-status.version
-#=> '1.45.2'
-
-# If you just need the version you can also use `get_version`
-power_wall.get_version()
-#=> '1.45.2'
-```
-
-### Powerwalls
-
-Get all powerwalls
-
-```python
-powerwalls_resp = power_wall.get_powerwalls()
-#=> <ListPowerwallsResponse ...>
-powerwalls_resp.powerwalls
-#=> [{"Package...}]
-```
-
-Get powerwalls status when authenticated:
-
-```python
-powerwalls_status = power_wall.get_poweralls_status()
-#=> <PowerwalllsStatusResponse ...>
-```
-For some unkown reason the response to `get_powerwalls` also includes the powerwalls status, so if you are not authenticated you can just retrive the status from the `ListPowerwallsResponse`
-
-```python
-powerwalls_resp = power_wall.get_powerwalls()
-powerwalls_resp.status
-#=> <PowerwallsStatusResponse ...>
-power_wall.get_serial_numbers()
+serials = powerwall.get_serial_numbers()
 #=> ["...", "...", ...]
 ```
 
-### More
+### VIN
 
-Most methods return a `Response` object except for those that only return a single value like `get_charge` and those that have to complex output like `get_networks`. 
-
-Most times those `Response`s reflect the json response but for most nested data objects this is not the case. You can access the original response using `<Response>.json_response`.
-
-Some other methods include:
-
-* `get_vin`
-* `get_solars`
-* `get_meters_info`
-* `get_installer_info`
-* `get_meter_readings`
-* `get_meters_info`
-* `get_phase_usage`
+```python
+vin = powerwall.get_vin()
+```

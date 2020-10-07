@@ -2,14 +2,7 @@ from enum import Enum
 
 from packaging import version
 
-SUPPORTED_POWERWALL_VERSIONS = ["1.45.0", "1.45.1", "1.45.2", "1.46.0"]
-
 DEFAULT_KW_ROUND_PERSICION = 1
-
-
-class Version(Enum):
-    v1_45_2 = version.parse("1.45.2")
-    v1_46_0 = version.parse("1.46.0")
 
 
 class User(Enum):
@@ -101,6 +94,7 @@ class UpdateState(Enum):
     DOWNLOAD = "/download"
     DOWNLOADED = "/update_downloaded"
     UNKNOWN = "/update_unknown"
+
 
 class UpdateStatus(Enum):
     IGNORING = "ignoring"
