@@ -42,6 +42,7 @@ from .api import API
 VERSION = "0.3.0"
 
 class Powerwall:
+
     def __init__(
         self,
         endpoint: str,

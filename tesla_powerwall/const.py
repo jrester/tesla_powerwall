@@ -4,7 +4,6 @@ from packaging import version
 
 DEFAULT_KW_ROUND_PERSICION = 1
 
-
 class User(Enum):
     INSTALLER = "installer"
     CUSTOMER = "customer"

@@ -11,7 +11,6 @@ from .const import (
 )
 from .helpers import convert_to_kw, assert_attribute
 
-
 class Response:
     def __init__(self, response: dict):
         self.response = response
@@ -127,6 +126,7 @@ class SiteInfo(Response):
     def __init__(self, response):
         super().__init__(response)
 
+
     @property
     def nominal_system_energy(self):
         return self.assert_attribute("nominal_system_energy_kWh")
@@ -154,7 +154,7 @@ class PowerwallStatus(Response):
 
     _START_TIME_FORMAT = "%Y-%m-%d %H:%M:%S %z"
     _UP_TIME_SECONDS_REGEX = re.compile(
-        r"((?P<hours>\d+?)h)((?P<minutes>\d+?)m)((?P<seconds>\d+?).)((?P<microseconds>\d+?)s)"
+        r"((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?).)((?P<microseconds>\d+?)s)"
     )
 
     def _parse_uptime_seconds(self, up_time_seconds: str):
