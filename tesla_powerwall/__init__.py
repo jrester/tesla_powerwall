@@ -136,7 +136,7 @@ class Powerwall:
             self._api.get_powerwalls(), "powerwalls", "powerwalls"
         )
         return [
-            assert_attribute(powerwall, "PackagSerialNumber")
+            assert_attribute(powerwall, "PackageSerialNumber")
             for powerwall in powerwalls
         ]
 
