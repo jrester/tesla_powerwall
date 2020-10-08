@@ -1,16 +1,13 @@
 from json.decoder import JSONDecodeError
+from typing import List
+from urllib.parse import urljoin
+
 import requests
-from urllib.parse import urljoin, urlparse, urlsplit, urlunparse, urlunsplit
+from packaging.version import Version
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
-from packaging.version import Version
-from typing import List
 
-from .error import (
-    AccessDeniedError,
-    APIError,
-    PowerwallUnreachableError,
-)
+from .error import AccessDeniedError, APIError, PowerwallUnreachableError
 
 
 class API(object):

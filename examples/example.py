@@ -6,6 +6,9 @@ ip = os.getenv("POWERWALL_IP")
 if ip is None:
     raise ValueError("POWERWALL_IP must be set")
 
+email = os.getenv("POWERWALL_EMAIL")
+password = os.getenv("POWERWALL_PASSWORD")
+
 power_wall = Powerwall(ip)
 
 # Identify the powerwall version

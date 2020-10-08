@@ -1,14 +1,10 @@
-from json.decoder import JSONDecodeError
-from typing import List, Union, Dict, TypedDict
-from urllib.parse import urljoin, urlparse, urlsplit, urlunparse, urlunsplit
-from packaging import version
-from contextlib import contextmanager
+from typing import Dict, List, Union
 
 import requests
+from packaging import version
 from requests import Session
-from urllib3 import disable_warnings
-from urllib3.exceptions import InsecureRequestWarning
 
+from .api import API
 from .const import (
     DEFAULT_KW_ROUND_PERSICION,
     SUPPORTED_OPERATION_MODES,
@@ -18,31 +14,32 @@ from .const import (
     LineStatus,
     MeterType,
     OperationMode,
+    Roles,
+    SyncType,
     User,
 )
 from .error import (
     AccessDeniedError,
     APIError,
-    PowerwallUnreachableError,
-    PowerwallError,
     MissingAttributeError,
+    PowerwallError,
+    PowerwallUnreachableError,
 )
-from .helpers import convert_to_kw, assert_attribute
+from .helpers import assert_attribute, convert_to_kw
 from .responses import (
     LoginResponse,
-    SiteMaster,
-    SiteInfo,
-    PowerwallStatus,
     Meter,
     MetersAggregates,
+    PowerwallStatus,
+    SiteInfo,
+    SiteMaster,
     Solar,
 )
-from .api import API
 
 VERSION = "0.3.2"
 
-class Powerwall:
 
+class Powerwall:
     def __init__(
         self,
         endpoint: str,

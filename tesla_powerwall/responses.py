@@ -5,11 +5,10 @@ from .const import (
     DEFAULT_KW_ROUND_PERSICION,
     DeviceType,
     MeterType,
-    SyncType,
-    UpdateState,
     Roles,
 )
-from .helpers import convert_to_kw, assert_attribute
+from .helpers import assert_attribute, convert_to_kw
+
 
 class Response:
     def __init__(self, response: dict):
@@ -147,7 +146,6 @@ class SiteInfo(Response):
 
     def __init__(self, response):
         super().__init__(response)
-
 
     @property
     def nominal_system_energy(self):

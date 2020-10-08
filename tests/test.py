@@ -7,14 +7,13 @@ import responses
 from responses import GET, POST, Response, add
 
 from tesla_powerwall import (
+    API,
     AccessDeniedError,
     APIError,
     Meter,
     MetersAggregates,
-    MeterType,
     Powerwall,
     PowerwallUnreachableError,
-    API,
 )
 
 ENDPOINT = "https://1.1.1.1/api/"
