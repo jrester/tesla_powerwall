@@ -46,11 +46,33 @@ class Meter(Response):
 
     @property
     def instant_power(self):
-        return assert_attribute(self.response, "instant_power")
+        return self.assert_attribute("instant_power")
 
     @property
     def last_communication_time(self):
-        return assert_attribute(self.response, "last_communication_time")
+        return self.assert_attribute("last_communication_time")
+
+    @property
+    def frequency(self):
+        return self.assert_attribute("frequency")
+
+    @property
+    def energy_exported(self):
+        return self.assert_attribute("energy_exported")
+
+    def get_energy_exported(self, precision=DEFAULT_KW_ROUND_PERSICION):
+        return convert_to_kw(self.energy_exported, precision)
+
+    @property
+    def energy_imported(self):
+        return self.assert_attribute("energy_imported")
+
+    def get_energy_imported(self, precision=DEFAULT_KW_ROUND_PERSICION):
+        return convert_to_kw(self.energy_imported, precision)
+
+    @property
+    def avarage_voltage(self):
+        return self.assert_attribute("instant_average_voltage")
 
     def get_power(self, precision=DEFAULT_KW_ROUND_PERSICION):
         return convert_to_kw(self.instant_power, precision)

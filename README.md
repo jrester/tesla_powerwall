@@ -31,6 +31,7 @@ Powerwall Software versions from 1.45.0 to 1.49.0 are supported, but others will
   - [Meters](#meters)
     - [Aggregates](#aggregates)
     - [Current power supply/draw](#current-power-supplydraw)
+    - [Energy exported/imported](#energy-exportedimported)
   - [Device Type](#device-type)
   - [Grid Status](#grid-status)
   - [Operation mode](#operation-mode)
@@ -94,7 +95,7 @@ powerwall.logout()
 
 ### General
 
-The API object directly maps the REAT endpoints with a python method in the form of `<verb>_<path>`. So if you need the raw json responses you can use the API object. It can be either created manually or retrived from an existing `Powerwall`:
+The API object directly maps the REST endpoints with a python method in the form of `<verb>_<path>`. So if you need the raw json responses you can use the API object. It can be either created manually or retrived from an existing `Powerwall`:
 
 ```python
 from tesla_powerwall import API
@@ -254,6 +255,21 @@ meters.battery.is_active(precision=5)
 from tesla_powerwall.helpers import convert_to_kw
 
 convert_to_kw(meters.solar.instant_power, precision=1)
+```
+
+#### Energy exported/imported
+
+Get energy exported/imported in watts with `energy_exported` and `energy_imported`. For the values in kWh use `get_energy_exported` and `get_energy_imported`:
+
+```python
+meters.battery.energy_exported
+#=> 6394100
+meters.battery.get_energy_exported()
+#=> 6394.1
+meters.battery.energy_imported
+#=> 7576570
+meters.battery.get_energy_imported()
+#=> 7576.6
 ```
 
 ### Device Type
