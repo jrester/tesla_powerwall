@@ -97,9 +97,10 @@ class Meter(Response):
 class MetersAggregates(Response):
     def __init__(self, response):
         super().__init__(response)
-        for meter_type in MeterType:
-            meter = Meter(meter_type, self.assert_attribute(meter_type.value))
-            setattr(self, meter_type.value, meter)
+        self.solar = Meter(MeterType.SOLAR, self.assert_attribute(MeterType.SOLAR.value))
+        self.site = Meter(MeterType.SITE, self.assert_attribute(MeterType.SITE.value))
+        self.battery = Meter(MeterType.BATTERY, self.assert_attribute(MeterType.BATTERY.value))
+        self.load = Meter(MeterType.LOAD, self.assert_attribute(MeterType.LOAD.value))
 
     def get_meter(self, meter: MeterType) -> Meter:
         return getattr(self, meter.value)
@@ -128,6 +129,10 @@ class SiteMaster(Response):
     @property
     def is_connected_to_tesla(self):
         return self.assert_attribute("connected_to_tesla")
+
+    @property
+    def is_power_supply_mode(self):
+        return self.assert_attribute("power_supply_mode")
 
 
 class SiteInfo(Response):
@@ -165,6 +170,7 @@ class PowerwallStatus(Response):
     Attributes:
     * start_time
     * up_time_seconds
+    * is_new
     * version
     * device_type
     * commission_count

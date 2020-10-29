@@ -9,7 +9,7 @@ Python Tesla Powerwall API for consuming a local endpoint. The API is by no mean
 
 > Note: This is not an official API provided by Tesla and as such might fail at any time.
 
-Powerwall Software versions from 1.45.0 to 1.49.0 are supported, but others will probably work too. 
+Powerwall Software versions from 1.45.0 to 1.50.1 are supported, but others will probably work too. 
 
 > For more information about versioning see [API versioning](#api-versioning).
 
@@ -123,10 +123,10 @@ If you are sure which version your powerwall has you can pin the Powerwall objec
 ```python
 from tesla_powerwall import Version
 # Pin powerwall object
-powerwall = Powerwall("<powerwall-ip>", pin_version="1.46.0")
+powerwall = Powerwall("<powerwall-ip>", pin_version="1.50.1")
 
 # You can also pin a version after the powerwall object was created
-powerwall.pin_version("1.46.0")
+powerwall.pin_version("1.50.1")
 ```
 
 Otherwise you can let the API try to detect the version and pin it. This method should be prefered over the manual detection and pinning of the version:
