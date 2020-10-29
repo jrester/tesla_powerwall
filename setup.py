@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="tesla_powerwall",
-    version="0.3.3",
+    version="0.3.4",
     description="API for Tesla Powerwall",
     long_description=long_description,
     long_description_content_type="text/markdown",
