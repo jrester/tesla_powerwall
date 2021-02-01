@@ -68,6 +68,9 @@ class Powerwall:
     def logout(self):
         self._api.logout()
 
+    def is_authenticated(self) -> bool:
+        return self._api.is_authenticated()
+    
     def run(self):
         self._api.get_sitemater_run()
 
