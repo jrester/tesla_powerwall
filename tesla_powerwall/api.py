@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 
 import requests
 from packaging.version import Version
+from requests.api import request
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -46,7 +47,7 @@ class API(object):
 
         return endpoint
 
-    def _process_response(self, response: str) -> dict:
+    def _handle_error(self, response: requests.Response) -> None:
         if response.status_code == 404:
             raise APIError(
                 "The url {} returned error 404".format(response.request.path_url)
@@ -60,11 +61,23 @@ class API(object):
                 raise AccessDeniedError(response.request.path_url)
             else:
                 raise AccessDeniedError(
-                    response.request.path_url, response_json["error"]
+                    response.request.path_url,
+                    response_json.get("error"),
+                    response_json.get("message"),
                 )
 
-        if response.status_code == 502:
-            raise PowerwallUnreachableError()
+        raise APIError(
+            "API returned status code '{}: {}' with body: {}".format(
+                response.status_code,
+                requests.status_codes.codes[response.status_code],
+                response.text,
+            )
+        )
+
+    def _process_response(self, response: request.Response) -> dict:
+        if response.status_code >= 400:
+            # API returned some sort of error that must be handled
+            self._handle_error(response)
 
         try:
             response_json = response.json()
@@ -76,6 +89,8 @@ class API(object):
         if response_json is None:
             return {}
 
+        # Newer versions of the powerwall do not return such values anymore
+        # Kept for backwards compability or if the API changes again
         if "error" in response_json:
             raise APIError(response_json["error"])
 
@@ -92,7 +107,9 @@ class API(object):
 
         try:
             response = self._http_session.get(
-                url=self.url(path), timeout=self._timeout, headers=headers,
+                url=self.url(path),
+                timeout=self._timeout,
+                headers=headers,
             )
         except (
             requests.exceptions.ConnectionError,

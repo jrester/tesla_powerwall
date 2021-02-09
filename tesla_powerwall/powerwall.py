@@ -23,9 +23,10 @@ from .responses import (
     PowerwallStatus,
     SiteMaster,
     SiteInfo,
-    Solar
+    Solar,
 )
 from .helpers import assert_attribute
+
 
 class Powerwall:
     def __init__(
@@ -35,7 +36,7 @@ class Powerwall:
         http_session: requests.Session = None,
         verify_ssl: bool = False,
         disable_insecure_warning: bool = True,
-        pin_version: Union[str,version.Version] = None,
+        pin_version: Union[str, version.Version] = None,
     ):
         if pin_version is not None:
             self.pin_version(pin_version)
@@ -43,7 +44,11 @@ class Powerwall:
             self._pin_version = None
 
         self._api = API(
-            endpoint, timeout, http_session, verify_ssl, disable_insecure_warning,
+            endpoint,
+            timeout,
+            http_session,
+            verify_ssl,
+            disable_insecure_warning,
         )
 
     def login_as(
@@ -70,7 +75,7 @@ class Powerwall:
 
     def is_authenticated(self) -> bool:
         return self._api.is_authenticated()
-    
+
     def run(self):
         self._api.get_sitemater_run()
 

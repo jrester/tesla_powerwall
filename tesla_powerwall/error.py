@@ -38,10 +38,14 @@ class PowerwallUnreachableError(PowerwallError):
 
 
 class AccessDeniedError(PowerwallError):
-    def __init__(self, resource, error=None):
+    def __init__(self, resource, error=None, message=None):
         self.resource = resource
         self.error = error
+        self.message = message
         msg = "Access denied for resource {}".format(resource)
         if error is not None:
-            msg = "{}: {}".format(msg, error)
+            if message is not None:
+                msg = "{}: {}: {}".format(msg, error, message)
+            else:
+                msg = "{}: {}".format(msg, error)
         super().__init__(msg)

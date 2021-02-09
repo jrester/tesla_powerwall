@@ -97,9 +97,13 @@ class Meter(Response):
 class MetersAggregates(Response):
     def __init__(self, response):
         super().__init__(response)
-        self.solar = Meter(MeterType.SOLAR, self.assert_attribute(MeterType.SOLAR.value))
+        self.solar = Meter(
+            MeterType.SOLAR, self.assert_attribute(MeterType.SOLAR.value)
+        )
         self.site = Meter(MeterType.SITE, self.assert_attribute(MeterType.SITE.value))
-        self.battery = Meter(MeterType.BATTERY, self.assert_attribute(MeterType.BATTERY.value))
+        self.battery = Meter(
+            MeterType.BATTERY, self.assert_attribute(MeterType.BATTERY.value)
+        )
         self.load = Meter(MeterType.LOAD, self.assert_attribute(MeterType.LOAD.value))
 
     def get_meter(self, meter: MeterType) -> Meter:
