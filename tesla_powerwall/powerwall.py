@@ -54,8 +54,8 @@ class Powerwall:
     def login_as(
         self,
         user: Union[User, str],
-        email: str,
         password: str,
+        email: str,
         force_sm_off: bool = False,
     ) -> dict:
         if isinstance(user, User):
@@ -67,7 +67,7 @@ class Powerwall:
 
         return LoginResponse(response)
 
-    def login(self, email: str, password: str, force_sm_off: bool = False) -> dict:
+    def login(self, password: str, email: str = "", force_sm_off: bool = False) -> dict:
         return self.login_as(User.CUSTOMER, email, password, force_sm_off)
 
     def logout(self):
@@ -142,9 +142,9 @@ class Powerwall:
         )
         return OperationMode(operation_mode)
 
-    def get_backup_reserved_percentage(self) -> float:
+    def get_backup_reserve_percentage(self) -> float:
         return assert_attribute(
-            self._api.get_operation(), "backup_reserved_percent", "operation"
+            self._api.get_operation(), "backup_reserve_percent", "operation"
         )
 
     def get_solars(self) -> List[Solar]:

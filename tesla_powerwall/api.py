@@ -7,6 +7,7 @@ from packaging.version import Version
 from requests.api import request
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
+from http.client import responses
 
 from .error import AccessDeniedError, APIError, PowerwallUnreachableError
 
@@ -29,7 +30,8 @@ class API(object):
         self._http_session = http_session if http_session else requests.Session()
         self._http_session.verify = verify_ssl
 
-    def _parse_endpoint(self, endpoint: str) -> str:
+    @staticmethod
+    def _parse_endpoint(endpoint: str) -> str:
         if endpoint.startswith("https"):
             endpoint = endpoint
         elif endpoint.startswith("http"):
@@ -47,7 +49,8 @@ class API(object):
 
         return endpoint
 
-    def _handle_error(self, response: requests.Response) -> None:
+    @staticmethod
+    def _handle_error(response: requests.Response) -> None:
         if response.status_code == 404:
             raise APIError(
                 "The url {} returned error 404".format(response.request.path_url)
@@ -66,15 +69,22 @@ class API(object):
                     response_json.get("message"),
                 )
 
-        raise APIError(
-            "API returned status code '{}: {}' with body: {}".format(
-                response.status_code,
-                requests.status_codes.codes[response.status_code],
-                response.text,
+        if response.text is not None and len(response.text) > 0:
+            raise APIError(
+                "API returned status code '{}: {}' with body: {}".format(
+                    response.status_code,
+                    responses.get(response.status_code),
+                    response.text,
+                )
             )
-        )
+        else:
+            raise APIError(
+                "API returned status code '{}: {}' ".format(
+                    response.status_code, responses.get(response.status_code)
+                )
+            )
 
-    def _process_response(self, response: request.Response) -> dict:
+    def _process_response(self, response: requests.Response) -> dict:
         if response.status_code >= 400:
             # API returned some sort of error that must be handled
             self._handle_error(response)
@@ -159,7 +169,6 @@ class API(object):
         # The api unsets the auth cookie and the token is invalidated
         self.get("logout")
 
-    # Although this could be done dynamically it is more descriptive
     # Endpoints are mapped to one method by <verb>_<path> so they can be easily accessed
 
     def get_system_status_soe(self) -> dict:

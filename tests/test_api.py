@@ -36,7 +36,7 @@ class TestAPI(unittest.TestCase):
             self.api._process_response(res)
 
         res.status_code = 502
-        with self.assertRaises(PowerwallUnreachableError):
+        with self.assertRaises(APIError):
             self.api._process_response(res)
 
         res.status_code = 200
