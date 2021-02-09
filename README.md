@@ -9,7 +9,7 @@ Python Tesla Powerwall API for consuming a local endpoint. The API is by no mean
 
 > Note: This is not an official API provided by Tesla and as such might fail at any time.
 
-Powerwall Software versions from 1.45.0 to 1.50.1 as well as 20.40.x are tested, but others will probably work too. If you encounter an error regarding a change in the API of the Powerwall because your Powerwall has a different version than listed here please open an Issue to report this change so it can be fixed.
+Powerwall Software versions from 1.45.0 to 1.50.1 as well as 20.40 to 20.49 are tested, but others will probably work too. If you encounter an error regarding a change in the API of the Powerwall because your Powerwall has a different version than listed here please open an Issue to report this change so it can be fixed.
 
 > For more information about versioning see [API versioning](#api-versioning).
 
@@ -40,6 +40,8 @@ Powerwall Software versions from 1.45.0 to 1.50.1 as well as 20.40.x are tested,
 
 ## Installation
 
+Install the library via pip:
+
 ```bash
 $ pip install tesla_powerwall
 ```
@@ -51,15 +53,21 @@ $ pip install tesla_powerwall
 ```python
 from tesla_powerwall import Powerwall
 
+# Create a simple powerwall object by providing the IP
 powerwall = Powerwall("<ip of your Powerwall>")
 #=> <Powerwall ...>
 
+# Create a powerwall object with more options
 powerwall = Powerwall(
     endpoint="<ip of your powerwall>",
+    # Configure timeout; default is 10
     timeout=10,
+    # Provide a requests.Session
     http_sesion=None,
+    # Whether to verify the SSL certificate or not
     verify_ssl=False,
     disable_insecure_warning=True,
+    # Set the API to expect a specific version of the powerwall software
     pin_version=None
 )
 #=> <Powerwall ...>
@@ -70,7 +78,8 @@ powerwall = Powerwall(
 
 ### Authentication
 
-Logging in is not required for most methods. When a method requires you to log in an `AccessDeniedError` is thrown.
+Since version 20.49.0 authentication is required for all methods. For that reason you must call `login` before making a request to the API.
+When you perform a request without being loggedin a `AccessDeniedError` will probably be thrown if the endpoint requires authentication.
 
 To login you can either use `login` or `login_as`. `login` logs you in as `User.CUSTOMER` whereas with `login_as` you can choose a different user:
 
@@ -90,7 +99,9 @@ powerwall.login("<password>", "<email>")
 powerwall.login_as(User.INSTALLER, "<password>", "<email>")
 #=> <LoginResponse ...>
 
-# Check if we are logged in 
+# Check if we are logged in
+# This method only checks wether a cookie with a Bearer token exists
+# It does not verify whether this token is valid
 powerwall.is_authenticated()
 #=> True
 
