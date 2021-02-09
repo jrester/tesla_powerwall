@@ -77,12 +77,17 @@ To login you can either use `login` or `login_as`. `login` logs you in as `User.
 ```python
 from tesla_powerwall import User
 
-# Login as customer
-powerwall.login("<email>", "<password>")
+# Login as customer without email
+# The default value for the email is ""
+powerwall.login("<password>")
+#=> <LoginResponse ...>
+
+# Login as customer with email
+powerwall.login("<password>", "<email>")
 #=> <LoginResponse ...>
 
 # Login with different user
-powerwall.login_as(User.INSTALLER, "<email>", "<password>")
+powerwall.login_as(User.INSTALLER, "<password>", "<email>")
 #=> <LoginResponse ...>
 
 # Check if we are logged in 
@@ -105,7 +110,6 @@ api = API('https://<ip>/')
 # Perform get on 'system_status/soe'
 api.get_system_status_soe()
 #=> {'percentage': 97.59281925744594}
-
 
 # From existing powerwall
 api = powerwall.get_api()
@@ -295,7 +299,7 @@ powerwall.get_grid_services_active()
 ```python
 powerwall.get_operation_mode()
 #=> <OperationMode.SELF_CONSUMPTION: ...>
-powerwall.get_backup_reserved_percentage()
+powerwall.get_backup_reserve_percentage()
 #=> 5.000019999999999
 ```
 
