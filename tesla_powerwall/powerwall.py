@@ -68,7 +68,7 @@ class Powerwall:
         return LoginResponse(response)
 
     def login(self, password: str, email: str = "", force_sm_off: bool = False) -> dict:
-        return self.login_as(User.CUSTOMER, email, password, force_sm_off)
+        return self.login_as(User.CUSTOMER, password, email, force_sm_off)
 
     def logout(self):
         self._api.logout()
