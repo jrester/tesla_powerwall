@@ -26,7 +26,8 @@ from tesla_powerwall import (
     MeterType
 )
 
-from . import ENDPOINT, METERS_RESPONSE, STATUS_RESPONSE, GRID_STATUS_RESPONSE, SITE_INFO_RESPONSE, POWERWALLS_RESPONSE, SITE_MASTER_RESPONSE, OPERATION_RESPONSE
+
+from tests.unit import ENDPOINT, METERS_AGGREGATES_RESPONSE, STATUS_RESPONSE, GRID_STATUS_RESPONSE, SITE_INFO_RESPONSE, POWERWALLS_RESPONSE, SITEMASTER_RESPONSE, OPERATION_RESPONSE
 
 class TestPowerWall(unittest.TestCase):
     def setUp(self):
@@ -55,7 +56,7 @@ class TestPowerWall(unittest.TestCase):
     def test_get_sitemaster(self):
         add(
             Response(
-                responses.GET, url=f"{ENDPOINT}sitemaster", json=SITE_MASTER_RESPONSE
+                responses.GET, url=f"{ENDPOINT}sitemaster", json=SITEMASTER_RESPONSE
             )
         )
 
@@ -71,7 +72,7 @@ class TestPowerWall(unittest.TestCase):
     def test_get_meters(self):
         add(
             Response(
-                responses.GET, url=f"{ENDPOINT}meters/aggregates", json=METERS_RESPONSE
+                responses.GET, url=f"{ENDPOINT}meters/aggregates", json=METERS_AGGREGATES_RESPONSE
             )
         )
         meters = self.powerwall.get_meters()
@@ -87,7 +88,7 @@ class TestPowerWall(unittest.TestCase):
     def test_meter(self):
         add(
             Response(
-                responses.GET, url=f"{ENDPOINT}meters/aggregates", json=METERS_RESPONSE
+                responses.GET, url=f"{ENDPOINT}meters/aggregates", json=METERS_AGGREGATES_RESPONSE
             )
         )
 
@@ -95,7 +96,7 @@ class TestPowerWall(unittest.TestCase):
     def test_is_sending(self):
         add(
             Response(
-                responses.GET, url=f"{ENDPOINT}meters/aggregates", json=METERS_RESPONSE
+                responses.GET, url=f"{ENDPOINT}meters/aggregates", json=METERS_AGGREGATES_RESPONSE
             )
         )
         meters = self.powerwall.get_meters()
@@ -220,7 +221,3 @@ class TestPowerWall(unittest.TestCase):
             assert_attribute(resp, "test", "test")
 
         self.assertEqual(convert_to_kw(2500, -1), 2.5)
-
-    def test_misc(self):
-        PowerwallUnreachableError("reason")
-        AccessDeniedError("test", "Error reason")

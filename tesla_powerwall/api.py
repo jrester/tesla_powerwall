@@ -169,6 +169,11 @@ class API(object):
         # The api unsets the auth cookie and the token is invalidated
         self.get("logout")
 
+    def close(self):
+        # Close the HTTP Session
+        # THis method is required for testing, so python doesn't complain about unclosed resources
+        self._http_session.close()
+
     # Endpoints are mapped to one method by <verb>_<path> so they can be easily accessed
 
     def get_system_status_soe(self) -> dict:

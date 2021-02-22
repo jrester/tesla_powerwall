@@ -12,7 +12,7 @@ from tesla_powerwall import (
     APIError
 )
 
-from . import ENDPOINT
+from tests.unit import ENDPOINT
 
 class TestAPI(unittest.TestCase):
     def setUp(self):

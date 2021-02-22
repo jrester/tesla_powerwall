@@ -171,3 +171,6 @@ class Powerwall:
 
     def get_api(self):
         return self._api
+
+    def close(self):
+        self._api.close()

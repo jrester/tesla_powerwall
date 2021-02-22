@@ -5,6 +5,8 @@ with open("README.md", "r") as fh:
 
 setup(
     name="tesla_powerwall",
+    author="Jrester",
+    author_email="jrester379@gmail.com",
     version="0.3.6",
     description="API for Tesla Powerwall",
     long_description=long_description,

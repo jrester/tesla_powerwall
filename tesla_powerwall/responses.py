@@ -59,21 +59,21 @@ class Meter(Response):
     def energy_exported(self):
         return self.assert_attribute("energy_exported")
 
-    def get_energy_exported(self, precision=DEFAULT_KW_ROUND_PERSICION):
+    def get_energy_exported(self, precision=DEFAULT_KW_ROUND_PERSICION) -> float:
         return convert_to_kw(self.energy_exported, precision)
 
     @property
     def energy_imported(self):
         return self.assert_attribute("energy_imported")
 
-    def get_energy_imported(self, precision=DEFAULT_KW_ROUND_PERSICION):
+    def get_energy_imported(self, precision=DEFAULT_KW_ROUND_PERSICION) -> float:
         return convert_to_kw(self.energy_imported, precision)
 
     @property
     def avarage_voltage(self):
         return self.assert_attribute("instant_average_voltage")
 
-    def get_power(self, precision=DEFAULT_KW_ROUND_PERSICION):
+    def get_power(self, precision=DEFAULT_KW_ROUND_PERSICION) -> float:
         return convert_to_kw(self.instant_power, precision)
 
     def is_active(self, precision=DEFAULT_KW_ROUND_PERSICION) -> bool:
@@ -86,7 +86,7 @@ class Meter(Response):
         else:
             return self.get_power(precision) > 0
 
-    def is_sending_to(self, precision=DEFAULT_KW_ROUND_PERSICION):
+    def is_sending_to(self, precision=DEFAULT_KW_ROUND_PERSICION) -> bool:
         if self.meter == MeterType.LOAD:
             # For load the power is always positiv
             return self.get_power(precision) > 0
@@ -127,15 +127,15 @@ class SiteMaster(Response):
         return self.assert_attribute("status")
 
     @property
-    def is_running(self):
+    def is_running(self) -> bool:
         return self.assert_attribute("running")
 
     @property
-    def is_connected_to_tesla(self):
+    def is_connected_to_tesla(self) -> bool:
         return self.assert_attribute("connected_to_tesla")
 
     @property
-    def is_power_supply_mode(self):
+    def is_power_supply_mode(self) -> bool:
         return self.assert_attribute("power_supply_mode")
 
 
