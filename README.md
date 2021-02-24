@@ -207,6 +207,8 @@ sm.connected_to_tesla
 #=> true
 ```
 
+The sitemaster can be started and stopped using `run()` and `stop()`
+
 ### Siteinfo
 
 ```python
