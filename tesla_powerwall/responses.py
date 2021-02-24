@@ -184,7 +184,7 @@ class PowerwallStatus(Response):
 
     _START_TIME_FORMAT = "%Y-%m-%d %H:%M:%S %z"
     _UP_TIME_SECONDS_REGEX = re.compile(
-        r"((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?).)((?P<microseconds>\d+?)s)"
+        r'^((?P<days>[\.\d]+?)d)?((?P<hours>[\.\d]+?)h)?((?P<minutes>[\.\d]+?)m)?((?P<seconds>[\.\d]+?)s)?$'
     )
 
     def _parse_uptime_seconds(self, up_time_seconds: str):
@@ -197,7 +197,7 @@ class PowerwallStatus(Response):
         time_params = {}
         for (name, param) in match.groupdict().items():
             if param:
-                time_params[name] = int(param)
+                time_params[name] = float(param)
 
         return timedelta(**time_params)
 
