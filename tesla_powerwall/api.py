@@ -182,7 +182,7 @@ class API(object):
     def get_meters_aggregates(self) -> dict:
         return self.get("meters/aggregates")
 
-    def get_sitemater_run(self):
+    def get_sitemaster_run(self):
         return self.get("sitemaster/run")
 
     def get_sitemaster_stop(self):

@@ -77,7 +77,7 @@ class Powerwall:
         return self._api.is_authenticated()
 
     def run(self):
-        self._api.get_sitemater_run()
+        self._api.get_sitemaster_run()
 
     def stop(self):
         self._api.get_sitemaster_stop()
