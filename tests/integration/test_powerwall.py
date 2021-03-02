@@ -35,7 +35,7 @@ class TestPowerwall(unittest.TestCase):
             meter.instant_power
             meter.last_communication_time
             meter.frequency
-            meter.avarage_voltage
+            meter.average_voltage
             meter.get_energy_exported()
             meter.get_energy_imported()
             self.assertIsInstance(meter.get_power(), float)

@@ -149,7 +149,7 @@ class TestPowerWall(unittest.TestCase):
             )
         )
         status = self.powerwall.get_status()
-        self.assertEqual(status.up_time_seconds, datetime.timedelta(seconds=62105, microseconds=751424))
+        self.assertEqual(status.up_time_seconds, datetime.timedelta(seconds=61891, microseconds=214751))
         self.assertEqual(status.start_time, datetime.datetime(2020, 10, 28, 20, 14, 11, tzinfo=datetime.timezone(datetime.timedelta(seconds=28800))))
         self.assertEqual(status.device_type, DeviceType.GW1)
         self.assertEqual(status.version, "1.50.1")
