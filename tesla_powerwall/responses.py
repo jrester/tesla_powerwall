@@ -70,7 +70,7 @@ class Meter(Response):
         return convert_to_kw(self.energy_imported, precision)
 
     @property
-    def avarage_voltage(self):
+    def average_voltage(self):
         return self.assert_attribute("instant_average_voltage")
 
     def get_power(self, precision=DEFAULT_KW_ROUND_PERSICION) -> float:
