@@ -3,7 +3,7 @@ import os
 import unittest
 import datetime
 
-from packaging import version
+from distutils import version
 import requests
 import responses
 from responses import GET, POST, Response, add
@@ -38,10 +38,10 @@ class TestPowerWall(unittest.TestCase):
 
     def test_pins_version_on_creation(self):
         pw = Powerwall(ENDPOINT, pin_version="1.49.0")
-        self.assertEqual(pw.get_pinned_version(), version.parse("1.49.0"))
+        self.assertEqual(pw.get_pinned_version(), version.LooseVersion("1.49.0"))
 
-        pw = Powerwall(ENDPOINT, pin_version=version.parse("1.49.0"))
-        self.assertEqual(pw.get_pinned_version(), version.parse("1.49.0"))
+        pw = Powerwall(ENDPOINT, pin_version=version.LooseVersion("1.49.0"))
+        self.assertEqual(pw.get_pinned_version(), version.LooseVersion("1.49.0"))
 
     @responses.activate
     def test_get_charge(self):
@@ -207,7 +207,7 @@ class TestPowerWall(unittest.TestCase):
                 responses.GET, url=f"{ENDPOINT}status", json=STATUS_RESPONSE
             )
         )
-        vers = version.parse("1.50.1")
+        vers = version.LooseVersion("1.50.1")
         pw = Powerwall(ENDPOINT)
         self.assertEqual(pw.detect_and_pin_version(), vers)
         self.assertEqual(pw._pin_version, vers)

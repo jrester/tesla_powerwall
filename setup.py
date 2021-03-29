@@ -17,5 +17,5 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
     ],
-    install_requires=["requests>=2.22.0", "packaging>=20.0"],
+    install_requires=["requests>=2.22.0"],
 )

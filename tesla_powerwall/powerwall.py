@@ -1,6 +1,6 @@
 from typing import Union, List
 import requests
-from packaging import version
+from distutils import version
 
 from .api import API
 from .const import (
@@ -118,7 +118,7 @@ class Powerwall:
 
     def get_device_type(self) -> DeviceType:
         """Returns the device type of the powerwall"""
-        if self._pin_version is None or self._pin_version >= version.parse("1.46.0"):
+        if self._pin_version is None or self._pin_version >= version.LooseVersion("1.46.0"):
             return self.get_status().device_type
         else:
             return DeviceType(
@@ -164,7 +164,7 @@ class Powerwall:
         if isinstance(vers, version.Version):
             self._pin_version = vers
         else:
-            self._pin_version = version.parse(vers)
+            self._pin_version = version.LooseVersion(vers)
 
     def get_pinned_version(self) -> version.Version:
         return self._pin_version

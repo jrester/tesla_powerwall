@@ -3,7 +3,6 @@ from typing import List
 from urllib.parse import urljoin
 
 import requests
-from packaging.version import Version
 from requests.api import request
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
