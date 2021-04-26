@@ -70,6 +70,13 @@ class Meter(Response):
         return convert_to_kw(self.energy_imported, precision)
 
     @property
+    def instant_total_current(self):
+        return self.assert_attribute("instant_total_current")
+
+    def get_instant_total_current(self, precision=DEFAULT_KW_ROUND_PERSICION) -> float:
+        return round(self.instant_total_current, precision)
+
+    @property
     def average_voltage(self):
         return self.assert_attribute("instant_average_voltage")
 
