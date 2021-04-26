@@ -74,7 +74,7 @@ class Meter(Response):
         return self.assert_attribute("instant_total_current")
 
     def get_instant_total_current(self, precision=DEFAULT_KW_ROUND_PERSICION) -> float:
-        return round(self.assert_attribute("instant_total_current"), precision)
+        return round(self.instant_total_current, precision)
 
     @property
     def average_voltage(self):
