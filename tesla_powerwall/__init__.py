@@ -31,4 +31,4 @@ from .responses import (
 )
 from .powerwall import Powerwall
 
-VERSION = "0.3.9"
+VERSION = "0.3.10"
