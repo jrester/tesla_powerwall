@@ -303,7 +303,7 @@ Get current grid status.
 ```python
 powerwall.get_grid_status()
 #=> <GridStatus.Connected: 'SystemGridConnected'>
-powerwall.get_grid_services_active()
+powerwall.is_grid_services_active()
 #=> False
 ```
 
