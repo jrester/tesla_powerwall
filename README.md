@@ -9,7 +9,7 @@ Python Tesla Powerwall API for consuming a local endpoint. The API is by no mean
 
 > Note: This is not an official API provided by Tesla and as such might fail at any time.
 
-Powerwall Software versions from 1.45.0 to 1.50.1 as well as 20.40 to 20.49 are tested, but others will probably work too. If you encounter an error regarding a change in the API of the Powerwall because your Powerwall has a different version than listed here please open an Issue to report this change so it can be fixed.
+Powerwall Software versions from 1.45.0 to 1.50.1 as well as 20.40 to 21.20.6 are tested, but others will probably work too. If you encounter an error regarding a change in the API of the Powerwall because your Powerwall has a different version than listed here please open an Issue to report this change so it can be fixed.
 
 > For more information about versioning see [API versioning](#api-versioning).
 
@@ -49,6 +49,8 @@ $ pip install tesla_powerwall
 ## Usage
 
 ### Setup
+
+Until version `20.49.x` you can use the hostname or the IP to connect to your powerwall. As of `21.20.6` only the IP address works.
 
 ```python
 from tesla_powerwall import Powerwall
@@ -309,11 +311,18 @@ powerwall.get_grid_services_active()
 
 ### Operation mode
 
+The current operation mode and backup precentage can be retrived with `get_operation` and changed using `set_operation`.
+
 ```python
-powerwall.get_operation_mode()
-#=> <OperationMode.SELF_CONSUMPTION: ...>
-powerwall.get_backup_reserve_percentage()
-#=> 5.000019999999999
+operation = powerwall.get_operation()
+#=> OperationResponse(..)
+operation.mode
+#=> <OperationMode.SELF_CONSUMPTION: 'self_consumption'>
+operation.backup_reserve_percent
+#=> 20
+
+powerwall.set_operation(OperationMode.BACKUP, 30)
+#=> OperationResponse(..)
 ```
 
 ### Powerwalls Serial Numbers

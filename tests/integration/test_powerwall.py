@@ -1,5 +1,6 @@
 from tesla_powerwall.responses import PowerwallStatus
 import unittest
+from typing import Union
 
 from tesla_powerwall import Powerwall, GridStatus, SiteInfo, SiteMaster, MetersAggregates, Meter, MeterType, powerwall
 
@@ -15,7 +16,7 @@ class TestPowerwall(unittest.TestCase):
 
     def test_get_charge(self) -> None:
         charge = self.powerwall.get_charge()
-        self.assertIsInstance(charge, float)
+        self.assertIsInstance(charge, (float, int))
 
     def test_get_meters(self) -> None:
         meters = self.powerwall.get_meters()

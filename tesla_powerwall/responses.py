@@ -5,6 +5,7 @@ from .const import (
     DEFAULT_KW_ROUND_PERSICION,
     DeviceType,
     MeterType,
+    OperationMode,
     Roles,
 )
 from .helpers import assert_attribute, convert_to_kw
@@ -191,7 +192,7 @@ class PowerwallStatus(Response):
 
     _START_TIME_FORMAT = "%Y-%m-%d %H:%M:%S %z"
     _UP_TIME_SECONDS_REGEX = re.compile(
-        r'^((?P<days>[\.\d]+?)d)?((?P<hours>[\.\d]+?)h)?((?P<minutes>[\.\d]+?)m)?((?P<seconds>[\.\d]+?)s)?$'
+        r"^((?P<days>[\.\d]+?)d)?((?P<hours>[\.\d]+?)h)?((?P<minutes>[\.\d]+?)m)?((?P<seconds>[\.\d]+?)s)?$"
     )
 
     def _parse_uptime_seconds(self, up_time_seconds: str):
@@ -279,3 +280,13 @@ class Solar(Response):
     @property
     def power_rating_watts(self):
         return self.assert_attribute("power_rating_watts")
+
+
+class OperationResponse(Response):
+    @property
+    def mode(self) -> OperationMode:
+        return OperationMode(self.assert_attribute("mode"))
+
+    @property
+    def backup_reserve_percent(self) -> float:
+        return self.assert_attribute("backup_reserve_percent")

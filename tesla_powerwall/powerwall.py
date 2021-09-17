@@ -20,6 +20,7 @@ from .responses import (
     LoginResponse,
     Meter,
     MetersAggregates,
+    OperationResponse,
     PowerwallStatus,
     SiteMaster,
     SiteInfo,
@@ -82,7 +83,7 @@ class Powerwall:
     def stop(self):
         self._api.get_sitemaster_stop()
 
-    def get_charge(self) -> float:
+    def get_charge(self) -> Union[float, int]:
         return assert_attribute(self._api.get_system_status_soe(), "percentage", "soe")
 
     def get_sitemaster(self) -> SiteMaster:
@@ -110,7 +111,7 @@ class Powerwall:
         """Returns information about the powerwall site"""
         return SiteInfo(self._api.get_site_info())
 
-    def set_site_name(self, site_name: str):
+    def set_site_name(self, site_name: str) -> str:
         return self._api.post_site_info_site_name({"site_name": site_name})
 
     def get_status(self) -> PowerwallStatus:
@@ -118,7 +119,9 @@ class Powerwall:
 
     def get_device_type(self) -> DeviceType:
         """Returns the device type of the powerwall"""
-        if self._pin_version is None or self._pin_version >= version.LooseVersion("1.46.0"):
+        if self._pin_version is None or self._pin_version >= version.LooseVersion(
+            "1.46.0"
+        ):
             return self.get_status().device_type
         else:
             return DeviceType(
@@ -136,15 +139,14 @@ class Powerwall:
             for powerwall in powerwalls
         ]
 
-    def get_operation_mode(self) -> OperationMode:
-        operation_mode = assert_attribute(
-            self._api.get_operation(), "real_mode", "operation"
-        )
-        return OperationMode(operation_mode)
+    def get_operation(self) -> OperationResponse:
+        return OperationResponse(self._api.get_operation())
 
-    def get_backup_reserve_percentage(self) -> float:
-        return assert_attribute(
-            self._api.get_operation(), "backup_reserve_percent", "operation"
+    def set_operation(self, mode: OperationMode, percentage: float):
+        return OperationResponse(
+            self._api.post_operation(
+                {"mode": mode.value, "backup_reserve_percent": percentage}
+            )
         )
 
     def get_solars(self) -> List[Solar]:
@@ -169,7 +171,7 @@ class Powerwall:
     def get_pinned_version(self) -> version.Version:
         return self._pin_version
 
-    def get_api(self):
+    def get_api(self) -> API:
         return self._api
 
     def close(self):

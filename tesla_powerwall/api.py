@@ -206,6 +206,9 @@ class API(object):
     def get_operation(self):
         return self.get("operation")
 
+    def post_operation(self, payload: dict):
+        return self.post("operation", payload=payload)
+
     def get_networks(self) -> list:
         return self.get("networks")
 
