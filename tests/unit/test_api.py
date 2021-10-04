@@ -5,21 +5,23 @@ import requests
 import responses
 from responses import GET, POST, Response, add
 
-from tesla_powerwall import (
-    API,
-    AccessDeniedError,
-    PowerwallUnreachableError,
-    APIError
-)
+from tesla_powerwall import API, AccessDeniedError, PowerwallUnreachableError, APIError
 
 from tests.unit import ENDPOINT
+
 
 class TestAPI(unittest.TestCase):
     def setUp(self):
         self.api = API(ENDPOINT)
 
     def test_parse_endpoint(self):
-        test_endpoints = ["1.1.1.1", "http://1.1.1.1", "https://1.1.1.1/api/", "https://1.1.1.1/api", "https://1.1.1.1/"]
+        test_endpoints = [
+            "1.1.1.1",
+            "http://1.1.1.1",
+            "https://1.1.1.1/api/",
+            "https://1.1.1.1/api",
+            "https://1.1.1.1/",
+        ]
         for test_endpoint in test_endpoints:
             self.assertEqual(self.api._parse_endpoint(test_endpoint), ENDPOINT)
 
@@ -48,7 +50,7 @@ class TestAPI(unittest.TestCase):
         with self.assertRaises(APIError):
             self.api._process_response(res)
 
-        res._content = b'{}'
+        res._content = b"{}"
         self.assertEqual(self.api._process_response(res), {})
 
         res._content = b'{"response": "ok"}'
