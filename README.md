@@ -238,9 +238,13 @@ meters.solar
 
 meters.get_meter(MeterType.SOLAR)
 #=> <Meter ...>
+
 ```
 
 Available meters are: `solar`, `site`, `load` and `battery`
+
+> Note: if the powerwall you are working with has no solar panels installed `get_meter(MeterType.SOLAR)` returns `None`
+> With the attribute `MetersAggregates.meters` you can get the available meters in the response 
 
 #### Current power supply/draw
 

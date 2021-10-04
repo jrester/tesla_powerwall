@@ -1,0 +1,7 @@
+# Changelog
+
+## [0.3.11]
+
+### Changed
+
+- meters of `MetersAggregates` can now only be accessed via `get_meter` (https://github.com/home-assistant/core/issues/56660)

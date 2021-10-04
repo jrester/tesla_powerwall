@@ -104,17 +104,13 @@ class Meter(Response):
 class MetersAggregates(Response):
     def __init__(self, response):
         super().__init__(response)
-        self.solar = Meter(
-            MeterType.SOLAR, self.assert_attribute(MeterType.SOLAR.value)
-        )
-        self.site = Meter(MeterType.SITE, self.assert_attribute(MeterType.SITE.value))
-        self.battery = Meter(
-            MeterType.BATTERY, self.assert_attribute(MeterType.BATTERY.value)
-        )
-        self.load = Meter(MeterType.LOAD, self.assert_attribute(MeterType.LOAD.value))
+        self.meters = [MeterType(key) for key in response.keys()]
 
     def get_meter(self, meter: MeterType) -> Meter:
-        return getattr(self, meter.value)
+        if meter in self.meters:
+            return Meter(meter, self.assert_attribute(meter.value))
+        else:
+            return None
 
 
 class SiteMaster(Response):
@@ -191,7 +187,7 @@ class PowerwallStatus(Response):
 
     _START_TIME_FORMAT = "%Y-%m-%d %H:%M:%S %z"
     _UP_TIME_SECONDS_REGEX = re.compile(
-        r'^((?P<days>[\.\d]+?)d)?((?P<hours>[\.\d]+?)h)?((?P<minutes>[\.\d]+?)m)?((?P<seconds>[\.\d]+?)s)?$'
+        r"^((?P<days>[\.\d]+?)d)?((?P<hours>[\.\d]+?)h)?((?P<minutes>[\.\d]+?)m)?((?P<seconds>[\.\d]+?)s)?$"
     )
 
     def _parse_uptime_seconds(self, up_time_seconds: str):

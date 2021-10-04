@@ -118,7 +118,9 @@ class Powerwall:
 
     def get_device_type(self) -> DeviceType:
         """Returns the device type of the powerwall"""
-        if self._pin_version is None or self._pin_version >= version.LooseVersion("1.46.0"):
+        if self._pin_version is None or self._pin_version >= version.LooseVersion(
+            "1.46.0"
+        ):
             return self.get_status().device_type
         else:
             return DeviceType(

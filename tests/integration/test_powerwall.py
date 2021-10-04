@@ -1,9 +1,19 @@
 from tesla_powerwall.responses import PowerwallStatus
 import unittest
 
-from tesla_powerwall import Powerwall, GridStatus, SiteInfo, SiteMaster, MetersAggregates, Meter, MeterType, powerwall
+from tesla_powerwall import (
+    Powerwall,
+    GridStatus,
+    SiteInfo,
+    SiteMaster,
+    MetersAggregates,
+    Meter,
+    MeterType,
+    powerwall,
+)
 
 from tests.integration import POWERWALL_IP, POWERWALL_PASSWORD
+
 
 class TestPowerwall(unittest.TestCase):
     def setUp(self) -> None:
@@ -21,15 +31,10 @@ class TestPowerwall(unittest.TestCase):
         meters = self.powerwall.get_meters()
         self.assertIsInstance(meters, MetersAggregates)
 
-        self.assertIsInstance(meters.site, Meter)
-        self.assertIsInstance(meters.solar, Meter)
-        self.assertIsInstance(meters.battery, Meter)
-        self.assertIsInstance(meters.load, Meter)
-        self.assertIsInstance(meters.get_meter(MeterType.SOLAR), Meter)
+        self.assertIsInstance(meters.get_meter(MeterType.BATTERY), Meter)
 
-        for meter_type in MeterType:
+        for meter_type in meters.meters:
             meter = meters.get_meter(meter_type)
-            meter = meters.battery
             meter.energy_exported
             meter.energy_imported
             meter.instant_power
