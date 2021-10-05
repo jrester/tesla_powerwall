@@ -233,8 +233,6 @@ from tesla_powerwall import MeterType
 
 meters = powerwall.get_meters()
 #=> <MetersAggregates ...>
-meters.solar
-#=> <Meter ...>
 
 meters.get_meter(MeterType.SOLAR)
 #=> <Meter ...>
