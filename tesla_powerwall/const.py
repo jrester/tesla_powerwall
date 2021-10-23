@@ -63,6 +63,7 @@ class MeterType(Enum):
     SITE = "site"
     BATTERY = "battery"
     LOAD = "load"
+    GENERATOR = "generator"
 
 
 class DeviceType(Enum):
