@@ -24,6 +24,7 @@ from .responses import (
     SiteMaster,
     SiteInfo,
     Solar,
+    Battery,
 )
 from .helpers import assert_attribute
 
@@ -85,6 +86,9 @@ class Powerwall:
     def get_charge(self) -> float:
         return assert_attribute(self._api.get_system_status_soe(), "percentage", "soe")
 
+    def get_energy(self) -> int:
+        return assert_attribute(self._api.get_system_status(), "nominal_energy_remaining", "system_status")
+
     def get_sitemaster(self) -> SiteMaster:
         return SiteMaster(self._api.get_sitemaster())
 
@@ -98,6 +102,13 @@ class Powerwall:
         )
 
         return GridStatus(status)
+
+    def get_capacity(self) -> float:
+        return assert_attribute(self._api.get_system_status(), "nominal_full_pack_energy", "system_status")
+
+    def get_batteries(self) -> List[Battery]:
+        batteries = assert_attribute(self._api.get_system_status(), "battery_blocks", "system_status")
+        return [Battery(battery) for battery in batteries]
 
     def is_grid_services_active(self) -> bool:
         return assert_attribute(

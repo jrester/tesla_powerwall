@@ -176,7 +176,46 @@ Get charge in percent:
 
 ```python
 powerwall.get_charge()
-#=> 97.59281925744594
+#=> 97.59281925744594 (%)
+```
+
+Get charge in watt:
+
+```python
+powerwall.get_energy()
+#=> 14807 (W)
+```
+
+### Capacity
+
+Get the capacity of your powerwall in watt:
+
+```python
+powerwall.get_capacity()
+#=> 28078 (W)
+```
+
+### Battery Packs
+
+Get information about the battery packs that are installed:
+
+```python
+batteries = powerwall.get_batteries()
+#=> [<Battery ...>, <Battery ...>]
+batteries[0].part_number
+#=> "XXX-G"
+batteries[0].serial_number
+#=> "TGXXX"
+batteries[0].energy_remaining
+#=> 7378 (W)
+batteries[0].capacity
+#=> 14031 (W)
+batteries[0].energy_charged
+#=> 5525740 (W)
+batteries[0].energy_discharged
+#=> 4659550 (W)
+batteries[0].wobble_detected
+#=> False
 ```
 
 ### Powerwall Status

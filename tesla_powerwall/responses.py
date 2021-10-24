@@ -275,3 +275,58 @@ class Solar(Response):
     @property
     def power_rating_watts(self):
         return self.assert_attribute("power_rating_watts")
+
+class Battery(Response):
+
+    @property
+    def part_number(self):
+        return self.assert_attribute("PackagePartNumber")
+
+    @property
+    def serial_number(self):
+        return self.assert_attribute("PackageSerialNumber")
+
+    @property
+    def energy_charged(self) -> int:
+        """get the amount of energy that was ever charged
+
+        Returns:
+            int: energy in watts
+        """
+        return self.assert_attribute("energy_charged")
+
+    @property
+    def energy_discharged(self) -> int:
+        """get the amount of energy that was ever discharged
+
+        Returns:
+            int: energy in watts
+        """
+        return self.assert_attribute("energy_discharged")
+
+    @property
+    def energy_remaining(self) -> int:
+        """get the remaining charged energy
+
+        Returns:
+            int: energy in watts
+        """     
+        return self.assert_attribute("nominal_energy_remaining")
+
+    @property
+    def capacity(self) -> int:
+        """get the capacity of a battery
+
+        Returns:
+            int: energy in watts
+        """
+        return self.assert_attribute("nominal_full_pack_energy")
+
+    @property
+    def wobble_detected(self) -> bool:
+        """get whether a wobble was detected
+
+        Returns:
+            bool: detected
+        """
+        return self.assert_attribute("wobble_detected")

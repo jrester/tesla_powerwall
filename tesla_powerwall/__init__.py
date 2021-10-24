@@ -28,6 +28,7 @@ from .responses import (
     SiteInfo,
     SiteMaster,
     Solar,
+    Battery,
 )
 from .powerwall import Powerwall
 

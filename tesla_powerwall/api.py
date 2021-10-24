@@ -175,6 +175,9 @@ class API(object):
 
     # Endpoints are mapped to one method by <verb>_<path> so they can be easily accessed
 
+    def get_system_status(self) -> dict:
+        return self.get("system_status")
+
     def get_system_status_soe(self) -> dict:
         return self.get("system_status/soe")
 

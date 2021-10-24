@@ -25,6 +25,7 @@ from tesla_powerwall import (
     MissingAttributeError,
     MeterType,
 )
+from tesla_powerwall.const import OperationMode
 
 
 from tests.unit import (
@@ -36,6 +37,7 @@ from tests.unit import (
     POWERWALLS_RESPONSE,
     SITEMASTER_RESPONSE,
     OPERATION_RESPONSE,
+    SYSTEM_STATUS_RESPONSE,
 )
 
 
@@ -201,12 +203,14 @@ class TestPowerWall(unittest.TestCase):
         add(
             Response(responses.GET, url=f"{ENDPOINT}operation", json=OPERATION_RESPONSE)
         )
+        self.assertEqual(self.powerwall.get_backup_reserve_percentage(), 5.000019999999999)
 
     @responses.activate
     def test_get_operation_mode(self):
         add(
             Response(responses.GET, url=f"{ENDPOINT}operation", json=OPERATION_RESPONSE)
         )
+        self.assertEqual(self.powerwall.get_operation_mode(), OperationMode.SELF_CONSUMPTION)
 
     @responses.activate
     def test_get_version(self):
@@ -220,6 +224,22 @@ class TestPowerWall(unittest.TestCase):
         pw = Powerwall(ENDPOINT)
         self.assertEqual(pw.detect_and_pin_version(), vers)
         self.assertEqual(pw._pin_version, vers)
+
+    @responses.activate
+    def test_system_status(self):
+        add(Response(responses.GET, url=f"{ENDPOINT}system_status", json=SYSTEM_STATUS_RESPONSE))
+        self.assertEqual(self.powerwall.get_capacity(), 28078)
+        self.assertEqual(self.powerwall.get_energy(), 14807)
+
+        batteries = self.powerwall.get_batteries()
+        self.assertEqual(len(batteries), 2)
+        self.assertEqual(batteries[0].part_number, "XXX-G")
+        self.assertEqual(batteries[0].serial_number, "TGXXX")
+        self.assertEqual(batteries[0].energy_remaining, 7378)
+        self.assertEqual(batteries[0].capacity, 14031)
+        self.assertEqual(batteries[0].energy_charged, 5525740)
+        self.assertEqual(batteries[0].energy_discharged, 4659550)
+        self.assertEqual(batteries[0].wobble_detected, False)
 
     def test_helpers(self):
         resp = {"a": 1}

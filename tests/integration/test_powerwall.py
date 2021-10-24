@@ -14,7 +14,6 @@ from tesla_powerwall import (
 
 from tests.integration import POWERWALL_IP, POWERWALL_PASSWORD
 
-
 class TestPowerwall(unittest.TestCase):
     def setUp(self) -> None:
         self.powerwall = Powerwall(POWERWALL_IP)
@@ -67,11 +66,29 @@ class TestPowerwall(unittest.TestCase):
         site_info.site_name
         site_info.timezone
 
-    def get_grid_status(self) -> None:
+    def test_capacity(self) -> None:
+        self.assertIsInstance(self.powerwall.get_capacity(), int)
+
+    def test_energy(self) -> None:
+        self.assertIsInstance(self.powerwall.get_energy(), int)
+
+    def test_batteries(self) -> None:
+        batteries = self.powerwall.get_batteries()
+        self.assertGreater(len(batteries), 0)
+        for battery in batteries:
+            battery.wobble_detected
+            battery.energy_discharged
+            battery.energy_charged
+            battery.energy_remaining
+            battery.capacity
+            battery.part_number
+            battery.serial_number
+
+    def test_grid_status(self) -> None:
         grid_status = self.powerwall.get_grid_status()
         self.assertIsInstance(grid_status, GridStatus)
 
-    def get_status(self) -> None:
+    def test_status(self) -> None:
         status = self.powerwall.get_status()
         self.assertIsInstance(status, PowerwallStatus)
         status.up_time_seconds
