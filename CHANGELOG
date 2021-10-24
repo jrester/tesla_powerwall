@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.13]
+
+Implement `system_status` endpoint (https://github.com/jrester/tesla_powerwall/issues/31):
+- add `Battery` response type, which is returned by `get_batteries`
+- add `get_energy`, `get_capacity`, `get_batteries`
+
 ## [0.3.12]
 
 - add MeterType `generator` (https://github.com/jrester/tesla_powerwall/issues/30)
