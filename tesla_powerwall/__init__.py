@@ -18,6 +18,7 @@ from .error import (
     MissingAttributeError,
     PowerwallError,
     PowerwallUnreachableError,
+    MeterNotAvailableError,
 )
 from .helpers import assert_attribute, convert_to_kw
 from .responses import (
@@ -32,4 +33,4 @@ from .responses import (
 )
 from .powerwall import Powerwall
 
-VERSION = "0.3.13"
+VERSION = "0.3.14"

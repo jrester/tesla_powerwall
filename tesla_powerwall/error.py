@@ -49,3 +49,14 @@ class AccessDeniedError(PowerwallError):
             else:
                 msg = "{}: {}".format(msg, error)
         super().__init__(msg)
+
+
+class MeterNotAvailableError(PowerwallError):
+    def __init__(self, meter, available_meters):
+        self.meter = meter
+        self.available_meters = available_meters
+        super().__init__(
+            "Meter {} is not available at your powerwall. Following meters are available: {} ".format(
+                meter.value, available_meters
+            )
+        )

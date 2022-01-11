@@ -14,6 +14,7 @@ from tesla_powerwall import (
 
 from tests.integration import POWERWALL_IP, POWERWALL_PASSWORD
 
+
 class TestPowerwall(unittest.TestCase):
     def setUp(self) -> None:
         self.powerwall = Powerwall(POWERWALL_IP)

@@ -7,7 +7,7 @@ Python Tesla Powerwall API for consuming a local endpoint. The API is by no mean
 
 > Note: This is not an official API provided by Tesla and as such might fail at any time.
 
-Powerwall Software versions from 1.45.0 to 1.50.1 as well as 20.40 to 21.35.0 are tested, but others will probably work too. If you encounter an error regarding a change in the API of the Powerwall because your Powerwall has a different version than listed here please open an Issue to report this change so it can be fixed.
+Powerwall Software versions from 1.45.0 to 1.50.1 as well as 20.40 to 21.39.1 are tested, but others will probably work too. If you encounter an error regarding a change in the API of the Powerwall because your Powerwall has a different version than listed here please open an Issue to report this change so it can be fixed.
 
 > For more information about versioning see [API versioning](#api-versioning).
 
@@ -272,15 +272,20 @@ from tesla_powerwall import MeterType
 meters = powerwall.get_meters()
 #=> <MetersAggregates ...>
 
+# access meter, but may return None when meter is not available
 meters.get_meter(MeterType.SOLAR)
 #=> <Meter ...>
 
+# access meter, but may raise MeterNotAvailableError when the meter is not available at your powerwall (e.g. no solar panels installed)
+meters.solar
+#=> <Meter ...>
+
+# get all available meters at the current powerwall
+meters.meters
+#=> [<MeterType.SITE: 'site'>, <MeterType.BATTERY: 'battery'>, <MeterType.LOAD: 'load'>, <MeterType.SOLAR: 'solar'>]
 ```
 
-Available meters are: `solar`, `site`, `load` and `battery`. If you have a generator you can also access it with the `generator` MeterType.
-
-> Note: if the powerwall you are working with has no solar panels installed `get_meter(MeterType.SOLAR)` returns `None`
-> With the attribute `MetersAggregates.meters` you can get the available meters in the response 
+Available meters are: `solar`, `site`, `load`, `battery` and `generator`. Some of those meters might not be available based on the installation and raise MeterNotAvailableError when accessed.
 
 #### Current power supply/draw
 
@@ -305,14 +310,6 @@ meters.battery.is_active(precision=5)
 ```
 
 > Note: For MeterType.LOAD `is_drawing_from` **always** returns `False` because it cannot be drawn from `load`.
-
-`Meter.get_power` is just a convenience method which is equivalent to:
-
-```python
-from tesla_powerwall.helpers import convert_to_kw
-
-convert_to_kw(meters.solar.instant_power, precision=1)
-```
 
 #### Energy exported/imported
 

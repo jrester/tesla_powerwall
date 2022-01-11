@@ -1,6 +1,6 @@
 from typing import Union, List
 import requests
-from distutils import version
+from packaging import version
 
 from .api import API
 from .const import (
@@ -87,7 +87,9 @@ class Powerwall:
         return assert_attribute(self._api.get_system_status_soe(), "percentage", "soe")
 
     def get_energy(self) -> int:
-        return assert_attribute(self._api.get_system_status(), "nominal_energy_remaining", "system_status")
+        return assert_attribute(
+            self._api.get_system_status(), "nominal_energy_remaining", "system_status"
+        )
 
     def get_sitemaster(self) -> SiteMaster:
         return SiteMaster(self._api.get_sitemaster())
@@ -104,10 +106,14 @@ class Powerwall:
         return GridStatus(status)
 
     def get_capacity(self) -> float:
-        return assert_attribute(self._api.get_system_status(), "nominal_full_pack_energy", "system_status")
+        return assert_attribute(
+            self._api.get_system_status(), "nominal_full_pack_energy", "system_status"
+        )
 
     def get_batteries(self) -> List[Battery]:
-        batteries = assert_attribute(self._api.get_system_status(), "battery_blocks", "system_status")
+        batteries = assert_attribute(
+            self._api.get_system_status(), "battery_blocks", "system_status"
+        )
         return [Battery(battery) for battery in batteries]
 
     def is_grid_services_active(self) -> bool:
@@ -177,7 +183,7 @@ class Powerwall:
         if isinstance(vers, version.Version):
             self._pin_version = vers
         else:
-            self._pin_version = version.LooseVersion(vers)
+            self._pin_version = version.Version(vers)
 
     def get_pinned_version(self) -> version.Version:
         return self._pin_version

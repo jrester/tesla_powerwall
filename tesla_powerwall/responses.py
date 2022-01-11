@@ -8,6 +8,7 @@ from .const import (
     Roles,
 )
 from .helpers import assert_attribute, convert_to_kw
+from .error import MeterNotAvailableError
 
 
 class Response:
@@ -105,6 +106,16 @@ class MetersAggregates(Response):
     def __init__(self, response):
         super().__init__(response)
         self.meters = [MeterType(key) for key in response.keys()]
+
+    def __getattribute__(self, attr):
+        if attr.upper() in MeterType.__dict__:
+            m = MeterType(attr)
+            if m in self.meters:
+                return self.get_meter(m)
+            else:
+                raise MeterNotAvailableError(m, self.meters)
+        else:
+            return object.__getattribute__(self, attr)
 
     def get_meter(self, meter: MeterType) -> Meter:
         if meter in self.meters:
@@ -276,8 +287,8 @@ class Solar(Response):
     def power_rating_watts(self):
         return self.assert_attribute("power_rating_watts")
 
-class Battery(Response):
 
+class Battery(Response):
     @property
     def part_number(self):
         return self.assert_attribute("PackagePartNumber")
@@ -310,7 +321,7 @@ class Battery(Response):
 
         Returns:
             int: energy in watts
-        """     
+        """
         return self.assert_attribute("nominal_energy_remaining")
 
     @property

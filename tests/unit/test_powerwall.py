@@ -1,23 +1,17 @@
-import json
-import os
 import unittest
 import datetime
 
-from distutils import version
-import requests
+from packaging import version
 import responses
 from responses import GET, POST, Response, add
 
 from tesla_powerwall import (
     API,
-    AccessDeniedError,
-    APIError,
     Meter,
     MetersAggregates,
     Powerwall,
-    PowerwallUnreachableError,
+    MeterNotAvailableError,
     SiteMaster,
-    SiteInfo,
     GridStatus,
     DeviceType,
     assert_attribute,
@@ -50,10 +44,10 @@ class TestPowerWall(unittest.TestCase):
 
     def test_pins_version_on_creation(self):
         pw = Powerwall(ENDPOINT, pin_version="1.49.0")
-        self.assertEqual(pw.get_pinned_version(), version.LooseVersion("1.49.0"))
+        self.assertEqual(pw.get_pinned_version(), version.Version("1.49.0"))
 
-        pw = Powerwall(ENDPOINT, pin_version=version.LooseVersion("1.49.0"))
-        self.assertEqual(pw.get_pinned_version(), version.LooseVersion("1.49.0"))
+        pw = Powerwall(ENDPOINT, pin_version=version.Version("1.49.0"))
+        self.assertEqual(pw.get_pinned_version(), version.Version("1.49.0"))
 
     @responses.activate
     def test_get_charge(self):
@@ -95,17 +89,10 @@ class TestPowerWall(unittest.TestCase):
             meters.meters,
             [MeterType.SITE, MeterType.BATTERY, MeterType.LOAD, MeterType.SOLAR],
         )
+        self.assertIsInstance(meters.load, Meter)
         self.assertIsInstance(meters.get_meter(MeterType.LOAD), Meter)
-
-    @responses.activate
-    def test_meter(self):
-        add(
-            Response(
-                responses.GET,
-                url=f"{ENDPOINT}meters/aggregates",
-                json=METERS_AGGREGATES_RESPONSE,
-            )
-        )
+        with self.assertRaises(MeterNotAvailableError):
+            meters.generator
 
     @responses.activate
     def test_is_sending(self):
@@ -203,14 +190,18 @@ class TestPowerWall(unittest.TestCase):
         add(
             Response(responses.GET, url=f"{ENDPOINT}operation", json=OPERATION_RESPONSE)
         )
-        self.assertEqual(self.powerwall.get_backup_reserve_percentage(), 5.000019999999999)
+        self.assertEqual(
+            self.powerwall.get_backup_reserve_percentage(), 5.000019999999999
+        )
 
     @responses.activate
     def test_get_operation_mode(self):
         add(
             Response(responses.GET, url=f"{ENDPOINT}operation", json=OPERATION_RESPONSE)
         )
-        self.assertEqual(self.powerwall.get_operation_mode(), OperationMode.SELF_CONSUMPTION)
+        self.assertEqual(
+            self.powerwall.get_operation_mode(), OperationMode.SELF_CONSUMPTION
+        )
 
     @responses.activate
     def test_get_version(self):
@@ -220,14 +211,20 @@ class TestPowerWall(unittest.TestCase):
     @responses.activate
     def test_detect_and_pin_version(self):
         add(Response(responses.GET, url=f"{ENDPOINT}status", json=STATUS_RESPONSE))
-        vers = version.LooseVersion("1.50.1")
+        vers = version.Version("1.50.1")
         pw = Powerwall(ENDPOINT)
         self.assertEqual(pw.detect_and_pin_version(), vers)
         self.assertEqual(pw._pin_version, vers)
 
     @responses.activate
     def test_system_status(self):
-        add(Response(responses.GET, url=f"{ENDPOINT}system_status", json=SYSTEM_STATUS_RESPONSE))
+        add(
+            Response(
+                responses.GET,
+                url=f"{ENDPOINT}system_status",
+                json=SYSTEM_STATUS_RESPONSE,
+            )
+        )
         self.assertEqual(self.powerwall.get_capacity(), 28078)
         self.assertEqual(self.powerwall.get_energy(), 14807)
 

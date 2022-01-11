@@ -7,7 +7,7 @@ setup(
     name="tesla_powerwall",
     author="Jrester",
     author_email="jrester379@gmail.com",
-    version='0.3.13',
+    version='0.3.14',
     description="API for Tesla Powerwall",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -17,5 +17,5 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
     ],
-    install_requires=["requests>=2.22.0"],
+    install_requires=["requests>=2.22.0", "packaging>=20.5"],
 )

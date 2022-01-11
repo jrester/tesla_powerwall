@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.14]
+
+- revert changes from 0.3.11: 
+    - meters can now be accessed using the old, direct method (e.g. `meters.solar.instant_power`)
+    - if a meter is not available a `MeterNotAvailableError` will be thrown
+- move from `distutils.version` to `packaging.version`
+
 ## [0.3.13]
 
 Implement `system_status` endpoint (https://github.com/jrester/tesla_powerwall/issues/31):
