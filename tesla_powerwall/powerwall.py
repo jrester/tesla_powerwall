@@ -155,6 +155,10 @@ class Powerwall:
             for powerwall in powerwalls
         ]
 
+    def get_gateway_din(self) -> str:
+        """Return the gateway din."""
+        return assert_attribute(self._api.get_powerwalls(), "gateway_din", "powerwalls")
+
     def get_operation_mode(self) -> OperationMode:
         operation_mode = assert_attribute(
             self._api.get_operation(), "real_mode", "operation"

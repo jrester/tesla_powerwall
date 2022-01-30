@@ -186,6 +186,16 @@ class TestPowerWall(unittest.TestCase):
         self.assertEqual(serial_numbers, ["SerialNumber1", "SerialNumber2"])
 
     @responses.activate
+    def test_get_gateway_din(self):
+        add(
+            Response(
+                responses.GET, url=f"{ENDPOINT}powerwalls", json=POWERWALLS_RESPONSE
+            )
+        )
+        gateway_din = self.powerwall.get_gateway_din()
+        self.assertEqual(gateway_din, "gateway_din")
+
+    @responses.activate
     def test_get_backup_reserved_percentage(self):
         add(
             Response(responses.GET, url=f"{ENDPOINT}operation", json=OPERATION_RESPONSE)
