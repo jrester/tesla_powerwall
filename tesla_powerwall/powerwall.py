@@ -135,7 +135,7 @@ class Powerwall:
 
     def get_device_type(self) -> DeviceType:
         """Returns the device type of the powerwall"""
-        if self._pin_version is None or self._pin_version >= version.LooseVersion(
+        if self._pin_version is None or self._pin_version >= version.Version(
             "1.46.0"
         ):
             return self.get_status().device_type
@@ -173,7 +173,8 @@ class Powerwall:
         return assert_attribute(self._api.get_config(), "vin", "config")
 
     def get_version(self) -> str:
-        return assert_attribute(self._api.get_status(), "version", "status")
+        version_str = assert_attribute(self._api.get_status(), "version", "status")
+        return version_str.split(' ')[0] # newer versions include a sha trailer '21.44.1 c58c2df3'
 
     def detect_and_pin_version(self) -> str:
         self.pin_version(self.get_version())
