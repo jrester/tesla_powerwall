@@ -36,6 +36,7 @@ Powerwall Software versions from 1.45.0 to 1.50.1 as well as 20.40 to 21.39.1 ar
     - [Grid Status](#grid-status)
     - [Operation mode](#operation-mode)
     - [Powerwalls Serial Numbers](#powerwalls-serial-numbers)
+    - [Gateway DIN](#gateway-din)
     - [VIN](#vin)
 ## Installation
 
@@ -358,6 +359,13 @@ powerwall.get_backup_reserve_percentage()
 ```python
 serials = powerwall.get_serial_numbers()
 #=> ["...", "...", ...]
+```
+
+### Gateway DIN
+
+```python
+din = powerwall.get_gateway_din()
+#=> 4159645-02-A--TGXXX
 ```
 
 ### VIN

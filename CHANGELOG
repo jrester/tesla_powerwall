@@ -1,5 +1,11 @@
 # Changelog
 
+
+## [0.3.15]
+
+- fix version pin when there is a sha trailer (https://github.com/jrester/tesla_powerwall/pull/34)
+- Add support for fetching the gateway_din (https://github.com/jrester/tesla_powerwall/pull/33)
+
 ## [0.3.14]
 
 - revert changes from 0.3.11: 

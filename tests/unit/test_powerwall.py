@@ -166,7 +166,7 @@ class TestPowerWall(unittest.TestCase):
             ),
         )
         self.assertEqual(status.device_type, DeviceType.GW1)
-        self.assertEqual(status.version, "1.50.1")
+        self.assertEqual(status.version, "1.50.1 c58c2df3")
 
     @responses.activate
     def test_get_device_type(self):
