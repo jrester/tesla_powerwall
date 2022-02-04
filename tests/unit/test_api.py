@@ -3,9 +3,9 @@ import json
 
 import requests
 import responses
-from responses import GET, POST, Response, add
+from responses import GET, Response, add
 
-from tesla_powerwall import API, AccessDeniedError, PowerwallUnreachableError, APIError
+from tesla_powerwall import API, AccessDeniedError, APIError
 
 from tests.unit import ENDPOINT
 

@@ -1,9 +1,8 @@
 import unittest
 import datetime
 
-from packaging import version
 import responses
-from responses import GET, POST, Response, add
+from responses import GET, Response, add
 
 from tesla_powerwall import (
     API,
@@ -41,13 +40,6 @@ class TestPowerWall(unittest.TestCase):
 
     def test_get_api(self):
         self.assertIsInstance(self.powerwall.get_api(), API)
-
-    def test_pins_version_on_creation(self):
-        pw = Powerwall(ENDPOINT, pin_version="1.49.0")
-        self.assertEqual(pw.get_pinned_version(), version.Version("1.49.0"))
-
-        pw = Powerwall(ENDPOINT, pin_version=version.Version("1.49.0"))
-        self.assertEqual(pw.get_pinned_version(), version.Version("1.49.0"))
 
     @responses.activate
     def test_get_charge(self):
@@ -217,14 +209,6 @@ class TestPowerWall(unittest.TestCase):
     def test_get_version(self):
         add(Response(responses.GET, url=f"{ENDPOINT}status", json=STATUS_RESPONSE))
         self.assertEqual(self.powerwall.get_version(), "1.50.1")
-
-    @responses.activate
-    def test_detect_and_pin_version(self):
-        add(Response(responses.GET, url=f"{ENDPOINT}status", json=STATUS_RESPONSE))
-        vers = version.Version("1.50.1")
-        pw = Powerwall(ENDPOINT)
-        self.assertEqual(pw.detect_and_pin_version(), vers)
-        self.assertEqual(pw._pin_version, vers)
 
     @responses.activate
     def test_system_status(self):

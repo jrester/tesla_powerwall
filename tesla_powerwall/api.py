@@ -3,7 +3,6 @@ from typing import List
 from urllib.parse import urljoin
 
 import requests
-from requests.api import request
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 from http.client import responses
@@ -195,10 +194,6 @@ class API(object):
 
     def get_status(self) -> dict:
         return self.get("status")
-
-    # Endpoint not available in 1.46 and up
-    def get_device_type(self):
-        return self.get("device_type")
 
     def get_customer_registration(self):
         return self.get("customer/registration")

@@ -9,7 +9,6 @@ from tesla_powerwall import (
     MetersAggregates,
     Meter,
     MeterType,
-    powerwall,
 )
 
 from tests.integration import POWERWALL_IP, POWERWALL_PASSWORD

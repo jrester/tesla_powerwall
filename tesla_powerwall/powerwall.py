@@ -1,6 +1,5 @@
 from typing import Union, List
 import requests
-from packaging import version
 
 from .api import API
 from .const import (
@@ -36,14 +35,8 @@ class Powerwall:
         timeout: int = 10,
         http_session: requests.Session = None,
         verify_ssl: bool = False,
-        disable_insecure_warning: bool = True,
-        pin_version: Union[str, version.Version] = None,
+        disable_insecure_warning: bool = True
     ):
-        if pin_version is not None:
-            self.pin_version(pin_version)
-        else:
-            self._pin_version = None
-
         self._api = API(
             endpoint,
             timeout,
@@ -135,16 +128,7 @@ class Powerwall:
 
     def get_device_type(self) -> DeviceType:
         """Returns the device type of the powerwall"""
-        if self._pin_version is None or self._pin_version >= version.Version(
-            "1.46.0"
-        ):
-            return self.get_status().device_type
-        else:
-            return DeviceType(
-                assert_attribute(
-                    self._api.get_device_type(), "device_type", "device_type"
-                )
-            )
+        return self.get_status().device_type
 
     def get_serial_numbers(self) -> List[str]:
         powerwalls = assert_attribute(
@@ -179,19 +163,6 @@ class Powerwall:
     def get_version(self) -> str:
         version_str = assert_attribute(self._api.get_status(), "version", "status")
         return version_str.split(' ')[0] # newer versions include a sha trailer '21.44.1 c58c2df3'
-
-    def detect_and_pin_version(self) -> str:
-        self.pin_version(self.get_version())
-        return self._pin_version
-
-    def pin_version(self, vers: Union[str, version.Version]):
-        if isinstance(vers, version.Version):
-            self._pin_version = vers
-        else:
-            self._pin_version = version.Version(vers)
-
-    def get_pinned_version(self) -> version.Version:
-        return self._pin_version
 
     def get_api(self):
         return self._api
