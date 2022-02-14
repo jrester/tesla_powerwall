@@ -1,18 +1,23 @@
+from typing import List, Union
+
+from .const import MeterType
+
+
 class PowerwallError(Exception):
-    def __init__(self, msg):
+    def __init__(self, msg: str):
         super().__init__(msg)
 
 
 class APIError(PowerwallError):
-    def __init__(self, error):
+    def __init__(self, error: str):
         super().__init__("Powerwall api error: {}".format(error))
 
 
 class MissingAttributeError(APIError):
-    def __init__(self, response: dict, attribute: str, url: str = None):
-        self.response = response
-        self.attribute = attribute
-        self.url = url
+    def __init__(self, response: dict, attribute: str, url: Union[str, None] = None):
+        self.response: dict = response
+        self.attribute: str = attribute
+        self.url: Union[str, None] = url
 
         if url is None:
             super().__init__(
@@ -29,19 +34,24 @@ class MissingAttributeError(APIError):
 
 
 class PowerwallUnreachableError(PowerwallError):
-    def __init__(self, reason=None):
+    def __init__(self, reason: Union[str, None] = None):
         msg = "Powerwall is unreachable"
-        self.reason = reason
+        self.reason: Union[str, None] = reason
         if reason is not None:
             msg = "{}: {}".format(msg, reason)
         super().__init__(msg)
 
 
 class AccessDeniedError(PowerwallError):
-    def __init__(self, resource, error=None, message=None):
-        self.resource = resource
-        self.error = error
-        self.message = message
+    def __init__(
+        self,
+        resource: str,
+        error: Union[str, None] = None,
+        message: Union[str, None] = None,
+    ):
+        self.resource: str = resource
+        self.error: Union[str, None] = error
+        self.message: Union[str, None] = message
         msg = "Access denied for resource {}".format(resource)
         if error is not None:
             if message is not None:
@@ -52,9 +62,9 @@ class AccessDeniedError(PowerwallError):
 
 
 class MeterNotAvailableError(PowerwallError):
-    def __init__(self, meter, available_meters):
-        self.meter = meter
-        self.available_meters = available_meters
+    def __init__(self, meter: MeterType, available_meters: List[MeterType]):
+        self.mete: MeterType = meter
+        self.available_meters: List[MeterType] = available_meters
         super().__init__(
             "Meter {} is not available at your powerwall. Following meters are available: {} ".format(
                 meter.value, available_meters

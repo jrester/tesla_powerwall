@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.16]
+
+- add `py.typed` file
+- remove all the version pinning and drop support for powerwall version < 0.47.0
+- add more type hints
+- fix 'login_time' attribute in `LoginResponse`
 
 ## [0.3.15]
 

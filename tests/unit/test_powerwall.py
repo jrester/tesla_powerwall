@@ -1,35 +1,33 @@
-import unittest
 import datetime
+import unittest
 
 import responses
 from responses import GET, Response, add
 
 from tesla_powerwall import (
     API,
-    Meter,
-    MetersAggregates,
-    Powerwall,
-    MeterNotAvailableError,
-    SiteMaster,
-    GridStatus,
     DeviceType,
+    GridStatus,
+    Meter,
+    MeterNotAvailableError,
+    MetersAggregates,
+    MeterType,
+    MissingAttributeError,
+    Powerwall,
+    SiteMaster,
     assert_attribute,
     convert_to_kw,
-    MissingAttributeError,
-    MeterType,
 )
 from tesla_powerwall.const import OperationMode
-
-
 from tests.unit import (
     ENDPOINT,
-    METERS_AGGREGATES_RESPONSE,
-    STATUS_RESPONSE,
     GRID_STATUS_RESPONSE,
-    SITE_INFO_RESPONSE,
-    POWERWALLS_RESPONSE,
-    SITEMASTER_RESPONSE,
+    METERS_AGGREGATES_RESPONSE,
     OPERATION_RESPONSE,
+    POWERWALLS_RESPONSE,
+    SITE_INFO_RESPONSE,
+    SITEMASTER_RESPONSE,
+    STATUS_RESPONSE,
     SYSTEM_STATUS_RESPONSE,
 )
 

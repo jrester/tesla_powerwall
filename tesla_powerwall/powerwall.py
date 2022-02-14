@@ -1,4 +1,5 @@
-from typing import Union, List
+from typing import List, Union
+
 import requests
 
 from .api import API
@@ -15,17 +16,17 @@ from .const import (
     SyncType,
     User,
 )
+from .helpers import assert_attribute
 from .responses import (
+    Battery,
     LoginResponse,
     Meter,
     MetersAggregates,
     PowerwallStatus,
-    SiteMaster,
     SiteInfo,
+    SiteMaster,
     Solar,
-    Battery,
 )
-from .helpers import assert_attribute
 
 
 class Powerwall:
@@ -33,9 +34,9 @@ class Powerwall:
         self,
         endpoint: str,
         timeout: int = 10,
-        http_session: requests.Session = None,
+        http_session: Union[requests.Session, None] = None,
         verify_ssl: bool = False,
-        disable_insecure_warning: bool = True
+        disable_insecure_warning: bool = True,
     ):
         self._api = API(
             endpoint,
@@ -64,16 +65,16 @@ class Powerwall:
     def login(self, password: str, email: str = "", force_sm_off: bool = False) -> dict:
         return self.login_as(User.CUSTOMER, password, email, force_sm_off)
 
-    def logout(self):
+    def logout(self) -> None:
         self._api.logout()
 
     def is_authenticated(self) -> bool:
         return self._api.is_authenticated()
 
-    def run(self):
+    def run(self) -> None:
         self._api.get_sitemaster_run()
 
-    def stop(self):
+    def stop(self) -> None:
         self._api.get_sitemaster_stop()
 
     def get_charge(self) -> float:
@@ -120,7 +121,7 @@ class Powerwall:
         """Returns information about the powerwall site"""
         return SiteInfo(self._api.get_site_info())
 
-    def set_site_name(self, site_name: str):
+    def set_site_name(self, site_name: str) -> str:
         return self._api.post_site_info_site_name({"site_name": site_name})
 
     def get_status(self) -> PowerwallStatus:
@@ -162,10 +163,12 @@ class Powerwall:
 
     def get_version(self) -> str:
         version_str = assert_attribute(self._api.get_status(), "version", "status")
-        return version_str.split(' ')[0] # newer versions include a sha trailer '21.44.1 c58c2df3'
+        return version_str.split(" ")[
+            0
+        ]  # newer versions include a sha trailer '21.44.1 c58c2df3'
 
-    def get_api(self):
+    def get_api(self) -> API:
         return self._api
 
-    def close(self):
+    def close(self) -> None:
         self._api.close()

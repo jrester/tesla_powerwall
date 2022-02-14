@@ -1,24 +1,20 @@
 import re
 from datetime import datetime, timedelta
+from typing import List
 
-from .const import (
-    DEFAULT_KW_ROUND_PERSICION,
-    DeviceType,
-    MeterType,
-    Roles,
-)
-from .helpers import assert_attribute, convert_to_kw
+from .const import DEFAULT_KW_ROUND_PERSICION, DeviceType, MeterType, Roles
 from .error import MeterNotAvailableError
+from .helpers import assert_attribute, convert_to_kw
 
 
 class Response:
-    def __init__(self, response: dict):
+    def __init__(self, response: dict) -> None:
         self.response = response
 
-    def assert_attribute(self, attr: str):
+    def assert_attribute(self, attr: str) -> any:
         return assert_attribute(self.response, attr)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self.response)
 
 
@@ -40,45 +36,45 @@ class Meter(Response):
     - timeout
     """
 
-    def __init__(self, meter: MeterType, response):
+    def __init__(self, meter: MeterType, response) -> None:
         self.meter = meter
         super().__init__(response)
 
     @property
-    def instant_power(self):
+    def instant_power(self) -> float:
         return self.assert_attribute("instant_power")
 
     @property
-    def last_communication_time(self):
+    def last_communication_time(self) -> str:
         return self.assert_attribute("last_communication_time")
 
     @property
-    def frequency(self):
+    def frequency(self) -> float:
         return self.assert_attribute("frequency")
 
     @property
-    def energy_exported(self):
+    def energy_exported(self) -> float:
         return self.assert_attribute("energy_exported")
 
     def get_energy_exported(self, precision=DEFAULT_KW_ROUND_PERSICION) -> float:
         return convert_to_kw(self.energy_exported, precision)
 
     @property
-    def energy_imported(self):
+    def energy_imported(self) -> float:
         return self.assert_attribute("energy_imported")
 
     def get_energy_imported(self, precision=DEFAULT_KW_ROUND_PERSICION) -> float:
         return convert_to_kw(self.energy_imported, precision)
 
     @property
-    def instant_total_current(self):
+    def instant_total_current(self) -> float:
         return self.assert_attribute("instant_total_current")
 
     def get_instant_total_current(self, precision=DEFAULT_KW_ROUND_PERSICION) -> float:
         return round(self.instant_total_current, precision)
 
     @property
-    def average_voltage(self):
+    def average_voltage(self) -> float:
         return self.assert_attribute("instant_average_voltage")
 
     def get_power(self, precision=DEFAULT_KW_ROUND_PERSICION) -> float:
@@ -103,11 +99,11 @@ class Meter(Response):
 
 
 class MetersAggregates(Response):
-    def __init__(self, response):
+    def __init__(self, response) -> str:
         super().__init__(response)
         self.meters = [MeterType(key) for key in response.keys()]
 
-    def __getattribute__(self, attr):
+    def __getattribute__(self, attr) -> any:
         if attr.upper() in MeterType.__dict__:
             m = MeterType(attr)
             if m in self.meters:
@@ -133,11 +129,11 @@ class SiteMaster(Response):
     - power_supply_mode
     """
 
-    def __init__(self, response):
+    def __init__(self, response) -> None:
         super().__init__(response)
 
     @property
-    def status(self):
+    def status(self) -> str:
         return self.assert_attribute("status")
 
     @property
@@ -167,19 +163,19 @@ class SiteInfo(Response):
     - grid_code
     """
 
-    def __init__(self, response):
+    def __init__(self, response) -> None:
         super().__init__(response)
 
     @property
-    def nominal_system_energy(self):
+    def nominal_system_energy(self) -> int:
         return self.assert_attribute("nominal_system_energy_kWh")
 
     @property
-    def site_name(self):
+    def site_name(self) -> str:
         return self.assert_attribute("site_name")
 
     @property
-    def timezone(self):
+    def timezone(self) -> str:
         return self.assert_attribute("timezone")
 
 
@@ -201,7 +197,7 @@ class PowerwallStatus(Response):
         r"^((?P<days>[\.\d]+?)d)?((?P<hours>[\.\d]+?)h)?((?P<minutes>[\.\d]+?)m)?((?P<seconds>[\.\d]+?)s)?$"
     )
 
-    def _parse_uptime_seconds(self, up_time_seconds: str):
+    def _parse_uptime_seconds(self, up_time_seconds: str) -> timedelta:
         match = PowerwallStatus._UP_TIME_SECONDS_REGEX.match(up_time_seconds)
         if not match:
             raise ValueError(
@@ -216,21 +212,21 @@ class PowerwallStatus(Response):
         return timedelta(**time_params)
 
     @property
-    def up_time_seconds(self):
+    def up_time_seconds(self) -> timedelta:
         up_time_seconds = assert_attribute(self.response, "up_time_seconds")
         return self._parse_uptime_seconds(up_time_seconds)
 
     @property
-    def start_time(self):
+    def start_time(self) -> datetime:
         start_time = assert_attribute(self.response, "start_time")
         return datetime.strptime(start_time, self._START_TIME_FORMAT)
 
     @property
-    def version(self):
+    def version(self) -> str:
         return self.assert_attribute("version")
 
     @property
-    def device_type(self):
+    def device_type(self) -> DeviceType:
         return DeviceType(self.assert_attribute("device_type"))
 
 
@@ -247,24 +243,24 @@ class LoginResponse(Response):
     """
 
     @property
-    def firstname(self):
+    def firstname(self) -> str:
         return self.assert_attribute("firstname")
 
     @property
-    def lastname(self):
+    def lastname(self) -> str:
         return self.assert_attribute("lastname")
 
     @property
-    def token(self):
+    def token(self) -> str:
         return self.assert_attribute("token")
 
     @property
-    def roles(self):
+    def roles(self) -> List[Roles]:
         return [Roles(role) for role in self.assert_attribute("roles")]
 
     @property
     def login_time(self):
-        return self.assert_attribute("login_time")
+        return self.assert_attribute("loginTime")
 
 
 class Solar(Response):
@@ -276,25 +272,25 @@ class Solar(Response):
     """
 
     @property
-    def brand(self):
+    def brand(self) -> str:
         return self.assert_attribute("brand")
 
     @property
-    def model(self):
+    def model(self) -> str:
         return self.assert_attribute("model")
 
     @property
-    def power_rating_watts(self):
+    def power_rating_watts(self) -> int:
         return self.assert_attribute("power_rating_watts")
 
 
 class Battery(Response):
     @property
-    def part_number(self):
+    def part_number(self) -> str:
         return self.assert_attribute("PackagePartNumber")
 
     @property
-    def serial_number(self):
+    def serial_number(self) -> str:
         return self.assert_attribute("PackageSerialNumber")
 
     @property

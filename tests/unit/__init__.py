@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 ENDPOINT = "https://1.1.1.1/api/"
 

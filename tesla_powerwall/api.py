@@ -1,3 +1,4 @@
+from http.client import responses
 from json.decoder import JSONDecodeError
 from typing import List
 from urllib.parse import urljoin
@@ -5,7 +6,6 @@ from urllib.parse import urljoin
 import requests
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
-from http.client import responses
 
 from .error import AccessDeniedError, APIError, PowerwallUnreachableError
 
@@ -161,13 +161,13 @@ class API(object):
             },
         )
 
-    def logout(self):
+    def logout(self) -> None:
         if not self.is_authenticated():
             raise APIError("Must be logged in to log out")
         # The api unsets the auth cookie and the token is invalidated
         self.get("logout")
 
-    def close(self):
+    def close(self) -> None:
         # Close the HTTP Session
         # THis method is required for testing, so python doesn't complain about unclosed resources
         self._http_session.close()
@@ -195,13 +195,13 @@ class API(object):
     def get_status(self) -> dict:
         return self.get("status")
 
-    def get_customer_registration(self):
+    def get_customer_registration(self) -> dict:
         return self.get("customer/registration")
 
     def get_powerwalls(self):
         return self.get("powerwalls")
 
-    def get_operation(self):
+    def get_operation(self) -> dict:
         return self.get("operation")
 
     def get_networks(self) -> list:

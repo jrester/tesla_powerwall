@@ -15,13 +15,15 @@ from .const import (
 from .error import (
     AccessDeniedError,
     APIError,
+    MeterNotAvailableError,
     MissingAttributeError,
     PowerwallError,
     PowerwallUnreachableError,
-    MeterNotAvailableError,
 )
 from .helpers import assert_attribute, convert_to_kw
+from .powerwall import Powerwall
 from .responses import (
+    Battery,
     LoginResponse,
     Meter,
     MetersAggregates,
@@ -29,8 +31,6 @@ from .responses import (
     SiteInfo,
     SiteMaster,
     Solar,
-    Battery,
 )
-from .powerwall import Powerwall
 
-VERSION = "0.3.15"
+VERSION = "0.3.16"

@@ -1,15 +1,12 @@
 ![Licence](https://img.shields.io/github/license/jrester/tesla_powerwall?style=for-the-badge)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/tesla_powerwall?color=blue&style=for-the-badge)
 ![PyPI](https://img.shields.io/pypi/v/tesla_powerwall?style=for-the-badge)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tesla_powerwall?style=for-the-badge)
 
 Python Tesla Powerwall API for consuming a local endpoint. The API is by no means complete and mainly features methods which are considered to be of common use. If you feel like methods should be included you are welcome to open an Issue or create a Pull Request.
 
-> Note: This is not an official API provided by Tesla and as such might fail at any time.
+> Note: This is not an official API provided by Tesla and not affilated in anyways with Tesla.
 
-Powerwall Software versions from 1.45.0 to 1.50.1 as well as 20.40 to 21.39.1 are tested, but others will probably work too. If you encounter an error regarding a change in the API of the Powerwall because your Powerwall has a different version than listed here please open an Issue to report this change so it can be fixed.
-
-> For more information about versioning see [API versioning](#api-versioning).
+Powerwall Software versions from 1.47.0 to 1.50.1 as well as 20.40 to 21.39.1 are tested, but others will probably work too. If you encounter an error regarding a change in the API of the Powerwall because your Powerwall has a different version than listed here please open an Issue to report this change so it can be fixed.
 
 
 # Table of Contents <!-- omit in TOC -->
@@ -19,7 +16,6 @@ Powerwall Software versions from 1.45.0 to 1.50.1 as well as 20.40 to 21.39.1 ar
     - [Setup](#setup)
     - [Authentication](#authentication)
     - [General](#general)
-        - [API versioning](#api-versioning)
         - [Errors](#errors)
         - [Response](#response)
     - [Battery level](#battery-level)
@@ -62,13 +58,11 @@ powerwall = Powerwall(
     endpoint="<ip of your powerwall>",
     # Configure timeout; default is 10
     timeout=10,
-    # Provide a requests.Session
+    # Provide a requests.Session or None to have one created
     http_sesion=None,
     # Whether to verify the SSL certificate or not
     verify_ssl=False,
-    disable_insecure_warning=True,
-    # Set the API to expect a specific version of the powerwall software
-    pin_version=None
+    disable_insecure_warning=True
 )
 #=> <Powerwall ...>
 ```
@@ -79,7 +73,7 @@ powerwall = Powerwall(
 ### Authentication
 
 Since version 20.49.0 authentication is required for all methods. For that reason you must call `login` before making a request to the API.
-When you perform a request without being loggedin a `AccessDeniedError` will probably be thrown if the endpoint requires authentication.
+When you perform a request without being loggedin a `AccessDeniedError` will be thrown.
 
 To login you can either use `login` or `login_as`. `login` logs you in as `User.CUSTOMER` whereas with `login_as` you can choose a different user:
 
@@ -129,26 +123,6 @@ api.get_system_status_soe()
 
 The `Powerwall` objet provides a wrapper around the API and exposes common methods.
 
-#### API versioning
-
-The powerwall API is inconsistent across different versions. This is why some versions may return different responses. If no version is specified the newest version is assumed.
-
-If you are sure which version your powerwall has you can pin the Powerwall object to a version:
-
-```python
-from tesla_powerwall import Version
-# Pin powerwall object
-powerwall = Powerwall("<powerwall-ip>", pin_version="1.50.1")
-
-# You can also pin a version after the powerwall object was created
-powerwall.pin_version("20.40.3")
-```
-
-Otherwise you can let the API try to detect the version and pin it. This method should be prefered over the manual detection and pinning of the version:
-```python
-powerwall.detect_and_pin_version()
-```
-
 #### Errors
 
 As the powerwall REST API varies widley between version and country it may happen that an attribute may not be included in your response. If that is the case a `MissingAttributeError` will be thrown indicating what attribute wasn't available. 
@@ -169,6 +143,8 @@ assert_attribute(status.response, "version")
 # or
 status.assert_attribute("version)
 ```
+
+For retriving the version you could also alternativly use `powerwall.get_version`.
 
 ### Battery level
 

@@ -1,12 +1,11 @@
-import unittest
 import json
+import unittest
 
 import requests
 import responses
 from responses import GET, Response, add
 
 from tesla_powerwall import API, AccessDeniedError, APIError
-
 from tests.unit import ENDPOINT
 
 
