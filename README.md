@@ -44,6 +44,14 @@ $ pip install tesla_powerwall
 
 ## Usage
 
+For a basic Overview of the functionality of this library you can take a look at `examples/example.py`:
+
+```bash
+$ export POWERWALL_IP=<ip of your Powerwall>
+$ export POWERWALL_PASSWORD=<your password>
+$ python3 examples/example.py
+```
+
 ### Setup
 
 ```python
