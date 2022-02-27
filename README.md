@@ -59,7 +59,7 @@ powerwall = Powerwall(
     # Configure timeout; default is 10
     timeout=10,
     # Provide a requests.Session or None to have one created
-    http_sesion=None,
+    http_session=None,
     # Whether to verify the SSL certificate or not
     verify_ssl=False,
     disable_insecure_warning=True
@@ -306,7 +306,7 @@ meters.battery.get_energy_imported()
 ### Device Type
 
 ```python
-powerwall.get_devie_type()
+powerwall.get_device_type()
 #=> <DeviceType.GW1: 'hec'>
 ```
 
