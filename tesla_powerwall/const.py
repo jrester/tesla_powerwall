@@ -64,6 +64,7 @@ class MeterType(Enum):
     BATTERY = "battery"
     LOAD = "load"
     GENERATOR = "generator"
+    BUSWAY = "busway"
 
 
 class DeviceType(Enum):
