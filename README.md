@@ -262,7 +262,7 @@ meters.meters
 #=> [<MeterType.SITE: 'site'>, <MeterType.BATTERY: 'battery'>, <MeterType.LOAD: 'load'>, <MeterType.SOLAR: 'solar'>]
 ```
 
-Available meters are: `solar`, `site`, `load`, `battery` and `generator`. Some of those meters might not be available based on the installation and raise MeterNotAvailableError when accessed.
+Available meters are: `solar`, `site`, `load`, `battery`, `generator`, and `busway`. Some of those meters might not be available based on the installation and raise MeterNotAvailableError when accessed.
 
 #### Current power supply/draw
 
