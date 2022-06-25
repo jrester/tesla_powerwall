@@ -6,7 +6,7 @@ Python Tesla Powerwall API for consuming a local endpoint. The API is by no mean
 
 > Note: This is not an official API provided by Tesla and not affilated in anyways with Tesla.
 
-Powerwall Software versions from 1.47.0 to 1.50.1 as well as 20.40 to 21.39.1 are tested, but others will probably work too. If you encounter an error regarding a change in the API of the Powerwall because your Powerwall has a different version than listed here please open an Issue to report this change so it can be fixed.
+Powerwall Software versions from 1.47.0 to 1.50.1 as well as 20.40 to 22.9.2 are tested, but others will probably work too. If you encounter an error regarding a change in the API of the Powerwall because your Powerwall has a different version than listed here please open an Issue to report this change so it can be fixed.
 
 
 # Table of Contents <!-- omit in TOC -->
@@ -262,7 +262,7 @@ meters.meters
 #=> [<MeterType.SITE: 'site'>, <MeterType.BATTERY: 'battery'>, <MeterType.LOAD: 'load'>, <MeterType.SOLAR: 'solar'>]
 ```
 
-Available meters are: `solar`, `site`, `load`, `battery` and `generator`. Some of those meters might not be available based on the installation and raise MeterNotAvailableError when accessed.
+Available meters are: `solar`, `site`, `load`, `battery`, `generator`, and `busway`. Some of those meters might not be available based on the installation and raise MeterNotAvailableError when accessed.
 
 #### Current power supply/draw
 
