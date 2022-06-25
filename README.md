@@ -149,7 +149,7 @@ status.version
 # is the same as
 assert_attribute(status.response, "version")
 # or
-status.assert_attribute("version)
+status.assert_attribute("version")
 ```
 
 For retriving the version you could also alternativly use `powerwall.get_version`.

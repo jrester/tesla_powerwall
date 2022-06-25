@@ -15,6 +15,7 @@ setup(
     packages=find_packages(exclude=["tests*"]),
     classifiers=[
         "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License"
     ],
     package_data={
         'tesla_powerwall': ["py.typed"]
