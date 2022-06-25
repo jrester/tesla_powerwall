@@ -33,4 +33,4 @@ from .responses import (
     Solar,
 )
 
-VERSION = "0.3.17"
+VERSION = "0.3.18"

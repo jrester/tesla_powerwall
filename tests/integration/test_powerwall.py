@@ -23,7 +23,10 @@ class TestPowerwall(unittest.TestCase):
 
     def test_get_charge(self) -> None:
         charge = self.powerwall.get_charge()
-        self.assertIsInstance(charge, float)
+        if(charge < 100):
+            self.assertIsInstance(charge, float)
+        else:
+            self.assertEqual(charge, 100)
 
     def test_get_meters(self) -> None:
         meters = self.powerwall.get_meters()

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.18]
+
+- updated examples
+- add Metertype `busway` thanks to @maikukun (https://github.com/jrester/tesla_powerwall/pull/40)
+
+
 ## [0.3.17]
 
 - move `py.typed` to correct location (https://github.com/jrester/tesla_powerwall/pull/35)

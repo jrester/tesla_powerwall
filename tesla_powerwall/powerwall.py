@@ -77,7 +77,7 @@ class Powerwall:
     def stop(self) -> None:
         self._api.get_sitemaster_stop()
 
-    def get_charge(self) -> float:
+    def get_charge(self) -> Union[float, int]:
         return assert_attribute(self._api.get_system_status_soe(), "percentage", "soe")
 
     def get_energy(self) -> int:
