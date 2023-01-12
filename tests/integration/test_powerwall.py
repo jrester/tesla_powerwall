@@ -2,6 +2,7 @@ import unittest
 
 from tesla_powerwall import (
     GridStatus,
+    IslandMode,
     Meter,
     MetersAggregates,
     MeterType,
@@ -96,3 +97,20 @@ class TestPowerwall(unittest.TestCase):
         status.up_time_seconds
         status.start_time
         status.version
+
+    def test_islanding(self) -> None:
+        initial_grid_status = self.powerwall.get_grid_status()
+        self.assertIsInstance(initial_grid_status, GridStatus)
+
+        if(initial_grid_status == GridStatus.CONNECTED):
+            self.powerwall.set_island_mode(IslandMode.OFFGRID)
+            self.assertEqual(self.powerwall.get_grid_status(), GridStatus.ISLANDED)
+            
+            self.powerwall.set_island_mode(IslandMode.ONGRID)
+            self.assertEqual(self.powerwall.get_grid_status(), GridStatus.CONNECTED)
+        else:
+            self.powerwall.set_island_mode(IslandMode.ONGRID)
+            self.assertEqual(self.powerwall.get_grid_status(), GridStatus.CONNECTED)
+
+            self.powerwall.set_island_mode(IslandMode.OFFGRID)
+            self.assertEqual(self.powerwall.get_grid_status(), GridStatus.ISLANDED)
