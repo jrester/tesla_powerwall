@@ -20,8 +20,8 @@ class Roles(Enum):
 
 class GridStatus(Enum):
     CONNECTED = "SystemGridConnected"
-    ISLANEDED_READY = "SystemIslandedReady"
-    ISLANEDED = "SystemIslandedActive"
+    ISLANDED_READY = "SystemIslandedReady"
+    ISLANDED = "SystemIslandedActive"
     TRANSITION_TO_GRID = "SystemTransitionToGrid"  # Used in version 1.46.0
 
 
