@@ -34,6 +34,7 @@ Powerwall Software versions from 1.47.0 to 1.50.1 as well as 20.40 to 22.9.2 are
     - [Powerwalls Serial Numbers](#powerwalls-serial-numbers)
     - [Gateway DIN](#gateway-din)
     - [VIN](#vin)
+    - [Off-grid status](#off-grid-status-set-island-mode)
 ## Installation
 
 Install the library via pip:
@@ -356,4 +357,20 @@ din = powerwall.get_gateway_din()
 
 ```python
 vin = powerwall.get_vin()
+```
+
+### Off-grid status (Set Island mode)
+
+Take your powerwall on- and off-grid similar to the "Take off-grid" button in the Tesla app. 
+
+#### Set powerwall to off-grid (Islanded)
+
+```python
+powerwall.set_island_mode(IslandMode.OFFGRID)
+```
+
+#### Set powerwall to off-grid (Connected)
+
+```python
+powerwall.set_island_mode(IslandMode.ONGRID)
 ```
