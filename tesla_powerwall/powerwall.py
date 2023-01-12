@@ -9,6 +9,7 @@ from .const import (
     DeviceType,
     GridState,
     GridStatus,
+    IslandMode,
     LineStatus,
     MeterType,
     OperationMode,
@@ -160,6 +161,9 @@ class Powerwall:
 
     def get_vin(self) -> str:
         return assert_attribute(self._api.get_config(), "vin", "config")
+
+    def set_island_mode(self, mode: IslandMode) -> IslandMode:
+        return assert_attribute(self._api.post_islanding_mode({"island_mode": mode}), "island_mode")
 
     def get_version(self) -> str:
         version_str = assert_attribute(self._api.get_status(), "version", "status")

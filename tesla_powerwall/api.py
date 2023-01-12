@@ -245,3 +245,6 @@ class API(object):
 
     def post_site_info_site_name(self, body: dict) -> dict:
         return self.post("site_info/site_name", body)
+
+    def post_islanding_mode(self, body: dict) -> dict:
+        return self.post("v2/islanding/mode", body)
