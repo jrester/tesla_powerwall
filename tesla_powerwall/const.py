@@ -23,6 +23,7 @@ class GridStatus(Enum):
     ISLANDED_READY = "SystemIslandedReady"
     ISLANDED = "SystemIslandedActive"
     TRANSITION_TO_GRID = "SystemTransitionToGrid"  # Used in version 1.46.0
+    TRANSITION_TO_ISLAND = "SystemTransitionToIsland"
 
 class IslandMode(Enum):
     OFFGRID = "intentional_reconnect_failsafe"
