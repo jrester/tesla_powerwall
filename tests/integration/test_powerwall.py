@@ -1,4 +1,5 @@
 import unittest
+from time import sleep
 
 from tesla_powerwall import (
     GridStatus,
@@ -103,14 +104,33 @@ class TestPowerwall(unittest.TestCase):
         self.assertIsInstance(initial_grid_status, GridStatus)
 
         if(initial_grid_status == GridStatus.CONNECTED):
-            self.powerwall.set_island_mode(IslandMode.OFFGRID)
-            self.assertEqual(self.powerwall.get_grid_status(), GridStatus.ISLANDED)
-            
-            self.powerwall.set_island_mode(IslandMode.ONGRID)
-            self.assertEqual(self.powerwall.get_grid_status(), GridStatus.CONNECTED)
-        else:
-            self.powerwall.set_island_mode(IslandMode.ONGRID)
-            self.assertEqual(self.powerwall.get_grid_status(), GridStatus.CONNECTED)
+            self.go_offline()
+            self.go_online()
+        elif(initial_grid_status == GridStatus.ISLANDED):
+            self.go_offline()
+            self.go_online()
 
-            self.powerwall.set_island_mode(IslandMode.OFFGRID)
-            self.assertEqual(self.powerwall.get_grid_status(), GridStatus.ISLANDED)
+    def go_offline(self) -> None:
+        observedIslandMode = self.powerwall.set_island_mode(IslandMode.OFFGRID)
+        self.assertEqual(observedIslandMode, IslandMode.OFFGRID)
+        self.wait_until_grid_status(GridStatus.ISLANDED)
+        self.assertEqual(self.powerwall.get_grid_status(), GridStatus.ISLANDED)
+
+    def go_online(self) -> None:
+        observedIslandMode = self.powerwall.set_island_mode(IslandMode.ONGRID)
+        self.assertEqual(observedIslandMode, IslandMode.ONGRID)
+        self.wait_until_grid_status(GridStatus.CONNECTED)
+        self.assertEqual(self.powerwall.get_grid_status(), GridStatus.CONNECTED)
+
+    def wait_until_grid_status(self, expectedStatus: GridStatus, sleepTime: int = 1, maxCycles: int = 20) -> None:
+        cycles = 0
+        observedStatus: GridStatus
+
+        while cycles < maxCycles:
+            observedStatus = self.powerwall.get_grid_status()
+            if(observedStatus == expectedStatus):
+                break
+            sleep(sleepTime)
+            cycles = cycles + 1
+
+        self.assertEqual(observedStatus, expectedStatus)
