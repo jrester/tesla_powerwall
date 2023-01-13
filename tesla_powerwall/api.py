@@ -4,6 +4,7 @@ from typing import List
 from urllib.parse import urljoin
 
 import requests
+import json
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -247,4 +248,5 @@ class API(object):
         return self.post("site_info/site_name", body)
 
     def post_islanding_mode(self, body: dict) -> dict:
-        return self.post("v2/islanding/mode", body)
+        payload = json.dumps(body)
+        return self.post("v2/islanding/mode", payload, headers={"Content-Type": "application/json"})
