@@ -4,7 +4,6 @@ from typing import List
 from urllib.parse import urljoin
 
 import requests
-import json
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -129,12 +128,14 @@ class API(object):
         payload: dict,
         headers: dict = {},
     ) -> dict:
+        request_headers = {"Content-Type": "application/json"}
+        request_headers.update(headers)
         try:
             response = self._http_session.post(
                 url=self.url(path),
-                data=payload,
+                json=payload,
                 timeout=self._timeout,
-                headers=headers,
+                headers=request_headers,
             )
         except (
             requests.exceptions.ConnectionError,
@@ -248,5 +249,4 @@ class API(object):
         return self.post("site_info/site_name", body)
 
     def post_islanding_mode(self, body: dict) -> dict:
-        payload = json.dumps(body)
-        return self.post("v2/islanding/mode", payload, headers={"Content-Type": "application/json"})
+        return self.post("v2/islanding/mode", body)
