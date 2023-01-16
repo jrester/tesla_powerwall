@@ -128,14 +128,12 @@ class API(object):
         payload: dict,
         headers: dict = {},
     ) -> dict:
-        request_headers = {"Content-Type": "application/json"}
-        request_headers.update(headers)
         try:
             response = self._http_session.post(
                 url=self.url(path),
                 json=payload,
                 timeout=self._timeout,
-                headers=request_headers,
+                headers=headers,
             )
         except (
             requests.exceptions.ConnectionError,
