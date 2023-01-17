@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.19]
+
+- add ability to take powerwall on/off grid. Thanks to @daniel-simpson (https://github.com/jrester/tesla_powerwall/pull/42)
+
 ## [0.3.18]
 
 - updated examples

@@ -7,7 +7,7 @@ setup(
     name="tesla_powerwall",
     author="Jrester",
     author_email="jrester379@gmail.com",
-    version='0.3.18',
+    version='0.3.19',
     description="API for Tesla Powerwall",
     long_description=long_description,
     long_description_content_type="text/markdown",
