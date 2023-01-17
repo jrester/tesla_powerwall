@@ -131,7 +131,7 @@ class API(object):
         try:
             response = self._http_session.post(
                 url=self.url(path),
-                data=payload,
+                json=payload,
                 timeout=self._timeout,
                 headers=headers,
             )
@@ -245,3 +245,6 @@ class API(object):
 
     def post_site_info_site_name(self, body: dict) -> dict:
         return self.post("site_info/site_name", body)
+
+    def post_islanding_mode(self, body: dict) -> dict:
+        return self.post("v2/islanding/mode", body)

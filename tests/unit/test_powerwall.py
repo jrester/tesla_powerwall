@@ -8,6 +8,7 @@ from tesla_powerwall import (
     API,
     DeviceType,
     GridStatus,
+    IslandMode,
     Meter,
     MeterNotAvailableError,
     MetersAggregates,
@@ -29,6 +30,8 @@ from tests.unit import (
     SITEMASTER_RESPONSE,
     STATUS_RESPONSE,
     SYSTEM_STATUS_RESPONSE,
+    ISLANDING_MODE_ONGRID_RESPONSE,
+    ISLANDING_MODE_OFFGRID_RESPONSE,
 )
 
 
@@ -229,6 +232,32 @@ class TestPowerWall(unittest.TestCase):
         self.assertEqual(batteries[0].energy_charged, 5525740)
         self.assertEqual(batteries[0].energy_discharged, 4659550)
         self.assertEqual(batteries[0].wobble_detected, False)
+
+    @responses.activate
+    def test_islanding_mode_offgrid(self):
+        add(
+            Response(
+                responses.POST,
+                url=f"{ENDPOINT}v2/islanding/mode",
+                json=ISLANDING_MODE_OFFGRID_RESPONSE,
+            )
+        )
+        
+        mode = self.powerwall.set_island_mode(IslandMode.OFFGRID)
+        self.assertEqual(mode, IslandMode.OFFGRID)
+
+    @responses.activate
+    def test_islanding_mode_ongrid(self):
+        add(
+            Response(
+                responses.POST,
+                url=f"{ENDPOINT}v2/islanding/mode",
+                json=ISLANDING_MODE_ONGRID_RESPONSE,
+            )
+        )
+        
+        mode = self.powerwall.set_island_mode(IslandMode.ONGRID)
+        self.assertEqual(mode, IslandMode.ONGRID)
 
     def test_helpers(self):
         resp = {"a": 1}

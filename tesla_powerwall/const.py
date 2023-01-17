@@ -20,10 +20,14 @@ class Roles(Enum):
 
 class GridStatus(Enum):
     CONNECTED = "SystemGridConnected"
-    ISLANEDED_READY = "SystemIslandedReady"
-    ISLANEDED = "SystemIslandedActive"
+    ISLANDED_READY = "SystemIslandedReady"
+    ISLANDED = "SystemIslandedActive"
     TRANSITION_TO_GRID = "SystemTransitionToGrid"  # Used in version 1.46.0
+    TRANSITION_TO_ISLAND = "SystemTransitionToIsland"
 
+class IslandMode(Enum):
+    OFFGRID = "intentional_reconnect_failsafe"
+    ONGRID = "backup"
 
 class GridState(Enum):
     COMPLIANT = "Grid_Compliant"
