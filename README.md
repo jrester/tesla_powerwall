@@ -168,7 +168,7 @@ Get charge in watt:
 
 ```python
 powerwall.get_energy()
-#=> 14807 (W)
+#=> 14807 (Wh)
 ```
 
 ### Capacity
@@ -177,7 +177,7 @@ Get the capacity of your powerwall in watt:
 
 ```python
 powerwall.get_capacity()
-#=> 28078 (W)
+#=> 28078 (Wh)
 ```
 
 ### Battery Packs
@@ -192,13 +192,13 @@ batteries[0].part_number
 batteries[0].serial_number
 #=> "TGXXX"
 batteries[0].energy_remaining
-#=> 7378 (W)
+#=> 7378 (Wh)
 batteries[0].capacity
-#=> 14031 (W)
+#=> 14031 (Wh)
 batteries[0].energy_charged
-#=> 5525740 (W)
+#=> 5525740 (Wh)
 batteries[0].energy_discharged
-#=> 4659550 (W)
+#=> 4659550 (Wh)
 batteries[0].wobble_detected
 #=> False
 ```
@@ -243,7 +243,7 @@ info.site_name
 info.country
 #=> 'Germany'
 info.nominal_system_energy
-#=> 13.5
+#=> 13.5 (kWh)
 info.timezone
 #=> 'Europe/Berlin'
 ```
@@ -280,9 +280,9 @@ Available meters are: `solar`, `site`, `load`, `battery`, `generator`, and `busw
 ```python
 meters = powerwall.get_meters()
 meters.solar.get_power()
-#=> 0.4 (in kWh)
+#=> 0.4 (kW)
 meters.solar.instant_power
-#=> 409.941801071167 (in watts)
+#=> 409.941801071167 (W)
 meters.solar.is_drawing_from()
 #=> True
 meters.load.is_sending_to()
@@ -299,17 +299,17 @@ meters.battery.is_active(precision=5)
 
 #### Energy exported/imported
 
-Get energy exported/imported in watts with `energy_exported` and `energy_imported`. For the values in kWh use `get_energy_exported` and `get_energy_imported`:
+Get energy exported/imported in watt-hours (Wh) with `energy_exported` and `energy_imported`. For the values in kilowatt-hours (kWh) use `get_energy_exported` and `get_energy_imported`:
 
 ```python
 meters.battery.energy_exported
-#=> 6394100
+#=> 6394100 (Wh)
 meters.battery.get_energy_exported()
-#=> 6394.1
+#=> 6394.1 (kWh)
 meters.battery.energy_imported
-#=> 7576570
+#=> 7576570 (Wh)
 meters.battery.get_energy_imported()
-#=> 7576.6
+#=> 7576.6 (kWh)
 ```
 
 ### Device Type
@@ -336,7 +336,7 @@ powerwall.is_grid_services_active()
 powerwall.get_operation_mode()
 #=> <OperationMode.SELF_CONSUMPTION: ...>
 powerwall.get_backup_reserve_percentage()
-#=> 5.000019999999999
+#=> 5.000019999999999 (%)
 ```
 
 ### Powerwalls Serial Numbers
