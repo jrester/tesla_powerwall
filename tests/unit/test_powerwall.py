@@ -2,7 +2,7 @@ import datetime
 import unittest
 
 import responses
-from responses import GET, Response, add
+from responses import GET, POST, Response, add
 
 from tesla_powerwall import (
     API,
@@ -200,6 +200,9 @@ class TestPowerWall(unittest.TestCase):
     @responses.activate
     def test_set_backup_reserve_percentage(self):
         add(
+            Response(responses.GET, url=f"{ENDPOINT}operation", json=OPERATION_RESPONSE)
+        )
+        add(
             Response(responses.POST, url=f"{ENDPOINT}operation", json=OPERATION_RESPONSE)
         )
         self.assertEqual(
@@ -217,6 +220,9 @@ class TestPowerWall(unittest.TestCase):
 
     @responses.activate
     def test_set_operation_mode(self):
+        add(
+            Response(responses.GET, url=f"{ENDPOINT}operation", json=OPERATION_RESPONSE)
+        )
         add(
             Response(responses.POST, url=f"{ENDPOINT}operation", json=OPERATION_RESPONSE)
         )
