@@ -1,6 +1,6 @@
 from typing import List, Union
 
-from .const import MeterType
+from .const import SUPPORTED_OPERATION_MODES, MeterType, OperationMode
 
 
 class PowerwallError(Exception):
@@ -68,5 +68,13 @@ class MeterNotAvailableError(PowerwallError):
         super().__init__(
             "Meter {} is not available at your powerwall. Following meters are available: {} ".format(
                 meter.value, available_meters
+            )
+        )
+
+class UnsupportedModeError(PowerwallError):
+    def __init__(self, operation_mode: OperationMode):
+        super().__init__(
+            "Operation mode {} is not currently supported.  Please try one of: {}".format(
+                operation_mode.value, SUPPORTED_OPERATION_MODES
             )
         )

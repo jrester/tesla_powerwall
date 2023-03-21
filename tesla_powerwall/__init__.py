@@ -20,6 +20,7 @@ from .error import (
     MissingAttributeError,
     PowerwallError,
     PowerwallUnreachableError,
+    UnsupportedModeError,
 )
 from .helpers import assert_attribute, convert_to_kw
 from .powerwall import Powerwall

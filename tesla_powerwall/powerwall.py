@@ -2,6 +2,8 @@ from typing import List, Union
 
 import requests
 
+from tesla_powerwall.error import UnsupportedModeError
+
 from .api import API
 from .const import (
     DEFAULT_KW_ROUND_PERSICION,
@@ -150,11 +152,42 @@ class Powerwall:
             self._api.get_operation(), "real_mode", "operation"
         )
         return OperationMode(operation_mode)
+    
+    def set_operation_mode(self, mode: OperationMode) -> OperationMode:
+        """Sets the operation mode."""
+        if mode not in SUPPORTED_OPERATION_MODES:
+            raise UnsupportedModeError(mode)
+
+        backup_reserve_percentage = self.get_backup_reserve_percentage()
+        operation_mode = assert_attribute(
+            self._api.set_operation({
+                "mode": mode.value,
+                "backup_reserve_percent": backup_reserve_percentage
+            }),
+            "mode",
+            "operation"
+        )
+        return OperationMode(operation_mode)
 
     def get_backup_reserve_percentage(self) -> float:
         return assert_attribute(
             self._api.get_operation(), "backup_reserve_percent", "operation"
         )
+    
+    def set_backup_reserve_percentage(self, value: float) -> float:
+        """Sets the backup percentage.
+        
+        Please note that values set via the Powerwall API are known to be out by a small factorwhen compared to values in the app."""
+        operation_mode = self.get_operation_mode()
+        backup_reserve_percentage = assert_attribute(
+            self._api.set_operation({
+                "mode": operation_mode.value,
+                "backup_reserve_percent": value
+            }),
+            "backup_reserve_percent",
+            "operation"
+        )
+        return float(backup_reserve_percentage)
 
     def get_solars(self) -> List[Solar]:
         return [Solar(solar) for solar in self._api.get_solars()]
