@@ -11,6 +11,7 @@ from tesla_powerwall import (
     SiteInfo,
     SiteMaster,
 )
+from tesla_powerwall.const import OperationMode
 from tesla_powerwall.responses import PowerwallStatus
 from tests.integration import POWERWALL_IP, POWERWALL_PASSWORD
 
@@ -98,6 +99,32 @@ class TestPowerwall(unittest.TestCase):
         status.up_time_seconds
         status.start_time
         status.version
+
+    def test_setOperationModeAndBackupPercent(self) -> None:
+        # Get initial values
+        initial_operation_mode = self.powerwall.get_operation_mode()
+        self.assertIsInstance(initial_operation_mode, OperationMode)
+        initial_backup_reserve_percentage = self.powerwall.get_backup_reserve_percentage()
+        self.assertIsInstance(initial_backup_reserve_percentage, float)
+
+        # Arrange
+        expected_operation_mode = OperationMode.SELF_CONSUMPTION
+        expected_backup_reserve_percentage = 80
+
+        # Act
+        self.powerwall.set_operation_mode(expected_operation_mode)
+        self.powerwall.set_backup_reserve_percentage(expected_backup_reserve_percentage)
+        observed_operation_mode = self.powerwall.get_operation_mode()
+        observed_backup_reserve_percentage = self.powerwall.get_backup_reserve_percentage()
+        
+        # Assert
+        self.assertEqual(observed_operation_mode, expected_operation_mode)
+        self.assertEqual(observed_backup_reserve_percentage, expected_backup_reserve_percentage)
+
+        # Reset back to initial values
+        self.powerwall.set_operation_mode(initial_operation_mode)
+        self.powerwall.set_backup_reserve_percentage(initial_backup_reserve_percentage)
+
 
     def test_islanding(self) -> None:
         initial_grid_status = self.powerwall.get_grid_status()

@@ -198,12 +198,30 @@ class TestPowerWall(unittest.TestCase):
         )
 
     @responses.activate
+    def test_set_backup_reserve_percentage(self):
+        add(
+            Response(responses.POST, url=f"{ENDPOINT}operation", json=OPERATION_RESPONSE)
+        )
+        self.assertEqual(
+            self.powerwall.set_backup_reserve_percentage(5.000019999999999), 5.000019999999999
+        )
+
+    @responses.activate
     def test_get_operation_mode(self):
         add(
             Response(responses.GET, url=f"{ENDPOINT}operation", json=OPERATION_RESPONSE)
         )
         self.assertEqual(
             self.powerwall.get_operation_mode(), OperationMode.SELF_CONSUMPTION
+        )
+
+    @responses.activate
+    def test_set_operation_mode(self):
+        add(
+            Response(responses.POST, url=f"{ENDPOINT}operation", json=OPERATION_RESPONSE)
+        )
+        self.assertEqual(
+            self.powerwall.set_operation_mode(OperationMode.SELF_CONSUMPTION), OperationMode.SELF_CONSUMPTION
         )
 
     @responses.activate
