@@ -35,6 +35,7 @@ Powerwall Software versions from 1.47.0 to 1.50.1 as well as 20.40 to 22.9.2 are
     - [Gateway DIN](#gateway-din)
     - [VIN](#vin)
     - [Off-grid status](#off-grid-status-set-island-mode)
+- [Testing](#testing)
 ## Installation
 
 Install the library via pip:
@@ -378,3 +379,15 @@ powerwall.set_island_mode(IslandMode.OFFGRID)
 ```python
 powerwall.set_island_mode(IslandMode.ONGRID)
 ```
+
+## Testing
+Make sure when making contributions to this library that you
+
+1. Update any documentation in the README.md file
+2. Run (and write!) unit and integration tests using Tox:
+    - Setup: [Tox documentation](https://tox.wiki/en/latest/installation.html)
+    - Run Unit tests: `python -m tox -e unit`
+    - Run Integration tests: 
+        - *nix based systems: `POWERWALL_IP=<your powerwall IP> POWERWALL_PASSWORD=<your powerwall password> python -m tox -e integration`
+        - A note for windows: the above set-environment-variable syntax won't work.  You should set local environment variables (`ENV_POWERWALL_IP`, `ENV_POWERWALL_PASSWORD`) in windows settings or your script host (e.g. `$env:ENV_POWERWALL_IP = '192.x.x.x'; $env:ENV_POWERWALL_PASSWORD='xxxx'; python -m tox -e integration` for PowerShell).
+        - If you're really stuck, put your IP and PASSWORD values (temporarily) into `tests/integration/__init__.py`.  But don't commit it!
