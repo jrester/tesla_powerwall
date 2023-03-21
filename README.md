@@ -337,6 +337,10 @@ powerwall.get_operation_mode()
 #=> <OperationMode.SELF_CONSUMPTION: ...>
 powerwall.get_backup_reserve_percentage()
 #=> 5.000019999999999 (%)
+powerwall.set_operation_mode(OperationMode.SELF_CONSUMPTION)
+#=> <OperationMode.SELF_CONSUMPTION: ...>
+powerwall.set_backup_reserve_percentage(50.5)
+#=> 50.5 (%)
 ```
 
 ### Powerwalls Serial Numbers
