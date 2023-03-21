@@ -63,7 +63,7 @@ class AccessDeniedError(PowerwallError):
 
 class MeterNotAvailableError(PowerwallError):
     def __init__(self, meter: MeterType, available_meters: List[MeterType]):
-        self.mete: MeterType = meter
+        self.meter: MeterType = meter
         self.available_meters: List[MeterType] = available_meters
         super().__init__(
             "Meter {} is not available at your powerwall. Following meters are available: {} ".format(
