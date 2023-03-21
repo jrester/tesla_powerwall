@@ -163,7 +163,10 @@ class Powerwall:
         return assert_attribute(self._api.get_config(), "vin", "config")
 
     def set_island_mode(self, mode: IslandMode) -> IslandMode:
-        return IslandMode(assert_attribute(self._api.post_islanding_mode({"island_mode": mode.value}), "island_mode"))
+        island_mode = assert_attribute(
+            self._api.post_islanding_mode({"island_mode": mode.value}), "island_mode"
+        )
+        return IslandMode(island_mode)
 
     def get_version(self) -> str:
         version_str = assert_attribute(self._api.get_status(), "version", "status")
