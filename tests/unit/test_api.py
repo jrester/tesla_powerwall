@@ -86,3 +86,10 @@ class TestAPI(unittest.TestCase):
 
     def test_url(self):
         self.assertEqual(self.api.url("test"), ENDPOINT + "test")
+
+    @responses.activate
+    def test_logout(self):
+        add(Response(GET, url=f"{ENDPOINT}logout"), body="", content_type="application/json")
+        self.api._http_session.cookies.set("AuthCookie", "foo")
+
+        self.api.logout()

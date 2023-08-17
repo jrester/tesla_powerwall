@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.3.20]
+
+- fix logout (https://github.com/jrester/tesla_powerwall/issues/50)
+- add meter details for site and solar (https://github.com/jrester/tesla_powerwall/issues/48)
+
 ## [0.3.19]
 
 - add ability to take powerwall on/off grid. Thanks to @daniel-simpson (https://github.com/jrester/tesla_powerwall/pull/42)

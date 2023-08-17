@@ -28,6 +28,7 @@ Powerwall Software versions from 1.47.0 to 1.50.1 as well as 20.40 to 22.9.2 are
         - [Aggregates](#aggregates)
         - [Current power supply/draw](#current-power-supplydraw)
         - [Energy exported/imported](#energy-exportedimported)
+        - [Details](#meter-details)
     - [Device Type](#device-type)
     - [Grid Status](#grid-status)
     - [Operation mode](#operation-mode)
@@ -311,6 +312,22 @@ meters.battery.energy_imported
 meters.battery.get_energy_imported()
 #=> 7576.6 (kWh)
 ```
+
+### Details
+
+You can receive more detailed information about the meters `site` and `solar`:
+
+```python
+meter_details = powerwall.get_meter_site() # or get_meter_solar() for the solar meter
+meter_details.real_power_a # same for real_power_b and real_power_c
+#=> 619.13532458
+meter_details.i_a_current # same for i_b_current and i_c_current
+#=> 3.02
+meter_details.v_l1n # smae for v_l2n and v_l3n
+#=> 235.82
+```
+
+> For the meters battery and grid no additional details are provided
 
 ### Device Type
 
