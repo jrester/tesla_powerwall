@@ -87,6 +87,9 @@ class API(object):
             # API returned some sort of error that must be handled
             self._handle_error(response)
 
+        if len(response.content) == 0:
+            return {}
+
         try:
             response_json = response.json()
         except JSONDecodeError:
@@ -224,6 +227,12 @@ class API(object):
 
     def get_meters(self) -> list:
         return self.get("meters")
+
+    def get_meters_site(self) -> list:
+        return self.get("meters/site")
+
+    def get_meters_solar(self) -> list:
+        return self.get("meters/solar")
 
     def get_installer(self) -> dict:
         return self.get("installer")
