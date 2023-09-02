@@ -1,9 +1,14 @@
 # Changelog
 
-## [0.3.20]
+## [0.4.0]
 
 - fix logout (https://github.com/jrester/tesla_powerwall/issues/50)
 - add meter details for site and solar (https://github.com/jrester/tesla_powerwall/issues/48)
+- extend pre-commit hooks
+    - add ruff for linting
+    - add mypy for type checking
+- move to pyproject.toml and remove old setup.py
+
 
 ## [0.3.19]
 
@@ -33,7 +38,7 @@
 
 ## [0.3.14]
 
-- revert changes from 0.3.11: 
+- revert changes from 0.3.11:
     - meters can now be accessed using the old, direct method (e.g. `meters.solar.instant_power`)
     - if a meter is not available a `MeterNotAvailableError` will be thrown
 - move from `distutils.version` to `packaging.version`

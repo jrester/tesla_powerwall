@@ -1,5 +1,6 @@
 import os
-from tesla_powerwall import Powerwall, Meter
+
+from tesla_powerwall import MeterResponse, Powerwall
 
 
 def getenv(var):
@@ -9,7 +10,7 @@ def getenv(var):
     return val
 
 
-def print_meter_row(meter_data: Meter):
+def print_meter_row(meter_data: MeterResponse):
     print(
         "{:>8} {:>8} {:>17} {:>17} {!r:>8} {!r:>17} {!r:>17}".format(
             meter_data.meter.value,
@@ -42,7 +43,7 @@ values = [
     ("Grid Status", power_wall.get_grid_status().value),
     ("Backup Reserve (%)", round(power_wall.get_backup_reserve_percentage())),
     ("Device Type", power_wall.get_device_type().value),
-    ("Software Version", power_wall.get_version())
+    ("Software Version", power_wall.get_version()),
 ]
 
 
@@ -62,5 +63,6 @@ print(
         "Sending to",
     )
 )
-for meter in meters_agg.meters:
-    print_meter_row(meters_agg.get_meter(meter))
+
+for meter in meters_agg.meters.values():
+    print_meter_row(meter)

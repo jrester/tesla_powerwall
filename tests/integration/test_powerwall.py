@@ -1,17 +1,14 @@
 import unittest
 from time import sleep
 
-from tesla_powerwall import (
-    GridStatus,
-    IslandMode,
-    Meter,
-    MetersAggregates,
-    MeterType,
-    Powerwall,
-    SiteInfo,
-    SiteMaster,
+from tesla_powerwall import GridStatus, IslandMode, MeterType, Powerwall
+from tesla_powerwall.responses import (
+    MeterResponse,
+    MetersAggregatesResponse,
+    PowerwallStatusResponse,
+    SiteInfoResponse,
+    SiteMasterResponse,
 )
-from tesla_powerwall.responses import PowerwallStatus
 from tests.integration import POWERWALL_IP, POWERWALL_PASSWORD
 
 
@@ -25,25 +22,26 @@ class TestPowerwall(unittest.TestCase):
 
     def test_get_charge(self) -> None:
         charge = self.powerwall.get_charge()
-        if(charge < 100):
+        if charge < 100:
             self.assertIsInstance(charge, float)
         else:
             self.assertEqual(charge, 100)
 
     def test_get_meters(self) -> None:
         meters = self.powerwall.get_meters()
-        self.assertIsInstance(meters, MetersAggregates)
+        self.assertIsInstance(meters, MetersAggregatesResponse)
 
-        self.assertIsInstance(meters.get_meter(MeterType.BATTERY), Meter)
+        self.assertIsInstance(meters.get_meter(MeterType.BATTERY), MeterResponse)
 
         for meter_type in meters.meters:
             meter = meters.get_meter(meter_type)
+            assert meter is not None
             meter.energy_exported
             meter.energy_imported
             meter.instant_power
             meter.last_communication_time
             meter.frequency
-            meter.average_voltage
+            meter.instant_average_voltage
             meter.get_energy_exported()
             meter.get_energy_imported()
             self.assertIsInstance(meter.get_power(), float)
@@ -54,7 +52,7 @@ class TestPowerwall(unittest.TestCase):
     def test_sitemaster(self) -> None:
         sitemaster = self.powerwall.get_sitemaster()
 
-        self.assertIsInstance(sitemaster, SiteMaster)
+        self.assertIsInstance(sitemaster, SiteMasterResponse)
 
         sitemaster.status
         sitemaster.is_running
@@ -64,7 +62,7 @@ class TestPowerwall(unittest.TestCase):
     def test_site_info(self) -> None:
         site_info = self.powerwall.get_site_info()
 
-        self.assertIsInstance(site_info, SiteInfo)
+        self.assertIsInstance(site_info, SiteInfoResponse)
 
         site_info.nominal_system_energy
         site_info.site_name
@@ -94,7 +92,7 @@ class TestPowerwall(unittest.TestCase):
 
     def test_status(self) -> None:
         status = self.powerwall.get_status()
-        self.assertIsInstance(status, PowerwallStatus)
+        self.assertIsInstance(status, PowerwallStatusResponse)
         status.up_time_seconds
         status.start_time
         status.version
@@ -103,10 +101,10 @@ class TestPowerwall(unittest.TestCase):
         initial_grid_status = self.powerwall.get_grid_status()
         self.assertIsInstance(initial_grid_status, GridStatus)
 
-        if(initial_grid_status == GridStatus.CONNECTED):
+        if initial_grid_status == GridStatus.CONNECTED:
             self.go_offline()
             self.go_online()
-        elif(initial_grid_status == GridStatus.ISLANDED):
+        elif initial_grid_status == GridStatus.ISLANDED:
             self.go_offline()
             self.go_online()
 
@@ -122,13 +120,18 @@ class TestPowerwall(unittest.TestCase):
         self.wait_until_grid_status(GridStatus.CONNECTED)
         self.assertEqual(self.powerwall.get_grid_status(), GridStatus.CONNECTED)
 
-    def wait_until_grid_status(self, expectedStatus: GridStatus, sleepTime: int = 1, maxCycles: int = 20) -> None:
+    def wait_until_grid_status(
+        self,
+        expectedStatus: GridStatus,
+        sleepTime: int = 1,
+        maxCycles: int = 20,
+    ) -> None:
         cycles = 0
         observedStatus: GridStatus
 
         while cycles < maxCycles:
             observedStatus = self.powerwall.get_grid_status()
-            if(observedStatus == expectedStatus):
+            if observedStatus == expectedStatus:
                 break
             sleep(sleepTime)
             cycles = cycles + 1

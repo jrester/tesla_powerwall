@@ -1,13 +1,13 @@
 from http.client import responses
 from json.decoder import JSONDecodeError
-from typing import List
+from typing import Any, List, Optional
 from urllib.parse import urljoin
 
 import requests
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
-from .error import AccessDeniedError, APIError, PowerwallUnreachableError
+from .error import AccessDeniedError, ApiError, PowerwallUnreachableError
 
 
 class API(object):
@@ -15,11 +15,10 @@ class API(object):
         self,
         endpoint: str,
         timeout: int = 10,
-        http_session: requests.Session = None,
+        http_session: Optional[requests.Session] = None,
         verify_ssl: bool = False,
         disable_insecure_warning: bool = True,
     ) -> None:
-
         if disable_insecure_warning:
             disable_warnings(InsecureRequestWarning)
 
@@ -50,7 +49,7 @@ class API(object):
     @staticmethod
     def _handle_error(response: requests.Response) -> None:
         if response.status_code == 404:
-            raise APIError(
+            raise ApiError(
                 "The url {} returned error 404".format(response.request.path_url)
             )
 
@@ -68,7 +67,7 @@ class API(object):
                 )
 
         if response.text is not None and len(response.text) > 0:
-            raise APIError(
+            raise ApiError(
                 "API returned status code '{}: {}' with body: {}".format(
                     response.status_code,
                     responses.get(response.status_code),
@@ -76,7 +75,7 @@ class API(object):
                 )
             )
         else:
-            raise APIError(
+            raise ApiError(
                 "API returned status code '{}: {}' ".format(
                     response.status_code, responses.get(response.status_code)
                 )
@@ -93,7 +92,7 @@ class API(object):
         try:
             response_json = response.json()
         except JSONDecodeError:
-            raise APIError(
+            raise ApiError(
                 "Error while decoding json of response: {}".format(response.text)
             )
 
@@ -103,14 +102,14 @@ class API(object):
         # Newer versions of the powerwall do not return such values anymore
         # Kept for backwards compability or if the API changes again
         if "error" in response_json:
-            raise APIError(response_json["error"])
+            raise ApiError(response_json["error"])
 
         return response_json
 
     def url(self, path: str):
         return urljoin(self._endpoint, path)
 
-    def get(self, path: str, headers: dict = {}) -> dict:
+    def get(self, path: str, headers: dict = {}) -> Any:
         try:
             response = self._http_session.get(
                 url=self.url(path),
@@ -121,7 +120,7 @@ class API(object):
             requests.exceptions.ConnectionError,
             requests.exceptions.ReadTimeout,
         ) as e:
-            raise PowerwallUnreachableError(e)
+            raise PowerwallUnreachableError(str(e))
 
         return self._process_response(response)
 
@@ -130,7 +129,7 @@ class API(object):
         path: str,
         payload: dict,
         headers: dict = {},
-    ) -> dict:
+    ) -> Any:
         try:
             response = self._http_session.post(
                 url=self.url(path),
@@ -142,7 +141,7 @@ class API(object):
             requests.exceptions.ConnectionError,
             requests.exceptions.ReadTimeout,
         ) as e:
-            raise PowerwallUnreachableError(e)
+            raise PowerwallUnreachableError(str(e))
 
         return self._process_response(response)
 
@@ -150,9 +149,12 @@ class API(object):
         return "AuthCookie" in self._http_session.cookies.keys()
 
     def login(
-        self, username: str, email: str, password: str, force_sm_off: bool = False
+        self,
+        username: str,
+        email: str,
+        password: str,
+        force_sm_off: bool = False,
     ) -> dict:
-
         # force_sm_off is referred to as 'shouldForceLogin' in the web source code
         return self.post(
             "login/Basic",
@@ -166,13 +168,14 @@ class API(object):
 
     def logout(self) -> None:
         if not self.is_authenticated():
-            raise APIError("Must be logged in to log out")
+            raise ApiError("Must be logged in to log out")
         # The api unsets the auth cookie and the token is invalidated
         self.get("logout")
 
     def close(self) -> None:
         # Close the HTTP Session
-        # THis method is required for testing, so python doesn't complain about unclosed resources
+        # THis method is required for testing,
+        # so python doesn't complain about unclosed resources
         self._http_session.close()
 
     # Endpoints are mapped to one method by <verb>_<path> so they can be easily accessed

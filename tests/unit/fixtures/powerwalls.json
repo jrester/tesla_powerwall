@@ -1,1 +1,216 @@
-{"enumerating": false, "gateway_din": "gateway_din", "updating": false, "checking_if_offgrid": false, "running_phase_detection": false, "phase_detection_last_error": "phase detection not run", "bubble_shedding": false, "on_grid_check_error": "on grid check not run", "grid_qualifying": false, "grid_code_validating": false, "phase_detection_not_available": true, "powerwalls": [{"Type": "", "PackagePartNumber": "PartNumber1", "PackageSerialNumber": "SerialNumber1", "type": "acpw", "grid_state": "Grid_Uncompliant", "grid_reconnection_time_seconds": 0, "under_phase_detection": false, "updating": false, "commissioning_diagnostic": {"name": "Commissioning", "category": "InternalComms", "disruptive": false, "inputs": null, "checks": [{"name": "CAN connectivity", "status": "fail", "start_time": "2020-10-29T15:02:46.361506132+01:00", "end_time": "2020-10-29T15:02:46.361509132+01:00", "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.", "results": {}, "debug": {}}, {"name": "Enable switch", "status": "fail", "start_time": "2020-10-29T15:02:46.361511798+01:00", "end_time": "2020-10-29T15:02:46.361513798+01:00", "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.", "results": {}, "debug": {}}, {"name": "Internal communications", "status": "fail", "start_time": "2020-10-29T15:02:46.361516132+01:00", "end_time": "2020-10-29T15:02:46.361518132+01:00", "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.", "results": {}, "debug": {}}, {"name": "Firmware up-to-date", "status": "fail", "start_time": "2020-10-29T15:02:46.361520132+01:00", "end_time": "2020-10-29T15:02:46.361522132+01:00", "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.", "results": {}, "debug": {}}]}, "update_diagnostic": {"name": "Firmware Update", "category": "InternalComms", "disruptive": true, "inputs": null, "checks": [{"name": "Powerwall firmware", "status": "not_run", "start_time": null, "end_time": null, "progress": 0, "results": null, "debug": null}, {"name": "Battery firmware", "status": "not_run", "start_time": null, "end_time": null, "progress": 0, "results": null, "debug": null}, {"name": "Inverter firmware", "status": "not_run", "start_time": null, "end_time": null, "progress": 0, "results": null, "debug": null}, {"name": "Grid code", "status": "not_run", "start_time": null, "end_time": null, "progress": 0, "results": null, "debug": null}]}, "bc_type": null}, {"Type": "", "PackagePartNumber": "PartNumber2", "PackageSerialNumber": "SerialNumber2", "type": "acpw", "grid_state": "Grid_Uncompliant", "grid_reconnection_time_seconds": 0, "under_phase_detection": false, "updating": false, "commissioning_diagnostic": {"name": "Commissioning", "category": "InternalComms", "disruptive": false, "inputs": null, "checks": [{"name": "CAN connectivity", "status": "fail", "start_time": "2020-10-29T15:02:46.361754463+01:00", "end_time": "2020-10-29T15:02:46.361757797+01:00", "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.", "results": {}, "debug": {}}, {"name": "Enable switch", "status": "fail", "start_time": "2020-10-29T15:02:46.36176013+01:00", "end_time": "2020-10-29T15:02:46.36176213+01:00", "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.", "results": {}, "debug": {}}, {"name": "Internal communications", "status": "fail", "start_time": "2020-10-29T15:02:46.36176413+01:00", "end_time": "2020-10-29T15:02:46.36176713+01:00", "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.", "results": {}, "debug": {}}, {"name": "Firmware up-to-date", "status": "fail", "start_time": "2020-10-29T15:02:46.361769463+01:00", "end_time": "2020-10-29T15:02:46.361771463+01:00", "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.", "results": {}, "debug": {}}]}, "update_diagnostic": {"name": "Firmware Update", "category": "InternalComms", "disruptive": true, "inputs": null, "checks": [{"name": "Powerwall firmware", "status": "not_run", "start_time": null, "end_time": null, "progress": 0, "results": null, "debug": null}, {"name": "Battery firmware", "status": "not_run", "start_time": null, "end_time": null, "progress": 0, "results": null, "debug": null}, {"name": "Inverter firmware", "status": "not_run", "start_time": null, "end_time": null, "progress": 0, "results": null, "debug": null}, {"name": "Grid code", "status": "not_run", "start_time": null, "end_time": null, "progress": 0, "results": null, "debug": null}]}, "bc_type": null}], "has_sync": false, "sync": null, "states": []}
+{
+  "bubble_shedding": false,
+  "checking_if_offgrid": false,
+  "enumerating": false,
+  "gateway_din": "gateway_din",
+  "grid_code_validating": false,
+  "grid_qualifying": false,
+  "has_sync": false,
+  "on_grid_check_error": "on grid check not run",
+  "phase_detection_last_error": "phase detection not run",
+  "phase_detection_not_available": true,
+  "powerwalls": [
+    {
+      "PackagePartNumber": "PartNumber1",
+      "PackageSerialNumber": "SerialNumber1",
+      "Type": "",
+      "bc_type": null,
+      "commissioning_diagnostic": {
+        "category": "InternalComms",
+        "checks": [
+          {
+            "debug": {},
+            "end_time": "2020-10-29T15:02:46.361509132+01:00",
+            "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.",
+            "name": "CAN connectivity",
+            "results": {},
+            "start_time": "2020-10-29T15:02:46.361506132+01:00",
+            "status": "fail"
+          },
+          {
+            "debug": {},
+            "end_time": "2020-10-29T15:02:46.361513798+01:00",
+            "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.",
+            "name": "Enable switch",
+            "results": {},
+            "start_time": "2020-10-29T15:02:46.361511798+01:00",
+            "status": "fail"
+          },
+          {
+            "debug": {},
+            "end_time": "2020-10-29T15:02:46.361518132+01:00",
+            "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.",
+            "name": "Internal communications",
+            "results": {},
+            "start_time": "2020-10-29T15:02:46.361516132+01:00",
+            "status": "fail"
+          },
+          {
+            "debug": {},
+            "end_time": "2020-10-29T15:02:46.361522132+01:00",
+            "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.",
+            "name": "Firmware up-to-date",
+            "results": {},
+            "start_time": "2020-10-29T15:02:46.361520132+01:00",
+            "status": "fail"
+          }
+        ],
+        "disruptive": false,
+        "inputs": null,
+        "name": "Commissioning"
+      },
+      "grid_reconnection_time_seconds": 0,
+      "grid_state": "Grid_Uncompliant",
+      "type": "acpw",
+      "under_phase_detection": false,
+      "update_diagnostic": {
+        "category": "InternalComms",
+        "checks": [
+          {
+            "debug": null,
+            "end_time": null,
+            "name": "Powerwall firmware",
+            "progress": 0,
+            "results": null,
+            "start_time": null,
+            "status": "not_run"
+          },
+          {
+            "debug": null,
+            "end_time": null,
+            "name": "Battery firmware",
+            "progress": 0,
+            "results": null,
+            "start_time": null,
+            "status": "not_run"
+          },
+          {
+            "debug": null,
+            "end_time": null,
+            "name": "Inverter firmware",
+            "progress": 0,
+            "results": null,
+            "start_time": null,
+            "status": "not_run"
+          },
+          {
+            "debug": null,
+            "end_time": null,
+            "name": "Grid code",
+            "progress": 0,
+            "results": null,
+            "start_time": null,
+            "status": "not_run"
+          }
+        ],
+        "disruptive": true,
+        "inputs": null,
+        "name": "Firmware Update"
+      },
+      "updating": false
+    },
+    {
+      "PackagePartNumber": "PartNumber2",
+      "PackageSerialNumber": "SerialNumber2",
+      "Type": "",
+      "bc_type": null,
+      "commissioning_diagnostic": {
+        "category": "InternalComms",
+        "checks": [
+          {
+            "debug": {},
+            "end_time": "2020-10-29T15:02:46.361757797+01:00",
+            "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.",
+            "name": "CAN connectivity",
+            "results": {},
+            "start_time": "2020-10-29T15:02:46.361754463+01:00",
+            "status": "fail"
+          },
+          {
+            "debug": {},
+            "end_time": "2020-10-29T15:02:46.36176213+01:00",
+            "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.",
+            "name": "Enable switch",
+            "results": {},
+            "start_time": "2020-10-29T15:02:46.36176013+01:00",
+            "status": "fail"
+          },
+          {
+            "debug": {},
+            "end_time": "2020-10-29T15:02:46.36176713+01:00",
+            "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.",
+            "name": "Internal communications",
+            "results": {},
+            "start_time": "2020-10-29T15:02:46.36176413+01:00",
+            "status": "fail"
+          },
+          {
+            "debug": {},
+            "end_time": "2020-10-29T15:02:46.361771463+01:00",
+            "message": "Cannot perform this action with site controller running. From landing page, either \"STOP SYSTEM\" or \"RUN WIZARD\" to proceed.",
+            "name": "Firmware up-to-date",
+            "results": {},
+            "start_time": "2020-10-29T15:02:46.361769463+01:00",
+            "status": "fail"
+          }
+        ],
+        "disruptive": false,
+        "inputs": null,
+        "name": "Commissioning"
+      },
+      "grid_reconnection_time_seconds": 0,
+      "grid_state": "Grid_Uncompliant",
+      "type": "acpw",
+      "under_phase_detection": false,
+      "update_diagnostic": {
+        "category": "InternalComms",
+        "checks": [
+          {
+            "debug": null,
+            "end_time": null,
+            "name": "Powerwall firmware",
+            "progress": 0,
+            "results": null,
+            "start_time": null,
+            "status": "not_run"
+          },
+          {
+            "debug": null,
+            "end_time": null,
+            "name": "Battery firmware",
+            "progress": 0,
+            "results": null,
+            "start_time": null,
+            "status": "not_run"
+          },
+          {
+            "debug": null,
+            "end_time": null,
+            "name": "Inverter firmware",
+            "progress": 0,
+            "results": null,
+            "start_time": null,
+            "status": "not_run"
+          },
+          {
+            "debug": null,
+            "end_time": null,
+            "name": "Grid code",
+            "progress": 0,
+            "results": null,
+            "start_time": null,
+            "status": "not_run"
+          }
+        ],
+        "disruptive": true,
+        "inputs": null,
+        "name": "Firmware Update"
+      },
+      "updating": false
+    }
+  ],
+  "running_phase_detection": false,
+  "states": [],
+  "sync": null,
+  "updating": false
+}

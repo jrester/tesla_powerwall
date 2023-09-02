@@ -9,13 +9,15 @@ from tesla_powerwall import (
     DeviceType,
     GridStatus,
     IslandMode,
-    Meter,
+    MeterDetailsReadings,
+    MeterDetailsResponse,
     MeterNotAvailableError,
-    MetersAggregates,
+    MeterResponse,
+    MetersAggregatesResponse,
     MeterType,
     MissingAttributeError,
     Powerwall,
-    SiteMaster,
+    SiteMasterResponse,
     assert_attribute,
     convert_to_kw,
 )
@@ -23,6 +25,10 @@ from tesla_powerwall.const import OperationMode
 from tests.unit import (
     ENDPOINT,
     GRID_STATUS_RESPONSE,
+    ISLANDING_MODE_OFFGRID_RESPONSE,
+    ISLANDING_MODE_ONGRID_RESPONSE,
+    METER_SITE_RESPONSE,
+    METER_SOLAR_RESPONSE,
     METERS_AGGREGATES_RESPONSE,
     OPERATION_RESPONSE,
     POWERWALLS_RESPONSE,
@@ -30,8 +36,6 @@ from tests.unit import (
     SITEMASTER_RESPONSE,
     STATUS_RESPONSE,
     SYSTEM_STATUS_RESPONSE,
-    ISLANDING_MODE_ONGRID_RESPONSE,
-    ISLANDING_MODE_OFFGRID_RESPONSE,
 )
 
 
@@ -46,7 +50,9 @@ class TestPowerWall(unittest.TestCase):
     def test_get_charge(self):
         add(
             Response(
-                GET, url=f"{ENDPOINT}system_status/soe", json={"percentage": 53.123423}
+                GET,
+                url=f"{ENDPOINT}system_status/soe",
+                json={"percentage": 53.123423},
             )
         )
         self.assertEqual(self.powerwall.get_charge(), 53.123423)
@@ -55,12 +61,14 @@ class TestPowerWall(unittest.TestCase):
     def test_get_sitemaster(self):
         add(
             Response(
-                responses.GET, url=f"{ENDPOINT}sitemaster", json=SITEMASTER_RESPONSE
+                responses.GET,
+                url=f"{ENDPOINT}sitemaster",
+                json=SITEMASTER_RESPONSE,
             )
         )
 
         sitemaster = self.powerwall.get_sitemaster()
-        self.assertIsInstance(sitemaster, SiteMaster)
+        self.assertIsInstance(sitemaster, SiteMasterResponse)
 
         self.assertEqual(sitemaster.status, "StatusUp")
         self.assertEqual(sitemaster.is_running, True)
@@ -77,15 +85,62 @@ class TestPowerWall(unittest.TestCase):
             )
         )
         meters = self.powerwall.get_meters()
-        self.assertIsInstance(meters, MetersAggregates)
+        self.assertIsInstance(meters, MetersAggregatesResponse)
         self.assertListEqual(
-            meters.meters,
-            [MeterType.SITE, MeterType.BATTERY, MeterType.LOAD, MeterType.SOLAR],
+            list(meters.meters.keys()),
+            [
+                MeterType.BATTERY,
+                MeterType.LOAD,
+                MeterType.SITE,
+                MeterType.SOLAR,
+            ],
         )
-        self.assertIsInstance(meters.load, Meter)
-        self.assertIsInstance(meters.get_meter(MeterType.LOAD), Meter)
+        self.assertIsInstance(meters.load, MeterResponse)
+        self.assertIsInstance(meters.get_meter(MeterType.LOAD), MeterResponse)
+        self.assertIsNone(meters.get_meter(MeterType.GENERATOR))
         with self.assertRaises(MeterNotAvailableError):
             meters.generator
+
+    @responses.activate
+    def test_get_meter_site(self):
+        add(
+            Response(
+                responses.GET,
+                url=f"{ENDPOINT}meters/site",
+                json=METER_SITE_RESPONSE,
+            )
+        )
+        meter = self.powerwall.get_meter_site()
+        self.assertIsInstance(meter, MeterDetailsResponse)
+        self.assertEqual(meter.location, MeterType.SITE)
+        readings = meter.readings
+        self.assertIsInstance(readings, MeterDetailsReadings)
+        # Optional voltage fields
+        self.assertIsInstance(readings.v_l1n, float)
+        self.assertIsInstance(readings.v_l2n, float)
+        self.assertIsNone(readings.v_l3n)
+
+        self.assertEqual(readings.instant_power, -18.00000076368451)
+        self.assertEqual(readings.get_power(), -0.0)
+
+    @responses.activate
+    def test_get_meter_solar(self):
+        add(
+            Response(
+                responses.GET,
+                url=f"{ENDPOINT}meters/solar",
+                json=METER_SOLAR_RESPONSE,
+            )
+        )
+        meter = self.powerwall.get_meter_solar()
+        self.assertIsInstance(meter, MeterDetailsResponse)
+        self.assertEqual(meter.location, MeterType.SOLAR)
+        readings = meter.readings
+        self.assertIsInstance(readings, MeterDetailsReadings)
+        # Optional voltage fields
+        self.assertIsInstance(readings.v_l1n, float)
+        self.assertIsNone(readings.v_l2n)
+        self.assertIsNone(readings.v_l3n)
 
     @responses.activate
     def test_is_sending(self):
@@ -131,7 +186,11 @@ class TestPowerWall(unittest.TestCase):
     @responses.activate
     def test_get_site_info(self):
         add(
-            Response(responses.GET, url=f"{ENDPOINT}site_info", json=SITE_INFO_RESPONSE)
+            Response(
+                responses.GET,
+                url=f"{ENDPOINT}site_info",
+                json=SITE_INFO_RESPONSE,
+            )
         )
         site_info = self.powerwall.get_site_info()
         self.assertEqual(site_info.nominal_system_energy, 27)
@@ -172,7 +231,9 @@ class TestPowerWall(unittest.TestCase):
     def test_get_serial_numbers(self):
         add(
             Response(
-                responses.GET, url=f"{ENDPOINT}powerwalls", json=POWERWALLS_RESPONSE
+                responses.GET,
+                url=f"{ENDPOINT}powerwalls",
+                json=POWERWALLS_RESPONSE,
             )
         )
         serial_numbers = self.powerwall.get_serial_numbers()
@@ -182,7 +243,9 @@ class TestPowerWall(unittest.TestCase):
     def test_get_gateway_din(self):
         add(
             Response(
-                responses.GET, url=f"{ENDPOINT}powerwalls", json=POWERWALLS_RESPONSE
+                responses.GET,
+                url=f"{ENDPOINT}powerwalls",
+                json=POWERWALLS_RESPONSE,
             )
         )
         gateway_din = self.powerwall.get_gateway_din()
@@ -191,7 +254,11 @@ class TestPowerWall(unittest.TestCase):
     @responses.activate
     def test_get_backup_reserved_percentage(self):
         add(
-            Response(responses.GET, url=f"{ENDPOINT}operation", json=OPERATION_RESPONSE)
+            Response(
+                responses.GET,
+                url=f"{ENDPOINT}operation",
+                json=OPERATION_RESPONSE,
+            )
         )
         self.assertEqual(
             self.powerwall.get_backup_reserve_percentage(), 5.000019999999999
@@ -200,7 +267,11 @@ class TestPowerWall(unittest.TestCase):
     @responses.activate
     def test_get_operation_mode(self):
         add(
-            Response(responses.GET, url=f"{ENDPOINT}operation", json=OPERATION_RESPONSE)
+            Response(
+                responses.GET,
+                url=f"{ENDPOINT}operation",
+                json=OPERATION_RESPONSE,
+            )
         )
         self.assertEqual(
             self.powerwall.get_operation_mode(), OperationMode.SELF_CONSUMPTION
@@ -242,7 +313,7 @@ class TestPowerWall(unittest.TestCase):
                 json=ISLANDING_MODE_OFFGRID_RESPONSE,
             )
         )
-        
+
         mode = self.powerwall.set_island_mode(IslandMode.OFFGRID)
         self.assertEqual(mode, IslandMode.OFFGRID)
 
@@ -255,7 +326,7 @@ class TestPowerWall(unittest.TestCase):
                 json=ISLANDING_MODE_ONGRID_RESPONSE,
             )
         )
-        
+
         mode = self.powerwall.set_island_mode(IslandMode.ONGRID)
         self.assertEqual(mode, IslandMode.ONGRID)
 

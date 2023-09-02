@@ -1,3 +1,40 @@
 [build-system]
-requires = ["requests>=2.22.0","setuptools >= 35.0.2"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "tesla-powerwall"
+version = "1.0.0"
+description = "A simple API for accessing the Tesla Powerwall over your local network"
+readme = "README.md"
+license = { file = "LICENSE"}
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["api", "tesla", "powerwall"]
+dependencies = [
+  "requests>=2.22.0",
+  "pre-commit",
+]
+
+[project.urls]
+Homepage = "https://github.com/jrester/tesla_powerwall"
+
+[project.optional-dependencies]
+test = [
+  "tox"
+]
+
+[tool.ruff]
+ignore-init-module-imports = true
+
+[tool.coverage.run]
+source = ["tesla_powerwall"]
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true

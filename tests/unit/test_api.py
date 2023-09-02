@@ -5,7 +5,7 @@ import requests
 import responses
 from responses import GET, Response, add
 
-from tesla_powerwall import API, AccessDeniedError, APIError
+from tesla_powerwall import API, AccessDeniedError, ApiError
 from tests.unit import ENDPOINT
 
 
@@ -33,20 +33,20 @@ class TestAPI(unittest.TestCase):
             self.api._process_response(res)
 
         res.status_code = 404
-        with self.assertRaises(APIError):
+        with self.assertRaises(ApiError):
             self.api._process_response(res)
 
         res.status_code = 502
-        with self.assertRaises(APIError):
+        with self.assertRaises(ApiError):
             self.api._process_response(res)
 
         res.status_code = 200
         res._content = b'{"error": "test_error"}'
-        with self.assertRaises(APIError):
+        with self.assertRaises(ApiError):
             self.api._process_response(res)
 
         res._content = b'{invalid_json"'
-        with self.assertRaises(APIError):
+        with self.assertRaises(ApiError):
             self.api._process_response(res)
 
         res._content = b"{}"
@@ -89,7 +89,11 @@ class TestAPI(unittest.TestCase):
 
     @responses.activate
     def test_logout(self):
-        add(Response(GET, url=f"{ENDPOINT}logout"), body="", content_type="application/json")
+        add(
+            Response(GET, url=f"{ENDPOINT}logout"),
+            body="",
+            content_type="application/json",
+        )
         self.api._http_session.cookies.set("AuthCookie", "foo")
 
         self.api.logout()
