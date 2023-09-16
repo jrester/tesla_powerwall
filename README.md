@@ -2,16 +2,16 @@
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/tesla_powerwall?color=blue&style=for-the-badge)
 ![PyPI](https://img.shields.io/pypi/v/tesla_powerwall?style=for-the-badge)
 
-Python Tesla Powerwall API for consuming a local endpoint. The API is by no means complete and mainly features methods which are considered to be of common use. If you feel like methods should be included you are welcome to open an Issue or create a Pull Request.
+Python Tesla Powerwall API for consuming a local endpoint.
+> Note: This is not an official API provided by Tesla and this project is not affilated with Tesla in any way.
 
-> Note: This is not an official API provided by Tesla and not affilated in anyways with Tesla.
-
-Powerwall Software versions from 1.47.0 to 1.50.1 as well as 20.40 to 22.9.2 are tested, but others will probably work too. If you encounter an error regarding a change in the API of the Powerwall because your Powerwall has a different version than listed here please open an Issue to report this change so it can be fixed.
-
+Powerwall Software versions from 1.47.0 to 1.50.1 as well as 20.40 to 22.9.2 are tested, but others will probably work too.
 
 # Table of Contents <!-- omit in TOC -->
 
 - [Installation](#installation)
+- [Limitations](#limitations)
+    - [Adjusting Backup Reserve Percentage](#adjusting-backup-reserve-percentage)
 - [Usage](#usage)
     - [Setup](#setup)
     - [Authentication](#authentication)
@@ -28,6 +28,7 @@ Powerwall Software versions from 1.47.0 to 1.50.1 as well as 20.40 to 22.9.2 are
         - [Aggregates](#aggregates)
         - [Current power supply/draw](#current-power-supplydraw)
         - [Energy exported/imported](#energy-exportedimported)
+        - [Details](#details)
     - [Device Type](#device-type)
     - [Grid Status](#grid-status)
     - [Operation mode](#operation-mode)
@@ -35,6 +36,7 @@ Powerwall Software versions from 1.47.0 to 1.50.1 as well as 20.40 to 22.9.2 are
     - [Gateway DIN](#gateway-din)
     - [VIN](#vin)
     - [Off-grid status](#off-grid-status-set-island-mode)
+
 ## Installation
 
 Install the library via pip:
@@ -42,6 +44,13 @@ Install the library via pip:
 ```bash
 $ pip install tesla_powerwall
 ```
+
+## Limitations
+
+### Adjusting Backup Reserve Percentage
+
+Currently it is not possible to control the Backup Percentage, because you need to be logged in as installer, which requires physical switch toggle. There is an ongoing discussion about a possible solution [here](https://github.com/vloschiavo/powerwall2/issues/55).
+However, if you believe there exists a solution, feel free to open an issue detailing the solution.
 
 ## Usage
 
@@ -67,7 +76,7 @@ powerwall = Powerwall(
     endpoint="<ip of your powerwall>",
     # Configure timeout; default is 10
     timeout=10,
-    # Provide a requests.Session or None to have one created
+    # Provide a requests.Session or None. If None is provided, a Session will be created.
     http_session=None,
     # Whether to verify the SSL certificate or not
     verify_ssl=False,
@@ -82,7 +91,7 @@ powerwall = Powerwall(
 ### Authentication
 
 Since version 20.49.0 authentication is required for all methods. For that reason you must call `login` before making a request to the API.
-When you perform a request without being loggedin a `AccessDeniedError` will be thrown.
+When you perform a request without being authenticated, an `AccessDeniedError` will be thrown.
 
 To login you can either use `login` or `login_as`. `login` logs you in as `User.CUSTOMER` whereas with `login_as` you can choose a different user:
 
@@ -110,6 +119,8 @@ powerwall.is_authenticated()
 
 # Logout
 powerwall.logout()
+powerwall.is_authenticated()
+#=> False
 ```
 
 ### General
@@ -131,29 +142,6 @@ api.get_system_status_soe()
 ```
 
 The `Powerwall` objet provides a wrapper around the API and exposes common methods.
-
-#### Errors
-
-As the powerwall REST API varies widley between version and country it may happen that an attribute may not be included in your response. If that is the case a `MissingAttributeError` will be thrown indicating what attribute wasn't available. 
-
-#### Response
-
-Responses are usally wrapped inside a `Response` object to provide convenience methods. An Example is the `Meter` class which is a sublass of `Response`. Each `Response` object includes the `response` member which consists of the plain json response. 
-
-```python
-from helpers import assert_attribute
-
-status = powerwall.get_status()
-#=> <PowerwallStatus ...>
-
-status.version
-# is the same as
-assert_attribute(status.response, "version")
-# or
-status.assert_attribute("version")
-```
-
-For retriving the version you could also alternativly use `powerwall.get_version`.
 
 ### Battery level
 
@@ -221,9 +209,9 @@ status.device_type
 ### Sitemaster
 
 ```python
-sm = powerwall.sitemaster 
+sm = powerwall.sitemaster
 #=> <SiteMaster ...>
-sm.status 
+sm.status
 #=> StatusUp
 sm.running
 #=> true
@@ -264,10 +252,10 @@ meters.get_meter(MeterType.SOLAR)
 
 # access meter, but may raise MeterNotAvailableError when the meter is not available at your powerwall (e.g. no solar panels installed)
 meters.solar
-#=> <Meter ...>
+#=> <MeterResponse ...>
 
 # get all available meters at the current powerwall
-meters.meters
+meters.meters.keys()
 #=> [<MeterType.SITE: 'site'>, <MeterType.BATTERY: 'battery'>, <MeterType.LOAD: 'load'>, <MeterType.SOLAR: 'solar'>]
 ```
 
@@ -312,6 +300,30 @@ meters.battery.get_energy_imported()
 #=> 7576.6 (kWh)
 ```
 
+### Details
+
+You can receive more detailed information about the meters `site` and `solar`:
+
+```python
+meter_details = powerwall.get_meter_site() # or get_meter_solar() for the solar meter
+#=> <MeterDetailsResponse ...>
+readings = meter_details.readings
+#=> <MeterDetailsReadings ...>
+readings.real_power_a # same for real_power_b and real_power_c
+#=> 619.13532458
+readings.i_a_current # same for i_b_current and i_c_current
+#=> 3.02
+readings.v_l1n # smae for v_l2n and v_l3n
+#=> 235.82
+readings.instant_power
+#=> -18.000023458
+readings.is_sending()
+```
+
+As `MeterDetailsReadings` inherits from `MeterResponse` (which is used in `MetersAggratesResponse`) it exposes the same data and methods.
+
+> For the meters battery and grid no additional details are provided, therefore no methods exist for those meters
+
 ### Device Type
 
 ```python
@@ -321,7 +333,7 @@ powerwall.get_device_type()
 
 ### Grid Status
 
-Get current grid status. 
+Get current grid status.
 
 ```python
 powerwall.get_grid_status()
@@ -361,7 +373,7 @@ vin = powerwall.get_vin()
 
 ### Off-grid status (Set Island mode)
 
-Take your powerwall on- and off-grid similar to the "Take off-grid" button in the Tesla app. 
+Take your powerwall on- and off-grid similar to the "Take off-grid" button in the Tesla app.
 
 #### Set powerwall to off-grid (Islanded)
 
@@ -373,4 +385,28 @@ powerwall.set_island_mode(IslandMode.OFFGRID)
 
 ```python
 powerwall.set_island_mode(IslandMode.ONGRID)
+```
+
+# Development
+
+## Building
+
+```sh
+$ python -m build
+```
+
+## Testing
+
+### Unit-Tests
+
+To run unit tests use tox:
+
+```sh
+$ tox -e unit
+```
+
+### Integration-Tests
+
+```sh
+$ tox -e integration
 ```

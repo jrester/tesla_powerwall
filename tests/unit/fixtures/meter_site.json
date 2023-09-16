@@ -1,0 +1,58 @@
+[
+  {
+    "Cached_readings": {
+      "energy_exported": 1152130.009160081,
+      "energy_exported_a": 1192873.1919444446,
+      "energy_exported_b": 1713.8994444444445,
+      "energy_imported": 15614764.694437858,
+      "energy_imported_a": 15654958.373333333,
+      "energy_imported_b": 6.539722222222222,
+      "frequency": 50,
+      "i_a_current": 0,
+      "i_b_current": 0,
+      "i_c_current": 0,
+      "instant_apparent_power": 431.96520416598025,
+      "instant_average_current": 0,
+      "instant_average_voltage": 123.87999878078699,
+      "instant_power": -18.00000076368451,
+      "instant_reactive_power": -431.5900109857321,
+      "instant_total_current": 0,
+      "last_communication_time": "2023-04-08T12:55:00.180984196+01:00",
+      "last_phase_energy_communication_time": "2023-04-07T14:44:17.625943287+01:00",
+      "last_phase_power_communication_time": "2023-04-08T12:55:00.180984196+01:00",
+      "last_phase_voltage_communication_time": "2023-04-08T12:55:00.181027196+01:00",
+      "reactive_power_a": -431.4800109863281,
+      "reactive_power_b": -0.10999999940395355,
+      "real_power_a": -17.950000762939453,
+      "real_power_b": -0.05000000074505806,
+      "serial_number": "OBB1234567890",
+      "timeout": 1500000000,
+      "v_l1n": 247.55999755859375,
+      "v_l2n": 0.20000000298023224,
+      "version": "1.7.1-Tesla"
+    },
+    "connection": {
+      "device_serial": "OBB1234567890",
+      "https_conf": {},
+      "ip_address": "PWRview-12345",
+      "neurio_connected": true,
+      "port": 443,
+      "short_id": "12345"
+    },
+    "cts": [
+      true,
+      true,
+      false,
+      false
+    ],
+    "id": 0,
+    "inverted": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "location": "site",
+    "type": "neurio_tcp"
+  }
+]

@@ -124,3 +124,4 @@ dmypy.json
 
 .js
 .vscode
+.direnv

@@ -8,12 +8,12 @@ class PowerwallError(Exception):
         super().__init__(msg)
 
 
-class APIError(PowerwallError):
+class ApiError(PowerwallError):
     def __init__(self, error: str):
         super().__init__("Powerwall api error: {}".format(error))
 
 
-class MissingAttributeError(APIError):
+class MissingAttributeError(ApiError):
     def __init__(self, response: dict, attribute: str, url: Union[str, None] = None):
         self.response: dict = response
         self.attribute: str = attribute
@@ -27,7 +27,8 @@ class MissingAttributeError(APIError):
             )
         else:
             super().__init__(
-                "The attribute '{}' is expected in the response for '{}' but is missing.".format(
+                "The attribute '{}' is expected in the response for \
+                 '{}' but is missing.".format(
                     attribute, url
                 )
             )
@@ -66,7 +67,8 @@ class MeterNotAvailableError(PowerwallError):
         self.meter: MeterType = meter
         self.available_meters: List[MeterType] = available_meters
         super().__init__(
-            "Meter {} is not available at your powerwall. Following meters are available: {} ".format(
+            "Meter {} is not available at your powerwall. \
+             Following meters are available: {} ".format(
                 meter.value, available_meters
             )
         )

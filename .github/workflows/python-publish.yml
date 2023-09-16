@@ -6,7 +6,7 @@ on:
       - created
       - published
       - released
-  
+
 jobs:
   deploy:
 

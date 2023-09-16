@@ -1,81 +1,54 @@
 import re
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import List
+from typing import Any, Dict, List, Optional
 
 from .const import DEFAULT_KW_ROUND_PERSICION, DeviceType, MeterType, Roles
 from .error import MeterNotAvailableError
-from .helpers import assert_attribute, convert_to_kw
+from .helpers import convert_to_kw
 
 
-class Response:
-    def __init__(self, response: dict) -> None:
-        self.response = response
-
-    def assert_attribute(self, attr: str) -> any:
-        return assert_attribute(self.response, attr)
+@dataclass
+class ResponseBase:
+    _raw: dict
 
     def __repr__(self) -> str:
-        return str(self.response)
+        return str(self._raw)
 
 
-class Meter(Response):
-    """
-    Attributes:
-    - last_communication_time
-    - instant_power
-    - instant_reactive_power
-    - instant_apparent_power
-    - frequency
-    - energy_exported
-    - energy_imported
-    - instant_average_voltage
-    - instant_total_current
-    - i_a_current
-    - i_b_current
-    - i_c_current
-    - timeout
-    """
+@dataclass
+class MeterResponse(ResponseBase):
+    meter: MeterType
+    instant_power: float
+    last_communication_time: str
+    frequency: float
+    energy_exported: float
+    energy_imported: float
+    instant_total_current: float
+    instant_average_voltage: float
 
-    def __init__(self, meter: MeterType, response) -> None:
-        self.meter = meter
-        super().__init__(response)
-
-    @property
-    def instant_power(self) -> float:
-        return self.assert_attribute("instant_power")
-
-    @property
-    def last_communication_time(self) -> str:
-        return self.assert_attribute("last_communication_time")
-
-    @property
-    def frequency(self) -> float:
-        return self.assert_attribute("frequency")
-
-    @property
-    def energy_exported(self) -> float:
-        return self.assert_attribute("energy_exported")
+    @staticmethod
+    def from_dict(meter: MeterType, src: dict) -> "MeterResponse":
+        return MeterResponse(
+            src,
+            meter=meter,
+            instant_power=src["instant_power"],
+            last_communication_time=src["last_communication_time"],
+            frequency=src["frequency"],
+            energy_exported=src["energy_exported"],
+            energy_imported=src["energy_imported"],
+            instant_total_current=src["instant_total_current"],
+            instant_average_voltage=src["instant_average_voltage"],
+        )
 
     def get_energy_exported(self, precision=DEFAULT_KW_ROUND_PERSICION) -> float:
         return convert_to_kw(self.energy_exported, precision)
 
-    @property
-    def energy_imported(self) -> float:
-        return self.assert_attribute("energy_imported")
-
     def get_energy_imported(self, precision=DEFAULT_KW_ROUND_PERSICION) -> float:
         return convert_to_kw(self.energy_imported, precision)
 
-    @property
-    def instant_total_current(self) -> float:
-        return self.assert_attribute("instant_total_current")
-
     def get_instant_total_current(self, precision=DEFAULT_KW_ROUND_PERSICION) -> float:
         return round(self.instant_total_current, precision)
-
-    @property
-    def average_voltage(self) -> float:
-        return self.assert_attribute("instant_average_voltage")
 
     def get_power(self, precision=DEFAULT_KW_ROUND_PERSICION) -> float:
         return convert_to_kw(self.instant_power, precision)
@@ -98,242 +71,218 @@ class Meter(Response):
             return self.get_power(precision) < 0
 
 
-class MetersAggregates(Response):
-    def __init__(self, response) -> str:
-        super().__init__(response)
-        self.meters = [MeterType(key) for key in response.keys()]
+@dataclass
+class MeterDetailsReadings(MeterResponse):
+    real_power_a: Optional[float]
+    real_power_b: Optional[float]
+    real_power_c: Optional[float]
 
-    def __getattribute__(self, attr) -> any:
+    i_a_current: Optional[float]
+    i_b_current: Optional[float]
+    i_c_current: Optional[float]
+
+    v_l1n: Optional[float]
+    v_l2n: Optional[float]
+    v_l3n: Optional[float]
+
+    @staticmethod
+    def from_dict(meter: MeterType, src: dict) -> "MeterDetailsReadings":
+        meter_response = MeterResponse.from_dict(meter, src)
+        return MeterDetailsReadings(
+            real_power_a=src.get("real_power_a"),
+            real_power_b=src.get("real_power_b"),
+            real_power_c=src.get("real_power_c"),
+            i_a_current=src.get("i_a_current"),
+            i_b_current=src.get("i_b_current"),
+            i_c_current=src.get("i_c_current"),
+            v_l1n=src.get("v_l1n"),
+            v_l2n=src.get("v_l2n"),
+            v_l3n=src.get("v_l3n"),
+            # Populate with the values from the base class
+            **meter_response.__dict__
+        )
+
+
+@dataclass
+class MeterDetailsResponse(ResponseBase):
+    location: MeterType
+    readings: MeterDetailsReadings
+
+    @staticmethod
+    def from_dict(src: dict) -> "MeterDetailsResponse":
+        location = MeterType(src["location"])
+        readings = MeterDetailsReadings.from_dict(location, src["Cached_readings"])
+        return MeterDetailsResponse(src, location=location, readings=readings)
+
+
+class MetersAggregatesResponse(ResponseBase):
+    @staticmethod
+    def from_dict(src: dict) -> "MetersAggregatesResponse":
+        meters = {
+            MeterType(key): MeterResponse.from_dict(MeterType(key), value)
+            for key, value in src.items()
+        }
+        return MetersAggregatesResponse(src, meters)
+
+    def __init__(self, response: dict, meters: Dict[MeterType, MeterResponse]) -> None:
+        self._raw = response
+        self.meters = meters
+
+    def __getattribute__(self, attr) -> Any:
         if attr.upper() in MeterType.__dict__:
             m = MeterType(attr)
             if m in self.meters:
-                return self.get_meter(m)
+                return self.meters[m]
             else:
-                raise MeterNotAvailableError(m, self.meters)
+                raise MeterNotAvailableError(m, list(self.meters.keys()))
         else:
             return object.__getattribute__(self, attr)
 
-    def get_meter(self, meter: MeterType) -> Meter:
-        if meter in self.meters:
-            return Meter(meter, self.assert_attribute(meter.value))
-        else:
-            return None
+    def get_meter(self, meter: MeterType) -> Optional[MeterResponse]:
+        return self.meters.get(meter)
 
 
-class SiteMaster(Response):
-    """
-    Attributes:
-    - running
-    - connected_to_tesla
-    - status
-    - power_supply_mode
-    """
+@dataclass
+class SiteMasterResponse(ResponseBase):
+    status: str
+    is_running: bool
+    is_connected_to_tesla: bool
+    is_power_supply_mode: bool
 
-    def __init__(self, response) -> None:
-        super().__init__(response)
-
-    @property
-    def status(self) -> str:
-        return self.assert_attribute("status")
-
-    @property
-    def is_running(self) -> bool:
-        return self.assert_attribute("running")
-
-    @property
-    def is_connected_to_tesla(self) -> bool:
-        return self.assert_attribute("connected_to_tesla")
-
-    @property
-    def is_power_supply_mode(self) -> bool:
-        return self.assert_attribute("power_supply_mode")
+    @staticmethod
+    def from_dict(src: dict) -> "SiteMasterResponse":
+        return SiteMasterResponse(
+            src,
+            status=src["status"],
+            is_running=src["running"],
+            is_connected_to_tesla=src["connected_to_tesla"],
+            is_power_supply_mode=src["power_supply_mode"],
+        )
 
 
-class SiteInfo(Response):
-    """
-    Attributes:
-    - max_site_meter_power_kW
-    - min_site_meter_power_kW
-    - nominal_system_energy_kWh
-    - nominal_system_power_kW
-    - max_system_energy_kWh
-    - max_system_power_kW
-    - site_name
-    - timezone
-    - grid_code
-    """
+@dataclass
+class SiteInfoResponse(ResponseBase):
+    nominal_system_energy: int
+    nominal_system_power: int
+    site_name: str
+    timezone: str
 
-    def __init__(self, response) -> None:
-        super().__init__(response)
-
-    @property
-    def nominal_system_energy(self) -> int:
-        return self.assert_attribute("nominal_system_energy_kWh")
-
-    @property
-    def site_name(self) -> str:
-        return self.assert_attribute("site_name")
-
-    @property
-    def timezone(self) -> str:
-        return self.assert_attribute("timezone")
+    @staticmethod
+    def from_dict(src: dict) -> "SiteInfoResponse":
+        return SiteInfoResponse(
+            src,
+            nominal_system_energy=src["nominal_system_energy_kWh"],
+            nominal_system_power=src["nominal_system_power_kW"],
+            site_name=src["site_name"],
+            timezone=src["timezone"],
+        )
 
 
-class PowerwallStatus(Response):
-    """
-    Attributes:
-    * start_time
-    * up_time_seconds
-    * is_new
-    * version
-    * device_type
-    * commission_count
-    * sync_type
-    * git_hash
-    """
+@dataclass
+class PowerwallStatusResponse(ResponseBase):
+    start_time: datetime
+    up_time_seconds: timedelta
+    version: str
+    device_type: DeviceType
+    commission_count: int
+    sync_type: str
+    git_hash: str
 
     _START_TIME_FORMAT = "%Y-%m-%d %H:%M:%S %z"
     _UP_TIME_SECONDS_REGEX = re.compile(
         r"^((?P<days>[\.\d]+?)d)?((?P<hours>[\.\d]+?)h)?((?P<minutes>[\.\d]+?)m)?((?P<seconds>[\.\d]+?)s)?$"
     )
 
-    def _parse_uptime_seconds(self, up_time_seconds: str) -> timedelta:
-        match = PowerwallStatus._UP_TIME_SECONDS_REGEX.match(up_time_seconds)
+    @staticmethod
+    def _parse_uptime_seconds(up_time_seconds: str) -> timedelta:
+        match = PowerwallStatusResponse._UP_TIME_SECONDS_REGEX.match(up_time_seconds)
         if not match:
             raise ValueError(
                 "Unable to parse up time seconds {}".format(up_time_seconds)
             )
 
         time_params = {}
-        for (name, param) in match.groupdict().items():
+        for name, param in match.groupdict().items():
             if param:
                 time_params[name] = float(param)
 
         return timedelta(**time_params)
 
-    @property
-    def up_time_seconds(self) -> timedelta:
-        up_time_seconds = assert_attribute(self.response, "up_time_seconds")
-        return self._parse_uptime_seconds(up_time_seconds)
-
-    @property
-    def start_time(self) -> datetime:
-        start_time = assert_attribute(self.response, "start_time")
-        return datetime.strptime(start_time, self._START_TIME_FORMAT)
-
-    @property
-    def version(self) -> str:
-        return self.assert_attribute("version")
-
-    @property
-    def device_type(self) -> DeviceType:
-        return DeviceType(self.assert_attribute("device_type"))
-
-
-class LoginResponse(Response):
-    """
-    Attributes
-    - email
-    - firstname
-    - lastname
-    - roles
-    - token
-    - provider
-    - loginTime
-    """
-
-    @property
-    def firstname(self) -> str:
-        return self.assert_attribute("firstname")
-
-    @property
-    def lastname(self) -> str:
-        return self.assert_attribute("lastname")
-
-    @property
-    def token(self) -> str:
-        return self.assert_attribute("token")
-
-    @property
-    def roles(self) -> List[Roles]:
-        return [Roles(role) for role in self.assert_attribute("roles")]
-
-    @property
-    def login_time(self):
-        return self.assert_attribute("loginTime")
+    @staticmethod
+    def from_dict(src: dict) -> "PowerwallStatusResponse":
+        start_time = datetime.strptime(
+            src["start_time"], PowerwallStatusResponse._START_TIME_FORMAT
+        )
+        up_time_seconds = PowerwallStatusResponse._parse_uptime_seconds(
+            src["up_time_seconds"]
+        )
+        return PowerwallStatusResponse(
+            src,
+            start_time=start_time,
+            up_time_seconds=up_time_seconds,
+            version=src["version"],
+            device_type=DeviceType(src["device_type"]),
+            commission_count=src["commission_count"],
+            sync_type=src["sync_type"],
+            git_hash=src["git_hash"],
+        )
 
 
-class Solar(Response):
-    """
-    Attributes
-    - brand
-    - model
-    - power_rating_watts
-    """
+@dataclass
+class LoginResponse(ResponseBase):
+    firstname: str
+    lastname: str
+    token: str
+    roles: List[Roles]
+    login_time: str
 
-    @property
-    def brand(self) -> str:
-        return self.assert_attribute("brand")
+    @staticmethod
+    def from_dict(src: dict) -> "LoginResponse":
+        return LoginResponse(
+            src,
+            firstname=src["firstname"],
+            lastname=src["lastname"],
+            token=src["token"],
+            roles=[Roles(role) for role in src["roles"]],
+            login_time=src["loginTime"],
+        )
 
-    @property
-    def model(self) -> str:
-        return self.assert_attribute("model")
 
-    @property
-    def power_rating_watts(self) -> int:
-        return self.assert_attribute("power_rating_watts")
+@dataclass
+class SolarResponse(ResponseBase):
+    brand: str
+    model: str
+    power_rating_watts: int
+
+    @staticmethod
+    def from_dict(src: dict) -> "SolarResponse":
+        return SolarResponse(
+            src,
+            brand=src["brand"],
+            model=src["model"],
+            power_rating_watts=src["power_rating_watts"],
+        )
 
 
-class Battery(Response):
-    @property
-    def part_number(self) -> str:
-        return self.assert_attribute("PackagePartNumber")
+@dataclass
+class BatteryResponse(ResponseBase):
+    part_number: str
+    serial_number: str
+    energy_charged: int
+    energy_discharged: int
+    energy_remaining: int
+    capacity: int
+    wobble_detected: bool
 
-    @property
-    def serial_number(self) -> str:
-        return self.assert_attribute("PackageSerialNumber")
-
-    @property
-    def energy_charged(self) -> int:
-        """get the amount of energy that was ever charged
-
-        Returns:
-            int: energy in watts
-        """
-        return self.assert_attribute("energy_charged")
-
-    @property
-    def energy_discharged(self) -> int:
-        """get the amount of energy that was ever discharged
-
-        Returns:
-            int: energy in watts
-        """
-        return self.assert_attribute("energy_discharged")
-
-    @property
-    def energy_remaining(self) -> int:
-        """get the remaining charged energy
-
-        Returns:
-            int: energy in watts
-        """
-        return self.assert_attribute("nominal_energy_remaining")
-
-    @property
-    def capacity(self) -> int:
-        """get the capacity of a battery
-
-        Returns:
-            int: energy in watts
-        """
-        return self.assert_attribute("nominal_full_pack_energy")
-
-    @property
-    def wobble_detected(self) -> bool:
-        """get whether a wobble was detected
-
-        Returns:
-            bool: detected
-        """
-        return self.assert_attribute("wobble_detected")
+    @staticmethod
+    def from_dict(src: dict) -> "BatteryResponse":
+        return BatteryResponse(
+            src,
+            part_number=src["PackagePartNumber"],
+            serial_number=src["PackageSerialNumber"],
+            energy_charged=src["energy_charged"],
+            energy_discharged=src["energy_discharged"],
+            energy_remaining=src["nominal_energy_remaining"],
+            capacity=src["nominal_full_pack_energy"],
+            wobble_detected=src["wobble_detected"],
+        )

@@ -1,1 +1,4 @@
-{"grid_status": "SystemGridConnected", "grid_services_active": false}
+{
+  "grid_services_active": false,
+  "grid_status": "SystemGridConnected"
+}

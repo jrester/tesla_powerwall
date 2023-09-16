@@ -1,1 +1,3 @@
-{"island_mode": "intentional_reconnect_failsafe"}
+{
+  "island_mode": "intentional_reconnect_failsafe"
+}
