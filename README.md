@@ -3,7 +3,7 @@
 ![PyPI](https://img.shields.io/pypi/v/tesla_powerwall?style=for-the-badge)
 
 Python Tesla Powerwall API for consuming a local endpoint.
-> Note: This is not an official API provided by Tesla and not affilated with Tesla in any way.
+> Note: This is not an official API provided by Tesla and this project is not affilated with Tesla in any way.
 
 Powerwall Software versions from 1.47.0 to 1.50.1 as well as 20.40 to 22.9.2 are tested, but others will probably work too.
 
