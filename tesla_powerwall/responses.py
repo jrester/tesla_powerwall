@@ -234,7 +234,7 @@ class LoginResponse(ResponseBase):
     lastname: str
     token: str
     roles: List[Roles]
-    login_time: datetime
+    login_time: str
 
     @staticmethod
     def from_dict(src: dict) -> "LoginResponse":
@@ -244,9 +244,7 @@ class LoginResponse(ResponseBase):
             lastname=src["lastname"],
             token=src["token"],
             roles=[Roles(role) for role in src["roles"]],
-            login_time=datetime.strptime(
-                src["loginTime"], "%Y-%m-%d %H:%M:%S"
-            ),  # Adjust the datetime format accordingly
+            login_time=src["loginTime"],
         )
 
 

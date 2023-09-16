@@ -386,3 +386,27 @@ powerwall.set_island_mode(IslandMode.OFFGRID)
 ```python
 powerwall.set_island_mode(IslandMode.ONGRID)
 ```
+
+# Development
+
+## Building
+
+```sh
+$ python -m build
+```
+
+## Testing
+
+### Unit-Tests
+
+To run unit tests use tox:
+
+```sh
+$ tox -e unit
+```
+
+### Integration-Tests
+
+```sh
+$ tox -e integration
+```
