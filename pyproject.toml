@@ -14,7 +14,9 @@ classifiers = [
 ]
 keywords = ["api", "tesla", "powerwall", "tesla_powerwall"]
 dependencies = [
-  "requests>=2.22.0"
+  "aiohttp>=3.7.4",
+  "requests>=2.22.0",
+  "urllib3>=2.1.0",
 ]
 
 [project.urls]
