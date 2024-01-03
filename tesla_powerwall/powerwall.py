@@ -1,4 +1,5 @@
-from typing import List, Union
+from types import TracebackType
+from typing import List, Union, Optional, Type
 
 import aiohttp
 import requests
@@ -23,8 +24,8 @@ class Powerwall:
     def __init__(
         self,
         endpoint: str,
-        http_session: aiohttp.ClientSession,
         timeout: int = 10,
+        http_session: Union[aiohttp.ClientSession, None] = None,
         verify_ssl: bool = False,
         disable_insecure_warning: bool = True,
     ):
@@ -199,3 +200,17 @@ class Powerwall:
 
     def get_api(self) -> API:
         return self._api
+
+    async def close(self):
+        await self._api.close()
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
+        await self.close()

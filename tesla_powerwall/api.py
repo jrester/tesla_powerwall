@@ -1,7 +1,8 @@
 import aiohttp
 from http.client import responses
 from json.decoder import JSONDecodeError
-from typing import Any, List
+from types import TracebackType
+from typing import Any, List, Optional, Type
 from urllib.parse import urljoin
 
 from urllib3 import disable_warnings
@@ -14,8 +15,8 @@ class API(object):
     def __init__(
         self,
         endpoint: str,
-        http_session: aiohttp.ClientSession,
         timeout: int = 10,
+        http_session: Optional[aiohttp.ClientSession] = None,
         verify_ssl: bool = False,
         disable_insecure_warning: bool = True,
     ) -> None:
@@ -24,7 +25,7 @@ class API(object):
 
         self._endpoint = self._parse_endpoint(endpoint)
         self._timeout = timeout
-        self._http_session = http_session
+        self._http_session = http_session if http_session else aiohttp.ClientSession()
         self._verify_ssl = verify_ssl
 
     @staticmethod
@@ -170,6 +171,20 @@ class API(object):
             raise ApiError("Must be logged in to log out")
         # The api unsets the auth cookie and the token is invalidated
         await self.get("logout")
+
+    async def close(self):
+        await self._http_session.close()
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
+        await self.close()
 
     # Endpoints are mapped to one method by <verb>_<path> so they can be easily accessed
 

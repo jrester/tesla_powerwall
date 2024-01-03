@@ -44,16 +44,12 @@ from tests.unit import (
 class TestPowerWall(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.aresponses = aresponses.ResponsesMockServer()
-        self.session = aiohttp.ClientSession()
-
         await self.aresponses.__aenter__()
-        await self.session.__aenter__()
 
-        self.powerwall = Powerwall(ENDPOINT, http_session=self.session)
+        self.powerwall = Powerwall(ENDPOINT)
 
     async def asyncTearDown(self):
-        await self.session.close()
-        await self.session.__aexit__(None, None, None)
+        await self.powerwall.close()
         await self.aresponses.__aexit__(None, None, None)
 
     def test_get_api(self):
