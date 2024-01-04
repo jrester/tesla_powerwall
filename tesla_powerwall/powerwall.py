@@ -2,7 +2,6 @@ from types import TracebackType
 from typing import List, Union, Optional, Type
 
 import aiohttp
-import requests
 
 from .api import API
 from .const import DeviceType, GridStatus, IslandMode, OperationMode, User
