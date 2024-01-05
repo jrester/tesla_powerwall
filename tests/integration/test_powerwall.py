@@ -17,6 +17,7 @@ class TestPowerwall(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.powerwall = Powerwall(POWERWALL_IP)
         await self.powerwall.login(POWERWALL_PASSWORD)
+        assert self.powerwall.is_authenticated()
 
     async def asyncTearDown(self):
         await self.powerwall.close()
