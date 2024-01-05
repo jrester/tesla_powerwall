@@ -21,6 +21,7 @@ class TestAPI(unittest.IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self):
         await self.api.close()
+        await self.session.close()
         await self.aresponses.__aexit__(None, None, None)
 
     def test_parse_endpoint(self):
@@ -139,3 +140,32 @@ class TestAPI(unittest.IsolatedAsyncioTestCase):
         await self.api.logout()
 
         self.aresponses.assert_plan_strictly_followed()
+
+    async def test_close(self):
+        api_session = None
+        async with API(ENDPOINT) as api:
+            api_session = api._http_session
+            self.assertFalse(api_session.closed)
+        self.assertTrue(api_session.closed)
+
+        async with aiohttp.ClientSession() as session:
+            async with API(ENDPOINT, http_session=session) as api:
+                api_session = api._http_session
+                self.assertFalse(api_session.closed)
+
+            self.assertFalse(api_session.closed)
+        self.assertTrue(api_session.closed)
+
+        api = API(ENDPOINT)
+        api_session = api._http_session
+        self.assertFalse(api_session.closed)
+        await api.close()
+        self.assertTrue(api_session.closed)
+
+        async with aiohttp.ClientSession() as session:
+            api_session = session
+            api = API(ENDPOINT, http_session=session)
+            self.assertFalse(api_session.closed)
+            await api.close()
+            self.assertFalse(api_session.closed)
+        self.assertTrue(api_session.closed)

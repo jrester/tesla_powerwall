@@ -277,3 +277,31 @@ class TestPowerWall(unittest.IsolatedAsyncioTestCase):
             assert_attribute(resp, "test", "test")
 
         self.assertEqual(convert_to_kw(2500, -1), 2.5)
+
+    async def test_close(self):
+        api_session = None
+        async with Powerwall(ENDPOINT) as powerwall:
+            api_session = powerwall._api._http_session
+            self.assertFalse(api_session.closed)
+        self.assertTrue(api_session.closed)
+
+        async with aiohttp.ClientSession() as session:
+            api_session = session
+            async with Powerwall(ENDPOINT, http_session=session) as powerwall:
+                self.assertFalse(api_session.closed)
+            self.assertFalse(api_session.closed)
+        self.assertTrue(api_session.closed)
+
+        powerwall = Powerwall(ENDPOINT)
+        api_session = powerwall._api._http_session
+        self.assertFalse(api_session.closed)
+        await powerwall.close()
+        self.assertTrue(api_session.closed)
+
+        async with aiohttp.ClientSession() as session:
+            api_session = session
+            powerwall = Powerwall(ENDPOINT, http_session=session)
+            self.assertFalse(api_session.closed)
+            await powerwall.close()
+            self.assertFalse(api_session.closed)
+        self.assertTrue(api_session.closed)

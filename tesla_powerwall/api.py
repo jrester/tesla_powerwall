@@ -24,9 +24,10 @@ class API(object):
             disable_warnings(InsecureRequestWarning)
 
         self._endpoint = self._parse_endpoint(endpoint)
-        self._timeout = timeout
+        self._timeout = aiohttp.ClientTimeout(total=timeout)
+        self._owns_http_session = False if http_session else True
         self._http_session = http_session if http_session else aiohttp.ClientSession()
-        self._verify_ssl = verify_ssl
+        self._ssl = None if verify_ssl else False
 
     @staticmethod
     def _parse_endpoint(endpoint: str) -> str:
@@ -116,7 +117,7 @@ class API(object):
                 url=self.url(path),
                 timeout=self._timeout,
                 headers=headers,
-                ssl=self._verify_ssl,
+                ssl=self._ssl,
             )
         except aiohttp.ClientConnectionError as e:
             raise PowerwallUnreachableError(str(e))
@@ -135,7 +136,7 @@ class API(object):
                 json=payload,
                 timeout=self._timeout,
                 headers=headers,
-                ssl=self._verify_ssl,
+                ssl=self._ssl,
             )
         except aiohttp.ClientConnectionError as e:
             raise PowerwallUnreachableError(str(e))
@@ -173,7 +174,8 @@ class API(object):
         await self.get("logout")
 
     async def close(self):
-        await self._http_session.close()
+        if self._owns_http_session:
+            await self._http_session.close()
 
     async def __aenter__(self):
         return self

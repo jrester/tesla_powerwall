@@ -15,15 +15,11 @@ from tests.integration import POWERWALL_IP, POWERWALL_PASSWORD
 
 class TestPowerwall(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        self.session = aiohttp.ClientSession()
-        await self.session.__aenter__()
-
-        self.powerwall = Powerwall(POWERWALL_IP, http_session=self.session)
+        self.powerwall = Powerwall(POWERWALL_IP)
         await self.powerwall.login(POWERWALL_PASSWORD)
 
     async def asyncTearDown(self):
-        await self.session.close()
-        await self.session.__aexit__(None, None, None)
+        await self.powerwall.close()
 
     async def test_get_charge(self) -> None:
         charge = await self.powerwall.get_charge()
