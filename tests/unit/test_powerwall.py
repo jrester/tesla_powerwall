@@ -47,15 +47,10 @@ class TestPowerWall(unittest.IsolatedAsyncioTestCase):
         self.aresponses = aresponses.ResponsesMockServer()
         await self.aresponses.__aenter__()
 
-        # Allow unsafe cookies so that folks can use IP addresses in their configs
-        # See: https://docs.aiohttp.org/en/v3.7.3/client_advanced.html#cookie-safety
-        jar = aiohttp.CookieJar(unsafe=True)
-        self.session = aiohttp.ClientSession(cookie_jar=jar)
         self.powerwall = Powerwall(ENDPOINT)
 
     async def asyncTearDown(self):
         await self.powerwall.close()
-        await self.session.close()
         await self.aresponses.__aexit__(None, None, None)
 
     def test_get_api(self):
