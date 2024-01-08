@@ -2,8 +2,10 @@ import unittest
 
 import aiohttp
 import aresponses
+import json
 
 from tesla_powerwall import API, AccessDeniedError, ApiError, PowerwallUnreachableError
+from tesla_powerwall.const import User
 from tests.unit import (
     ENDPOINT_HOST,
     ENDPOINT_PATH,
@@ -126,20 +128,59 @@ class TestAPI(unittest.IsolatedAsyncioTestCase):
     def test_url(self):
         self.assertEqual(self.api.url("test"), ENDPOINT + "test")
 
-    async def test_logout(self):
-        self.aresponses.add(
-            ENDPOINT_HOST,
-            f"{ENDPOINT_PATH}logout",
-            "GET",
-            self.aresponses.Response(
-                text="", headers={"Content-Type": "application/json"}
-            ),
-        )
+    async def test_login(self):
+        jar = aiohttp.CookieJar(unsafe=True)
+        async with aiohttp.ClientSession(cookie_jar=jar) as http_session:
+            async with API(ENDPOINT, http_session=http_session) as api:
+                username = User.CUSTOMER.value
+                password = "password"
+                email = "email@email.com"
 
-        self.session.cookie_jar.update_cookies(cookies={"AuthCookie": "foo"})
-        await self.api.logout()
+                async def response_handler(request) -> aresponses.Response:
+                    request_json = await request.json()
 
-        self.aresponses.assert_plan_strictly_followed()
+                    self.assertEqual(request_json["username"], username)
+                    self.assertEqual(request_json["password"], password)
+                    self.assertEqual(request_json["email"], email)
+
+                    login_response = self.aresponses.Response(
+                        text=json.dumps(
+                            {
+                                "email": request_json["email"],
+                                "firstname": "Tesla",
+                                "lastname": "Energy",
+                                "roles": ["Home_Owner"],
+                                "token": "x4jbH...XMP8w==",
+                                "provider": "Basic",
+                                "loginTime": "2023-03-25T13:10:48.9029581+01:00",
+                            }
+                        ),
+                        headers={"Content-Type": "application/json"},
+                    )
+                    login_response.set_cookie("AuthCookie", "foo")
+                    return login_response
+
+                self.aresponses.add(
+                    ENDPOINT_HOST,
+                    f"{ENDPOINT_PATH}login/Basic",
+                    "POST",
+                    response_handler,
+                )
+
+                await api.login(username=username, email=email, password=password)
+
+                self.aresponses.add(
+                    ENDPOINT_HOST,
+                    f"{ENDPOINT_PATH}logout",
+                    "GET",
+                    self.aresponses.Response(
+                        text="", headers={"Content-Type": "application/json"}
+                    ),
+                )
+
+                await api.logout()
+
+                self.aresponses.assert_plan_strictly_followed()
 
     async def test_close(self):
         api_session = None

@@ -200,10 +200,10 @@ class Powerwall:
     def get_api(self) -> API:
         return self._api
 
-    async def close(self):
+    async def close(self) -> None:
         await self._api.close()
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "Powerwall":
         return self
 
     async def __aexit__(

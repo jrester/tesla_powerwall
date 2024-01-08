@@ -26,8 +26,18 @@ class API(object):
         self._endpoint = self._parse_endpoint(endpoint)
         self._timeout = aiohttp.ClientTimeout(total=timeout)
         self._owns_http_session = False if http_session else True
-        self._http_session = http_session if http_session else aiohttp.ClientSession()
         self._ssl = None if verify_ssl else False
+
+        if http_session:
+            self._owns_http_session = False
+            self._http_session = http_session
+        else:
+            self._owns_http_session = True
+
+            # Allow unsafe cookies so that folks can use IP addresses in their configs
+            # See: https://docs.aiohttp.org/en/v3.7.3/client_advanced.html#cookie-safety
+            jar = aiohttp.CookieJar(unsafe=True)
+            self._http_session = aiohttp.ClientSession(cookie_jar=jar)
 
     @staticmethod
     def _parse_endpoint(endpoint: str) -> str:
@@ -51,17 +61,19 @@ class API(object):
     @staticmethod
     async def _handle_error(response: aiohttp.ClientResponse) -> None:
         if response.status == 404:
-            raise ApiError("The url {} returned error 404".format(response.real_url))
+            raise ApiError(
+                "The url {} returned error 404".format(str(response.real_url))
+            )
 
         if response.status == 401 or response.status == 403:
             response_json = None
             try:
                 response_json = await response.json()
             except Exception:
-                raise AccessDeniedError(response.real_url)
+                raise AccessDeniedError(str(response.real_url))
             else:
                 raise AccessDeniedError(
-                    response.real_url,
+                    str(response.real_url),
                     response_json.get("error"),
                     response_json.get("message"),
                 )
@@ -173,11 +185,11 @@ class API(object):
         # The api unsets the auth cookie and the token is invalidated
         await self.get("logout")
 
-    async def close(self):
+    async def close(self) -> None:
         if self._owns_http_session:
             await self._http_session.close()
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "API":
         return self
 
     async def __aexit__(

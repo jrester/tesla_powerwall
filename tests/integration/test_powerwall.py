@@ -15,12 +15,7 @@ from tests.integration import POWERWALL_IP, POWERWALL_PASSWORD
 
 class TestPowerwall(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        # Allow unsafe cookies so that folks can use IP addresses in their configs
-        # See: https://docs.aiohttp.org/en/v3.7.3/client_advanced.html#cookie-safety
-        jar = aiohttp.CookieJar(unsafe=True)
-        self.http_session = aiohttp.ClientSession(cookie_jar=jar)
-
-        self.powerwall = Powerwall(POWERWALL_IP, http_session=self.http_session)
+        self.powerwall = Powerwall(POWERWALL_IP)
         await self.powerwall.login(POWERWALL_PASSWORD)
         assert self.powerwall.is_authenticated()
 
