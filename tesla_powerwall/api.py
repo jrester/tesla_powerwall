@@ -1,10 +1,11 @@
-import aiohttp
 from http.client import responses
 from json.decoder import JSONDecodeError
 from types import TracebackType
 from typing import Any, List, Optional, Type
 from urllib.parse import urljoin
 
+import aiohttp
+import orjson
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -68,7 +69,7 @@ class API(object):
         if response.status == 401 or response.status == 403:
             response_json = None
             try:
-                response_json = await response.json()
+                response_json = await response.json(loads=orjson.loads)
             except Exception:
                 raise AccessDeniedError(str(response.real_url))
             else:
@@ -104,7 +105,7 @@ class API(object):
             return {}
 
         try:
-            response_json = await response.json(content_type=None)
+            response_json = await response.json(content_type=None, loads=orjson.loads)
         except JSONDecodeError:
             raise ApiError(
                 "Error while decoding json of response: {}".format(response.text)

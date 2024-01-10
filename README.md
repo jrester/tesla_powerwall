@@ -36,6 +36,7 @@ Powerwall Software versions from 1.47.0 to 1.50.1 as well as 20.40 to 22.9.2 are
     - [Gateway DIN](#gateway-din)
     - [VIN](#vin)
     - [Off-grid status](#off-grid-status-set-island-mode)
+- [Development](#development)
 
 ## Installation
 
@@ -389,6 +390,18 @@ await powerwall.set_island_mode(IslandMode.ONGRID)
 
 # Development
 
+## pre-commit
+
+This project uses pre-commit to run linters, formatters and type checking. You can easily run those checks locally:
+
+```sh
+# Install the pre-commit hooks
+$ pre-commit install
+pre-commit installed at .git/hooks/pre-commit
+```
+
+Now those checks will be execute on every `git commit`. You can also execute all checks manually with `pre-commit run --all-files`.
+
 ## Building
 
 ```sh
@@ -396,6 +409,9 @@ $ python -m build
 ```
 
 ## Testing
+
+The tests are split in unit and integration tests.
+The unit tests are self-contained and can simply be run locally by executing `tox -e unit`, whereas the integration test, run against a real powerwall.
 
 ### Unit-Tests
 
@@ -407,6 +423,12 @@ $ tox -e unit
 
 ### Integration-Tests
 
+To execute the integration tests you need to first provide some information about your powerwall:
+
 ```sh
+$ export POWERWALL_IP=<ip of your powerwall>
+$ export POWERWALL_PASSWORD=<password for your powerwall>
 $ tox -e integration
 ```
+
+> The integration tests might take your powerwall off grid and bring it back online. Before running the tests, make sure that you know what you are doing!

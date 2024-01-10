@@ -16,6 +16,7 @@ keywords = ["api", "tesla", "powerwall", "tesla_powerwall"]
 dependencies = [
   "aiohttp>=3.7.4",
   "urllib3>=1.26.18",
+  "orjson>=3.9.0"
 ]
 
 [project.urls]
