@@ -1,9 +1,10 @@
-import aiohttp
-import aresponses
 import datetime
 import json
-from typing import Optional, Union
 import unittest
+from typing import Optional, Union
+
+import aiohttp
+import aresponses
 
 from tesla_powerwall import (
     API,
@@ -24,9 +25,9 @@ from tesla_powerwall import (
 )
 from tesla_powerwall.const import OperationMode
 from tests.unit import (
+    ENDPOINT,
     ENDPOINT_HOST,
     ENDPOINT_PATH,
-    ENDPOINT,
     GRID_STATUS_RESPONSE,
     ISLANDING_MODE_OFFGRID_RESPONSE,
     ISLANDING_MODE_ONGRID_RESPONSE,

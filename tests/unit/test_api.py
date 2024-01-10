@@ -1,16 +1,12 @@
+import json
 import unittest
 
 import aiohttp
 import aresponses
-import json
 
-from tesla_powerwall import API, AccessDeniedError, ApiError, PowerwallUnreachableError
+from tesla_powerwall import API, AccessDeniedError, ApiError
 from tesla_powerwall.const import User
-from tests.unit import (
-    ENDPOINT_HOST,
-    ENDPOINT_PATH,
-    ENDPOINT,
-)
+from tests.unit import ENDPOINT, ENDPOINT_HOST, ENDPOINT_PATH
 
 
 class TestAPI(unittest.IsolatedAsyncioTestCase):

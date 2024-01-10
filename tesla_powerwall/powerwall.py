@@ -1,5 +1,5 @@
 from types import TracebackType
-from typing import List, Union, Optional, Type
+from typing import List, Optional, Type, Union
 
 import aiohttp
 
