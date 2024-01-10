@@ -1,7 +1,10 @@
 import json
 from pathlib import Path
 
-ENDPOINT = "https://1.1.1.1/api/"
+ENDPOINT_SCHEME = "https://"
+ENDPOINT_HOST = "1.1.1.1"
+ENDPOINT_PATH = "/api/"
+ENDPOINT = f"{ENDPOINT_SCHEME}{ENDPOINT_HOST}{ENDPOINT_PATH}"
 
 FIXTURE_BASE_PATH = Path("tests/unit/fixtures")
 

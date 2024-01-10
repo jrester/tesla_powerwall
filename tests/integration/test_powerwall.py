@@ -1,5 +1,6 @@
+import aiohttp
+import asyncio
 import unittest
-from time import sleep
 
 from tesla_powerwall import GridStatus, IslandMode, MeterType, Powerwall
 from tesla_powerwall.responses import (
@@ -12,23 +13,25 @@ from tesla_powerwall.responses import (
 from tests.integration import POWERWALL_IP, POWERWALL_PASSWORD
 
 
-class TestPowerwall(unittest.TestCase):
-    def setUp(self) -> None:
+class TestPowerwall(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
         self.powerwall = Powerwall(POWERWALL_IP)
-        self.powerwall.login(POWERWALL_PASSWORD)
+        await self.powerwall.login(POWERWALL_PASSWORD)
+        assert self.powerwall.is_authenticated()
 
-    def tearDown(self) -> None:
-        self.powerwall.close()
+    async def asyncTearDown(self):
+        await self.powerwall.close()
+        await self.http_session.close()
 
-    def test_get_charge(self) -> None:
-        charge = self.powerwall.get_charge()
+    async def test_get_charge(self) -> None:
+        charge = await self.powerwall.get_charge()
         if charge < 100:
             self.assertIsInstance(charge, float)
         else:
             self.assertEqual(charge, 100)
 
-    def test_get_meters(self) -> None:
-        meters = self.powerwall.get_meters()
+    async def test_get_meters(self) -> None:
+        meters = await self.powerwall.get_meters()
         self.assertIsInstance(meters, MetersAggregatesResponse)
 
         self.assertIsInstance(meters.get_meter(MeterType.BATTERY), MeterResponse)
@@ -49,8 +52,8 @@ class TestPowerwall(unittest.TestCase):
             self.assertIsInstance(meter.is_drawing_from(), bool)
             self.assertIsInstance(meter.is_sending_to(), bool)
 
-    def test_sitemaster(self) -> None:
-        sitemaster = self.powerwall.get_sitemaster()
+    async def test_sitemaster(self) -> None:
+        sitemaster = await self.powerwall.get_sitemaster()
 
         self.assertIsInstance(sitemaster, SiteMasterResponse)
 
@@ -59,8 +62,8 @@ class TestPowerwall(unittest.TestCase):
         sitemaster.is_connected_to_tesla
         sitemaster.is_power_supply_mode
 
-    def test_site_info(self) -> None:
-        site_info = self.powerwall.get_site_info()
+    async def test_site_info(self) -> None:
+        site_info = await self.powerwall.get_site_info()
 
         self.assertIsInstance(site_info, SiteInfoResponse)
 
@@ -68,14 +71,14 @@ class TestPowerwall(unittest.TestCase):
         site_info.site_name
         site_info.timezone
 
-    def test_capacity(self) -> None:
-        self.assertIsInstance(self.powerwall.get_capacity(), int)
+    async def test_capacity(self) -> None:
+        self.assertIsInstance(await self.powerwall.get_capacity(), int)
 
-    def test_energy(self) -> None:
-        self.assertIsInstance(self.powerwall.get_energy(), int)
+    async def test_energy(self) -> None:
+        self.assertIsInstance(await self.powerwall.get_energy(), int)
 
-    def test_batteries(self) -> None:
-        batteries = self.powerwall.get_batteries()
+    async def test_batteries(self) -> None:
+        batteries = await self.powerwall.get_batteries()
         self.assertGreater(len(batteries), 0)
         for battery in batteries:
             battery.wobble_detected
@@ -86,41 +89,41 @@ class TestPowerwall(unittest.TestCase):
             battery.part_number
             battery.serial_number
 
-    def test_grid_status(self) -> None:
-        grid_status = self.powerwall.get_grid_status()
+    async def test_grid_status(self) -> None:
+        grid_status = await self.powerwall.get_grid_status()
         self.assertIsInstance(grid_status, GridStatus)
 
-    def test_status(self) -> None:
-        status = self.powerwall.get_status()
+    async def test_status(self) -> None:
+        status = await self.powerwall.get_status()
         self.assertIsInstance(status, PowerwallStatusResponse)
         status.up_time_seconds
         status.start_time
         status.version
 
-    def test_islanding(self) -> None:
-        initial_grid_status = self.powerwall.get_grid_status()
+    async def test_islanding(self) -> None:
+        initial_grid_status = await self.powerwall.get_grid_status()
         self.assertIsInstance(initial_grid_status, GridStatus)
 
         if initial_grid_status == GridStatus.CONNECTED:
-            self.go_offline()
-            self.go_online()
+            await self.go_offline()
+            await self.go_online()
         elif initial_grid_status == GridStatus.ISLANDED:
-            self.go_offline()
-            self.go_online()
+            await self.go_offline()
+            await self.go_online()
 
-    def go_offline(self) -> None:
-        observedIslandMode = self.powerwall.set_island_mode(IslandMode.OFFGRID)
+    async def go_offline(self) -> None:
+        observedIslandMode = await self.powerwall.set_island_mode(IslandMode.OFFGRID)
         self.assertEqual(observedIslandMode, IslandMode.OFFGRID)
-        self.wait_until_grid_status(GridStatus.ISLANDED)
-        self.assertEqual(self.powerwall.get_grid_status(), GridStatus.ISLANDED)
+        await self.wait_until_grid_status(GridStatus.ISLANDED)
+        self.assertEqual(await self.powerwall.get_grid_status(), GridStatus.ISLANDED)
 
-    def go_online(self) -> None:
-        observedIslandMode = self.powerwall.set_island_mode(IslandMode.ONGRID)
+    async def go_online(self) -> None:
+        observedIslandMode = await self.powerwall.set_island_mode(IslandMode.ONGRID)
         self.assertEqual(observedIslandMode, IslandMode.ONGRID)
-        self.wait_until_grid_status(GridStatus.CONNECTED)
-        self.assertEqual(self.powerwall.get_grid_status(), GridStatus.CONNECTED)
+        await self.wait_until_grid_status(GridStatus.CONNECTED)
+        self.assertEqual(await self.powerwall.get_grid_status(), GridStatus.CONNECTED)
 
-    def wait_until_grid_status(
+    async def wait_until_grid_status(
         self,
         expectedStatus: GridStatus,
         sleepTime: int = 1,
@@ -130,10 +133,10 @@ class TestPowerwall(unittest.TestCase):
         observedStatus: GridStatus
 
         while cycles < maxCycles:
-            observedStatus = self.powerwall.get_grid_status()
+            observedStatus = await self.powerwall.get_grid_status()
             if observedStatus == expectedStatus:
                 break
-            sleep(sleepTime)
+            await asyncio.sleep(sleepTime)
             cycles = cycles + 1
 
         self.assertEqual(observedStatus, expectedStatus)

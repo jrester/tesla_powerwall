@@ -100,15 +100,15 @@ from tesla_powerwall import User
 
 # Login as customer without email
 # The default value for the email is ""
-powerwall.login("<password>")
+await powerwall.login("<password>")
 #=> <LoginResponse ...>
 
 # Login as customer with email
-powerwall.login("<password>", "<email>")
+await powerwall.login("<password>", "<email>")
 #=> <LoginResponse ...>
 
 # Login with different user
-powerwall.login_as(User.INSTALLER, "<password>", "<email>")
+await powerwall.login_as(User.INSTALLER, "<password>", "<email>")
 #=> <LoginResponse ...>
 
 # Check if we are logged in
@@ -118,7 +118,7 @@ powerwall.is_authenticated()
 #=> True
 
 # Logout
-powerwall.logout()
+await powerwall.logout()
 powerwall.is_authenticated()
 #=> False
 ```
@@ -133,12 +133,12 @@ from tesla_powerwall import API
 # Manually create API object
 api = API('https://<ip>/')
 # Perform get on 'system_status/soe'
-api.get_system_status_soe()
+await api.get_system_status_soe()
 #=> {'percentage': 97.59281925744594}
 
 # From existing powerwall
 api = powerwall.get_api()
-api.get_system_status_soe()
+await api.get_system_status_soe()
 ```
 
 The `Powerwall` objet provides a wrapper around the API and exposes common methods.
@@ -148,14 +148,14 @@ The `Powerwall` objet provides a wrapper around the API and exposes common metho
 Get charge in percent:
 
 ```python
-powerwall.get_charge()
+await powerwall.get_charge()
 #=> 97.59281925744594 (%)
 ```
 
 Get charge in watt:
 
 ```python
-powerwall.get_energy()
+await powerwall.get_energy()
 #=> 14807 (Wh)
 ```
 
@@ -164,7 +164,7 @@ powerwall.get_energy()
 Get the capacity of your powerwall in watt:
 
 ```python
-powerwall.get_capacity()
+await powerwall.get_capacity()
 #=> 28078 (Wh)
 ```
 
@@ -173,7 +173,7 @@ powerwall.get_capacity()
 Get information about the battery packs that are installed:
 
 ```python
-batteries = powerwall.get_batteries()
+batteries = await powerwall.get_batteries()
 #=> [<Battery ...>, <Battery ...>]
 batteries[0].part_number
 #=> "XXX-G"
@@ -194,7 +194,7 @@ batteries[0].wobble_detected
 ### Powerwall Status
 
 ```python
-status = powerwall.get_status()
+status = await powerwall.get_status()
 #=> <PowerwallStatus ...>
 status.version
 #=> '1.49.0'
@@ -209,7 +209,7 @@ status.device_type
 ### Sitemaster
 
 ```python
-sm = powerwall.sitemaster
+sm = await powerwall.get_sitemaster()
 #=> <SiteMaster ...>
 sm.status
 #=> StatusUp
@@ -224,7 +224,7 @@ The sitemaster can be started and stopped using `run()` and `stop()`
 ### Siteinfo
 
 ```python
-info = powerwall.get_site_info()
+info = await powerwall.get_site_info()
 #=> <SiteInfo ...>
 info.site_name
 #=> 'Tesla Home'
@@ -243,7 +243,7 @@ info.timezone
 ```python
 from tesla_powerwall import MeterType
 
-meters = powerwall.get_meters()
+meters = await powerwall.get_meters()
 #=> <MetersAggregates ...>
 
 # access meter, but may return None when meter is not available
@@ -266,7 +266,7 @@ Available meters are: `solar`, `site`, `load`, `battery`, `generator`, and `busw
 `Meter` provides different methods for checking current power supply/draw:
 
 ```python
-meters = powerwall.get_meters()
+meters = await powerwall.get_meters()
 meters.solar.get_power()
 #=> 0.4 (kW)
 meters.solar.instant_power
@@ -305,7 +305,7 @@ meters.battery.get_energy_imported()
 You can receive more detailed information about the meters `site` and `solar`:
 
 ```python
-meter_details = powerwall.get_meter_site() # or get_meter_solar() for the solar meter
+meter_details = await powerwall.get_meter_site() # or get_meter_solar() for the solar meter
 #=> <MeterDetailsResponse ...>
 readings = meter_details.readings
 #=> <MeterDetailsReadings ...>
@@ -327,7 +327,7 @@ As `MeterDetailsReadings` inherits from `MeterResponse` (which is used in `Meter
 ### Device Type
 
 ```python
-powerwall.get_device_type()
+await powerwall.get_device_type()
 #=> <DeviceType.GW1: 'hec'>
 ```
 
@@ -336,39 +336,39 @@ powerwall.get_device_type()
 Get current grid status.
 
 ```python
-powerwall.get_grid_status()
+await powerwall.get_grid_status()
 #=> <GridStatus.Connected: 'SystemGridConnected'>
-powerwall.is_grid_services_active()
+await powerwall.is_grid_services_active()
 #=> False
 ```
 
 ### Operation mode
 
 ```python
-powerwall.get_operation_mode()
+await powerwall.get_operation_mode()
 #=> <OperationMode.SELF_CONSUMPTION: ...>
-powerwall.get_backup_reserve_percentage()
+await powerwall.get_backup_reserve_percentage()
 #=> 5.000019999999999 (%)
 ```
 
 ### Powerwalls Serial Numbers
 
 ```python
-serials = powerwall.get_serial_numbers()
+await serials = powerwall.get_serial_numbers()
 #=> ["...", "...", ...]
 ```
 
 ### Gateway DIN
 
 ```python
-din = powerwall.get_gateway_din()
+await din = powerwall.get_gateway_din()
 #=> 4159645-02-A--TGXXX
 ```
 
 ### VIN
 
 ```python
-vin = powerwall.get_vin()
+await vin = powerwall.get_vin()
 ```
 
 ### Off-grid status (Set Island mode)
@@ -378,13 +378,13 @@ Take your powerwall on- and off-grid similar to the "Take off-grid" button in th
 #### Set powerwall to off-grid (Islanded)
 
 ```python
-powerwall.set_island_mode(IslandMode.OFFGRID)
+await powerwall.set_island_mode(IslandMode.OFFGRID)
 ```
 
 #### Set powerwall to off-grid (Connected)
 
 ```python
-powerwall.set_island_mode(IslandMode.ONGRID)
+await powerwall.set_island_mode(IslandMode.ONGRID)
 ```
 
 # Development

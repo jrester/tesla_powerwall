@@ -125,3 +125,6 @@ dmypy.json
 .js
 .vscode
 .direnv
+
+# MacOS finder stuff
+.DS_Store
