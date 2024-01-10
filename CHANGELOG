@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.5.0]
+
+- BREAKING: The API is now async by default (by @bubonicbob)
+
 ## [0.4.0]
 
 - fix logout (https://github.com/jrester/tesla_powerwall/issues/50)
