@@ -200,6 +200,8 @@ batteries[0].f_out
 #=> 49.953
 batteries[0].i_out
 #=> -7.4
+batteries[0].grid_state
+#=> GridState.COMPLIANT
 ```
 
 ### Powerwall Status

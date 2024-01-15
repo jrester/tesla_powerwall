@@ -3,7 +3,13 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from .const import DEFAULT_KW_ROUND_PERSICION, DeviceType, MeterType, Roles
+from .const import (
+    DEFAULT_KW_ROUND_PERSICION,
+    DeviceType,
+    GridState,
+    MeterType,
+    Roles,
+)
 from .error import MeterNotAvailableError
 from .helpers import convert_to_kw
 
@@ -278,6 +284,7 @@ class BatteryResponse(ResponseBase):
     v_out: float
     f_out: float
     i_out: float
+    grid_state: GridState
 
     @staticmethod
     def from_dict(src: dict) -> "BatteryResponse":
@@ -295,4 +302,5 @@ class BatteryResponse(ResponseBase):
             v_out=src["v_out"],
             f_out=src["f_out"],
             i_out=src["i_out"],
+            grid_state=GridState(src["pinv_grid_state"]),
         )
