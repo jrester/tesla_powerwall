@@ -190,6 +190,18 @@ batteries[0].energy_discharged
 #=> 4659550 (Wh)
 batteries[0].wobble_detected
 #=> False
+batteries[0].p_out
+#=> 260
+batteries[0].q_out
+#=> -1080
+batteries[0].v_out
+#=> 245.70
+batteries[0].f_out
+#=> 49.953
+batteries[0].i_out
+#=> -7.4
+batteries[0].grid_state
+#=> GridState.COMPLIANT
 ```
 
 ### Powerwall Status
