@@ -1,3 +1,4 @@
+import asyncio
 import os
 
 from tesla_powerwall import MeterResponse, Powerwall
@@ -24,45 +25,50 @@ def print_meter_row(meter_data: MeterResponse):
     )
 
 
-ip = getenv("POWERWALL_IP")
-password = getenv("POWERWALL_PASSWORD")
+async def main():
+    ip = getenv("POWERWALL_IP")
+    password = getenv("POWERWALL_PASSWORD")
 
-power_wall = Powerwall(ip)
-power_wall.login(password)
-site_name = power_wall.get_site_info().site_name
-meters_agg = power_wall.get_meters()
+    power_wall = Powerwall(ip)
+    await power_wall.login(password)
+    site_name = (await power_wall.get_site_info()).site_name
+    meters_agg = await power_wall.get_meters()
 
-print(f"{site_name}:\n")
+    print(f"{site_name}:\n")
 
-row_format = "{:>18}: {}"
+    row_format = "{:>18}: {}"
 
-values = [
-    ("Charge (%)", round(power_wall.get_charge())),
-    ("Capacity", power_wall.get_capacity()),
-    ("Nominal Energy", power_wall.get_energy()),
-    ("Grid Status", power_wall.get_grid_status().value),
-    ("Backup Reserve (%)", round(power_wall.get_backup_reserve_percentage())),
-    ("Device Type", power_wall.get_device_type().value),
-    ("Software Version", power_wall.get_version()),
-]
+    values = [
+        ("Charge (%)", round(await power_wall.get_charge())),
+        ("Capacity", await power_wall.get_capacity()),
+        ("Nominal Energy", await power_wall.get_energy()),
+        ("Grid Status", (await power_wall.get_grid_status()).value),
+        ("Backup Reserve (%)", round(await power_wall.get_backup_reserve_percentage())),
+        ("Device Type", (await power_wall.get_device_type()).value),
+        ("Software Version", await power_wall.get_version()),
+    ]
 
+    for val in values:
+        print(row_format.format(*val))
 
-for val in values:
-    print(row_format.format(*val))
+    print("\n")
 
-print("\n")
-
-print(
-    "{:>8} {:>8} {:>17} {:>17} {:>8} {:>17} {:>17}".format(
-        "Meter",
-        "Power",
-        "Energy exported",
-        "Energy imported",
-        "Active",
-        "Drawing from",
-        "Sending to",
+    print(
+        "{:>8} {:>8} {:>17} {:>17} {:>8} {:>17} {:>17}".format(
+            "Meter",
+            "Power",
+            "Energy exported",
+            "Energy imported",
+            "Active",
+            "Drawing from",
+            "Sending to",
+        )
     )
-)
 
-for meter in meters_agg.meters.values():
-    print_meter_row(meter)
+    for meter in meters_agg.meters.values():
+        print_meter_row(meter)
+
+    await power_wall.close()
+
+
+asyncio.run(main())

@@ -55,12 +55,12 @@ However, if you believe there exists a solution, feel free to open an issue deta
 
 ## Usage
 
-For a basic Overview of the functionality of this library you can take a look at `examples/example.py`:
+For a basic Overview of the functionality of this library you can take a look at `examples/example.py`. You can run the example, by cloning the repo and executing in your shell:
 
 ```bash
 $ export POWERWALL_IP=<ip of your Powerwall>
 $ export POWERWALL_PASSWORD=<your password>
-$ python3 examples/example.py
+$ tox -e example
 ```
 
 ### Setup
