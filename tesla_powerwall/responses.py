@@ -273,6 +273,11 @@ class BatteryResponse(ResponseBase):
     energy_remaining: int
     capacity: int
     wobble_detected: bool
+    p_out: int
+    q_out: int
+    v_out: float
+    f_out: float
+    i_out: float
 
     @staticmethod
     def from_dict(src: dict) -> "BatteryResponse":
@@ -285,4 +290,9 @@ class BatteryResponse(ResponseBase):
             energy_remaining=src["nominal_energy_remaining"],
             capacity=src["nominal_full_pack_energy"],
             wobble_detected=src["wobble_detected"],
+            p_out=src["p_out"],
+            q_out=src["q_out"],
+            v_out=src["v_out"],
+            f_out=src["f_out"],
+            i_out=src["i_out"],
         )

@@ -249,6 +249,11 @@ class TestPowerWall(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(batteries[0].energy_charged, 5525740)
         self.assertEqual(batteries[0].energy_discharged, 4659550)
         self.assertEqual(batteries[0].wobble_detected, False)
+        self.assertEqual(batteries[0].p_out, -1830)
+        self.assertEqual(batteries[0].i_out, 39)
+        self.assertEqual(batteries[0].f_out, 50.067)
+        self.assertEqual(batteries[0].q_out, 30)
+        self.assertEqual(batteries[0].v_out, 226.60000000000002)
         self.aresponses.assert_plan_strictly_followed()
 
     async def test_islanding_mode_offgrid(self):
