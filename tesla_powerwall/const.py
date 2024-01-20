@@ -33,7 +33,7 @@ class IslandMode(Enum):
 
 class GridState(Enum):
     COMPLIANT = "Grid_Compliant"
-    QUALIFINY = "Grid_Qualifying"
+    QUALIFYING = "Grid_Qualifying"
     UNCOMPLIANT = "Grid_Uncompliant"
 
 
