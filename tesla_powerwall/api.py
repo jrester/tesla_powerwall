@@ -2,12 +2,10 @@ from http.client import responses
 from json.decoder import JSONDecodeError
 from types import TracebackType
 from typing import Any, List, Optional, Type
-from urllib.parse import urljoin
 
 import aiohttp
 import orjson
-from urllib3 import disable_warnings
-from urllib3.exceptions import InsecureRequestWarning
+from yarl import URL
 
 from .error import AccessDeniedError, ApiError, PowerwallUnreachableError
 
@@ -21,10 +19,7 @@ class API(object):
         verify_ssl: bool = False,
         disable_insecure_warning: bool = True,
     ) -> None:
-        if disable_insecure_warning:
-            disable_warnings(InsecureRequestWarning)
-
-        self._endpoint = self._parse_endpoint(endpoint)
+        self._endpoint = URL(self._parse_endpoint(endpoint))
         self._timeout = aiohttp.ClientTimeout(total=timeout)
         self._owns_http_session = False if http_session else True
         self._ssl = None if verify_ssl else False
@@ -121,8 +116,8 @@ class API(object):
 
         return response_json
 
-    def url(self, path: str):
-        return urljoin(self._endpoint, path)
+    def url(self, path: str) -> URL:
+        return self._endpoint.join(URL(path))
 
     async def get(self, path: str, headers: dict = {}) -> Any:
         try:
