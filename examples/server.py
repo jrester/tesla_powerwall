@@ -6,7 +6,7 @@ import os
 import sys
 from OpenSSL import crypto
 
-SAMPLE_FILES = "samples/running"
+SAMPLE_FILES = os.path.join("samples", "running")
 CERT_FILE = "selfsigned.crt"
 KEY_FILE = "private.key"
 
