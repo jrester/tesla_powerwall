@@ -285,9 +285,14 @@ class BatteryResponse(ResponseBase):
     f_out: float
     i_out: float
     grid_state: GridState
+    percent_charged: float
 
     @staticmethod
     def from_dict(src: dict) -> "BatteryResponse":
+        percent_charged = (
+            100.0 * src["nominal_energy_remaining"] / src["nominal_full_pack_energy"]
+        )
+
         return BatteryResponse(
             src,
             part_number=src["PackagePartNumber"],
@@ -303,4 +308,5 @@ class BatteryResponse(ResponseBase):
             f_out=src["f_out"],
             i_out=src["i_out"],
             grid_state=GridState(src["pinv_grid_state"]),
+            percent_charged=percent_charged,
         )

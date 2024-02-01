@@ -256,6 +256,7 @@ class TestPowerWall(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(batteries[0].q_out, 30)
         self.assertEqual(batteries[0].v_out, 226.60000000000002)
         self.assertEqual(batteries[0].grid_state, GridState.COMPLIANT)
+        self.assertEqual(batteries[0].percent_charged, 100.0 * 7378 / 14031)
         self.aresponses.assert_plan_strictly_followed()
 
     async def test_islanding_mode_offgrid(self):
