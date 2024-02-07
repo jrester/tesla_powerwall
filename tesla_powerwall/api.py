@@ -19,7 +19,7 @@ class API(object):
         verify_ssl: bool = False,
         disable_insecure_warning: bool = True,
     ) -> None:
-        self._endpoint = URL(self._parse_endpoint(endpoint))
+        self._endpoint = URL(endpoint).with_scheme("https").with_path("api")
         self._timeout = aiohttp.ClientTimeout(total=timeout)
         self._owns_http_session = False if http_session else True
         self._ssl = None if verify_ssl else False
