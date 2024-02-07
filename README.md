@@ -86,7 +86,7 @@ powerwall = Powerwall(
     # Provide a requests.Session or None. If None is provided, a Session will be created.
     http_session=None,
     # Whether to verify the SSL certificate or not
-    verify_ssl=False,
+    verify_ssl=False
 )
 #=> <Powerwall ...>
 ```
