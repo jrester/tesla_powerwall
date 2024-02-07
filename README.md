@@ -9,15 +9,14 @@ Powerwall Software versions from 1.47.0 to 1.50.1 as well as 20.40 to 22.9.2 are
 
 # Table of Contents <!-- omit in TOC -->
 
-- [Installation](#installation)
-- [Limitations](#limitations)
+- [Table of Contents ](#table-of-contents-)
+  - [Installation](#installation)
+  - [Limitations](#limitations)
     - [Adjusting Backup Reserve Percentage](#adjusting-backup-reserve-percentage)
-- [Usage](#usage)
+  - [Usage](#usage)
     - [Setup](#setup)
     - [Authentication](#authentication)
     - [General](#general)
-        - [Errors](#errors)
-        - [Response](#response)
     - [Battery level](#battery-level)
     - [Capacity](#capacity)
     - [Battery Packs](#battery-packs)
@@ -25,18 +24,25 @@ Powerwall Software versions from 1.47.0 to 1.50.1 as well as 20.40 to 22.9.2 are
     - [Sitemaster](#sitemaster)
     - [Siteinfo](#siteinfo)
     - [Meters](#meters)
-        - [Aggregates](#aggregates)
-        - [Current power supply/draw](#current-power-supplydraw)
-        - [Energy exported/imported](#energy-exportedimported)
-        - [Details](#details)
+      - [Aggregates](#aggregates)
+      - [Current power supply/draw](#current-power-supplydraw)
+      - [Energy exported/imported](#energy-exportedimported)
+    - [Details](#details)
     - [Device Type](#device-type)
     - [Grid Status](#grid-status)
     - [Operation mode](#operation-mode)
     - [Powerwalls Serial Numbers](#powerwalls-serial-numbers)
     - [Gateway DIN](#gateway-din)
     - [VIN](#vin)
-    - [Off-grid status](#off-grid-status-set-island-mode)
+    - [Off-grid status (Set Island mode)](#off-grid-status-set-island-mode)
+      - [Set powerwall to off-grid (Islanded)](#set-powerwall-to-off-grid-islanded)
+      - [Set powerwall to off-grid (Connected)](#set-powerwall-to-off-grid-connected)
 - [Development](#development)
+  - [pre-commit](#pre-commit)
+  - [Building](#building)
+  - [Testing](#testing)
+    - [Unit-Tests](#unit-tests)
+    - [Integration-Tests](#integration-tests)
 
 ## Installation
 
@@ -81,13 +87,11 @@ powerwall = Powerwall(
     http_session=None,
     # Whether to verify the SSL certificate or not
     verify_ssl=False,
-    disable_insecure_warning=True
 )
 #=> <Powerwall ...>
 ```
 
 > Note: By default the API client does not verify the SSL certificate of the Powerwall. If you want to verify the SSL certificate you can set `verify_ssl` to `True`.
-> The API client suppresses warnings about an inseucre request (because we aren't verifing the certificate). If you want to enable those warnings you can set `disable_insecure_warning` to `False`.
 
 ### Authentication
 
