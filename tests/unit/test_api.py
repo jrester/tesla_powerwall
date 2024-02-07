@@ -3,6 +3,7 @@ import unittest
 
 import aiohttp
 import aresponses
+from yarl import URL
 
 from tesla_powerwall import API, AccessDeniedError, ApiError
 from tesla_powerwall.const import User
@@ -122,7 +123,7 @@ class TestAPI(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.api.is_authenticated(), True)
 
     def test_url(self):
-        self.assertEqual(self.api.url("test"), ENDPOINT + "test")
+        self.assertEqual(self.api.url("test"), URL(ENDPOINT + "test"))
 
     async def test_login(self):
         jar = aiohttp.CookieJar(unsafe=True)

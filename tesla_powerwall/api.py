@@ -116,7 +116,7 @@ class API(object):
         return response_json
 
     def url(self, path: str) -> URL:
-        return self._endpoint.join(URL(path))
+        return self._endpoint.joinpath(path)
 
     async def get(self, path: str, headers: dict = {}) -> Any:
         try:
