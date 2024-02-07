@@ -17,7 +17,6 @@ class API(object):
         timeout: int = 10,
         http_session: Optional[aiohttp.ClientSession] = None,
         verify_ssl: bool = False,
-        disable_insecure_warning: bool = True,
     ) -> None:
         self._endpoint = URL(endpoint).with_scheme("https").with_path("api")
         self._timeout = aiohttp.ClientTimeout(total=timeout)
