@@ -80,14 +80,12 @@ powerwall = Powerwall(
     # Provide a requests.Session or None. If None is provided, a Session will be created.
     http_session=None,
     # Whether to verify the SSL certificate or not
-    verify_ssl=False,
-    disable_insecure_warning=True
+    verify_ssl=False
 )
 #=> <Powerwall ...>
 ```
 
 > Note: By default the API client does not verify the SSL certificate of the Powerwall. If you want to verify the SSL certificate you can set `verify_ssl` to `True`.
-> The API client suppresses warnings about an inseucre request (because we aren't verifing the certificate). If you want to enable those warnings you can set `disable_insecure_warning` to `False`.
 
 ### Authentication
 

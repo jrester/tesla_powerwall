@@ -26,14 +26,12 @@ class Powerwall:
         timeout: int = 10,
         http_session: Union[aiohttp.ClientSession, None] = None,
         verify_ssl: bool = False,
-        disable_insecure_warning: bool = True,
-    ):
+    ) -> None:
         self._api = API(
             endpoint=endpoint,
             timeout=timeout,
             http_session=http_session,
             verify_ssl=verify_ssl,
-            disable_insecure_warning=disable_insecure_warning,
         )
 
     async def login_as(

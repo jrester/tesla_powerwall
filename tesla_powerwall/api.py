@@ -2,12 +2,10 @@ from http.client import responses
 from json.decoder import JSONDecodeError
 from types import TracebackType
 from typing import Any, List, Optional, Type
-from urllib.parse import urljoin
 
 import aiohttp
 import orjson
-from urllib3 import disable_warnings
-from urllib3.exceptions import InsecureRequestWarning
+from yarl import URL
 
 from .error import AccessDeniedError, ApiError, PowerwallUnreachableError
 
@@ -19,12 +17,10 @@ class API(object):
         timeout: int = 10,
         http_session: Optional[aiohttp.ClientSession] = None,
         verify_ssl: bool = False,
-        disable_insecure_warning: bool = True,
     ) -> None:
-        if disable_insecure_warning:
-            disable_warnings(InsecureRequestWarning)
-
-        self._endpoint = self._parse_endpoint(endpoint)
+        if not endpoint.startswith("http"):
+            endpoint = f"https://{endpoint}"
+        self._endpoint = URL(endpoint).with_path("api").with_scheme("https")
         self._timeout = aiohttp.ClientTimeout(total=timeout)
         self._owns_http_session = False if http_session else True
         self._ssl = None if verify_ssl else False
@@ -39,25 +35,6 @@ class API(object):
             # See: https://docs.aiohttp.org/en/v3.7.3/client_advanced.html#cookie-safety
             jar = aiohttp.CookieJar(unsafe=True)
             self._http_session = aiohttp.ClientSession(cookie_jar=jar)
-
-    @staticmethod
-    def _parse_endpoint(endpoint: str) -> str:
-        if endpoint.startswith("https"):
-            endpoint = endpoint
-        elif endpoint.startswith("http"):
-            endpoint = endpoint.replace("http", "https")
-        else:
-            # Use str.format instead of f'strings to be backwards compatible
-            endpoint = "https://{}".format(endpoint)
-
-        if not endpoint.endswith("api") and not endpoint.endswith("/"):
-            endpoint += "/api/"
-        elif endpoint.endswith("api"):
-            endpoint += "/"
-        elif endpoint.endswith("/") and not endpoint.endswith("api/"):
-            endpoint += "api/"
-
-        return endpoint
 
     @staticmethod
     async def _handle_error(response: aiohttp.ClientResponse) -> None:
@@ -121,8 +98,8 @@ class API(object):
 
         return response_json
 
-    def url(self, path: str):
-        return urljoin(self._endpoint, path)
+    def url(self, path: str) -> URL:
+        return self._endpoint.joinpath(path)
 
     async def get(self, path: str, headers: dict = {}) -> Any:
         try:
