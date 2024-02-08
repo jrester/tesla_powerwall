@@ -1,5 +1,9 @@
 # Changelog
 
+## [WIP]
+
+- Use yarl for URL parsing by @bdraco (https://github.com/jrester/tesla_powerwall/pull/62)
+
 ## [0.5.1]
 
 - Use orjson for parsing json (https://github.com/jrester/tesla_powerwall/pull/59)
