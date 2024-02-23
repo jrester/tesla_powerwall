@@ -200,6 +200,8 @@ batteries[0].i_out
 #=> -7.4
 batteries[0].grid_state
 #=> GridState.COMPLIANT
+batteries[0].percent_charged
+#=> 52.58
 ```
 
 ### Powerwall Status
