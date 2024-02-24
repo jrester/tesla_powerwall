@@ -37,6 +37,6 @@ from .responses import (
     SolarResponse,
 )
 
-VERSION = "0.5.1"
+VERSION = "0.5.2"
 
 __all__ = list(filter(lambda n: not n.startswith("_"), globals().keys()))
