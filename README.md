@@ -171,6 +171,7 @@ await powerwall.get_capacity()
 
 Get information about the battery packs that are installed:
 
+Assuming that the battery is operational, you can retrive a number of values about each battery:
 ```python
 batteries = await powerwall.get_batteries()
 #=> [<Battery ...>, <Battery ...>]
@@ -200,6 +201,22 @@ batteries[0].i_out
 #=> -7.4
 batteries[0].grid_state
 #=> GridState.COMPLIANT
+batteries[0].disabled_reasons
+#=> []
+
+```
+
+If a battery is disabled it's `grid_state` will be `GridState.DISABLED` and some values will be `None`. The variable `disabled_reasons` might contain more information why the battery is disabled:
+```python
+...
+batteries[1].grid_state
+#=> GridState.DISABLED
+batteries[1].disabled_reasons
+#=> ["DisabledExcessiveVoltageDrop"]
+batteries[1].p_out
+#=> None
+batteries[1].energy_charged
+#=> None
 ```
 
 ### Powerwall Status

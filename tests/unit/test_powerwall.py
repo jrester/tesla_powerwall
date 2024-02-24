@@ -242,7 +242,7 @@ class TestPowerWall(unittest.IsolatedAsyncioTestCase):
 
         self.add_response("system_status", body=SYSTEM_STATUS_RESPONSE)
         batteries = await self.powerwall.get_batteries()
-        self.assertEqual(len(batteries), 2)
+        self.assertEqual(len(batteries), 3)
         self.assertEqual(batteries[0].part_number, "XXX-G")
         self.assertEqual(batteries[0].serial_number, "TGXXX")
         self.assertEqual(batteries[0].energy_remaining, 7378)
@@ -256,6 +256,13 @@ class TestPowerWall(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(batteries[0].q_out, 30)
         self.assertEqual(batteries[0].v_out, 226.60000000000002)
         self.assertEqual(batteries[0].grid_state, GridState.COMPLIANT)
+        self.assertEqual(batteries[2].grid_state, GridState.DISABLED)
+        self.assertEqual(batteries[2].p_out, None)
+        self.assertEqual(batteries[2].i_out, None)
+        self.assertEqual(batteries[2].energy_charged, None)
+        self.assertEqual(
+            batteries[2].disabled_reasons, ["DisabledExcessiveVoltageDrop"]
+        )
         self.aresponses.assert_plan_strictly_followed()
 
     async def test_islanding_mode_offgrid(self):

@@ -32,6 +32,7 @@ class IslandMode(Enum):
 
 
 class GridState(Enum):
+    DISABLED = "Disabled"
     COMPLIANT = "Grid_Compliant"
     QUALIFYING = "Grid_Qualifying"
     UNCOMPLIANT = "Grid_Uncompliant"
