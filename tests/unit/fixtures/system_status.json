@@ -50,6 +50,32 @@
       "version": "67f943cb05d12d",
       "vf_mode": false,
       "wobble_detected": false
+    },
+    {
+      "OpSeqState": "Standby",
+      "PackagePartNumber": "XXX-E",
+      "PackageSerialNumber": "XXX",
+      "Type": "",
+      "backup_ready": false,
+      "charge_power_clamped": false,
+      "disabled_reasons": [
+        "DisabledExcessiveVoltageDrop"
+      ],
+      "energy_charged": null,
+      "energy_discharged": null,
+      "f_out": null,
+      "i_out": null,
+      "nominal_energy_remaining": 0,
+      "nominal_full_pack_energy": 14714,
+      "off_grid": false,
+      "p_out": null,
+      "pinv_grid_state": "",
+      "pinv_state": "",
+      "q_out": null,
+      "v_out": null,
+      "version": "eb113390162784",
+      "vf_mode": false,
+      "wobble_detected": false
     }
   ],
   "battery_target_power": -3646.2544361664613,

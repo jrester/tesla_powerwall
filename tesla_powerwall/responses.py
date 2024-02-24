@@ -272,22 +272,38 @@ class SolarResponse(ResponseBase):
 
 @dataclass
 class BatteryResponse(ResponseBase):
+    """
+    A battery pack as part of the system_status response.
+    """
+
     part_number: str
     serial_number: str
-    energy_charged: int
-    energy_discharged: int
+    wobble_detected: bool
     energy_remaining: int
     capacity: int
-    wobble_detected: bool
-    p_out: int
-    q_out: int
-    v_out: float
-    f_out: float
-    i_out: float
+    # Values might be None if this battery is in GridState.DISABLED
+    energy_charged: Optional[int]
+    energy_discharged: Optional[int]
+    p_out: Optional[int]
+    q_out: Optional[int]
+    v_out: Optional[float]
+    f_out: Optional[float]
+    i_out: Optional[float]
     grid_state: GridState
+    disabled_reasons: List[str]
 
     @staticmethod
     def from_dict(src: dict) -> "BatteryResponse":
+        # Check if the battery is disabled. A battery is considered disabled if:
+        # - there is at least one disabled reason present in the response,
+        # - or the pinv_grid_state is empty
+        disabled_reasons = src["disabled_reasons"]
+        raw_grid_state = src["pinv_grid_state"]
+        grid_state = (
+            GridState.DISABLED
+            if len(disabled_reasons) > 0 or len(raw_grid_state) == 0
+            else GridState(raw_grid_state)
+        )
         return BatteryResponse(
             src,
             part_number=src["PackagePartNumber"],
@@ -302,5 +318,6 @@ class BatteryResponse(ResponseBase):
             v_out=src["v_out"],
             f_out=src["f_out"],
             i_out=src["i_out"],
-            grid_state=GridState(src["pinv_grid_state"]),
+            grid_state=grid_state,
+            disabled_reasons=disabled_reasons,
         )
