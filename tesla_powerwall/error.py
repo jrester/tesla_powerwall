@@ -28,9 +28,7 @@ class MissingAttributeError(ApiError):
         else:
             super().__init__(
                 "The attribute '{}' is expected in the response for \
-                 '{}' but is missing.".format(
-                    attribute, url
-                )
+                 '{}' but is missing.".format(attribute, url)
             )
 
 
@@ -68,7 +66,5 @@ class MeterNotAvailableError(PowerwallError):
         self.available_meters: List[MeterType] = available_meters
         super().__init__(
             "Meter {} is not available at your powerwall. \
-             Following meters are available: {} ".format(
-                meter.value, available_meters
-            )
+             Following meters are available: {} ".format(meter.value, available_meters)
         )

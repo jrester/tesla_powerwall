@@ -105,7 +105,7 @@ class MeterDetailsReadings(MeterResponse):
             v_l2n=src.get("v_l2n"),
             v_l3n=src.get("v_l3n"),
             # Populate with the values from the base class
-            **meter_response.__dict__
+            **meter_response.__dict__,
         )
 
 
