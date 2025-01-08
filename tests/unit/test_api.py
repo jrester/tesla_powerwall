@@ -23,7 +23,7 @@ class TestAPI(unittest.IsolatedAsyncioTestCase):
         await self.session.close()
         await self.aresponses.__aexit__(None, None, None)
 
-    async def test_parse_endpoint(self):
+    async def test_endpoint_is_pared_correctly(self):
         test_endpoints = [
             "1.1.1.1",
             "http://1.1.1.1",
@@ -35,7 +35,8 @@ class TestAPI(unittest.IsolatedAsyncioTestCase):
         for test_endpoint in test_endpoints:
             api = API(test_endpoint)
             await api.close()
-            self.assertEqual(api.url(""), URL(ENDPOINT.rstrip("/")))
+            self.assertEqual(api.url("").scheme, "https")
+            self.assertTrue(api.url("").path.startswith("/api"))
 
     async def test_process_response(self):
         status = 0

@@ -18,6 +18,7 @@ class API(object):
         http_session: Optional[aiohttp.ClientSession] = None,
         verify_ssl: bool = False,
     ) -> None:
+        # Required if endpoint is a single ip address, because yarl does not correctly process them.
         if not endpoint.startswith("http"):
             endpoint = f"https://{endpoint}"
         self._endpoint = URL(endpoint).with_path("api").with_scheme("https")
