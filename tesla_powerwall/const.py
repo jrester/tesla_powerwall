@@ -24,6 +24,7 @@ class GridStatus(Enum):
     ISLANDED = "SystemIslandedActive"
     TRANSITION_TO_GRID = "SystemTransitionToGrid"  # Used in version 1.46.0
     TRANSITION_TO_ISLAND = "SystemTransitionToIsland"
+    WAIT_FOR_USER = "SystemWaitForUser"
 
 
 class IslandMode(Enum):
