@@ -128,3 +128,5 @@ dmypy.json
 
 # MacOS finder stuff
 .DS_Store
+
+.server
