@@ -125,8 +125,8 @@
     }
   ],
   "grid_services_power": 0,
-  "instantaneous_max_charge_power": 0,
-  "instantaneous_max_discharge_power": 0,
+  "instantaneous_max_charge_power": 7000,
+  "instantaneous_max_discharge_power": 8380,
   "inverter_nominal_usable_power": 9200,
   "last_toggle_timestamp": "2021-09-30T18:11:41.110543639+02:00",
   "load_charge_constraint": 0,

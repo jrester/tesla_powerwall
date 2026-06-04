@@ -263,6 +263,16 @@ class TestPowerWall(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             batteries[2].disabled_reasons, ["DisabledExcessiveVoltageDrop"]
         )
+
+        self.add_response("system_status", body=SYSTEM_STATUS_RESPONSE)
+        self.assertEqual(
+            await self.powerwall.get_instantaneous_max_charge_power(), 7000
+        )
+
+        self.add_response("system_status", body=SYSTEM_STATUS_RESPONSE)
+        self.assertEqual(
+            await self.powerwall.get_instantaneous_max_discharge_power(), 8380
+        )
         self.aresponses.assert_plan_strictly_followed()
 
     async def test_islanding_mode_offgrid(self):
