@@ -50,7 +50,7 @@ $ pip install tesla_powerwall
 
 ### Adjusting Backup Reserve Percentage
 
-Currently it is not possible to control the Backup Percentage, because you need to be logged in as installer, which requires physical switch toggle. There is an ongoing discussion about a possible solution [here](https://github.com/vloschiavo/powerwall2/issues/55).
+Currently, it is not possible to control the Backup Percentage, because you need to be logged in as installer, which requires physical switch toggle. There is an ongoing discussion about a possible solution [here](https://github.com/vloschiavo/powerwall2/issues/55).
 However, if you believe there exists a solution, feel free to open an issue detailing the solution.
 
 ## Usage
@@ -60,7 +60,7 @@ For a basic Overview of the functionality of this library you can take a look at
 ```bash
 $ export POWERWALL_IP=<ip of your Powerwall>
 $ export POWERWALL_PASSWORD=<your password>
-$ tox -e example
+$ uv run python examples/example.py
 ```
 
 ### Setup

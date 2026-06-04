@@ -19,14 +19,14 @@ dependencies = [
   "orjson>=3.9.0",
   "yarl>=1.15.0"
 ]
+requires-python = ">=3.12"
 
 [project.urls]
 Homepage = "https://github.com/jrester/tesla_powerwall"
 
-[project.optional-dependencies]
+[dependency-groups]
 test = [
- "tox",
- "pre-commit",
+    "aresponses",
 ]
 
 [tool.ruff.lint]
