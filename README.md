@@ -167,6 +167,17 @@ await powerwall.get_capacity()
 #=> 28078 (Wh)
 ```
 
+### Max Power
+
+Get the real-time (BMS-derated) maximum charge and discharge power in watt:
+
+```python
+await powerwall.get_instantaneous_max_charge_power()
+#=> 7000 (W)
+await powerwall.get_instantaneous_max_discharge_power()
+#=> 8380 (W)
+```
+
 ### Battery Packs
 
 Get information about the battery packs that are installed:

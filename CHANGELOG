@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- Add `get_instantaneous_max_charge_power` and `get_instantaneous_max_discharge_power` to expose the real-time (BMS-derated) charge/discharge power limits from `system_status`
+
 ## [0.5.2]
 
 - Use yarl for URL parsing by @bdraco (https://github.com/jrester/tesla_powerwall/pull/62)

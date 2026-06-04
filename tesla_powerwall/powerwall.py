@@ -118,6 +118,20 @@ class Powerwall:
             "system_status",
         )
 
+    async def get_instantaneous_max_charge_power(self) -> int:
+        return assert_attribute(
+            await self._api.get_system_status(),
+            "instantaneous_max_charge_power",
+            "system_status",
+        )
+
+    async def get_instantaneous_max_discharge_power(self) -> int:
+        return assert_attribute(
+            await self._api.get_system_status(),
+            "instantaneous_max_discharge_power",
+            "system_status",
+        )
+
     async def get_batteries(self) -> List[BatteryResponse]:
         batteries = assert_attribute(
             await self._api.get_system_status(), "battery_blocks", "system_status"
