@@ -15,9 +15,10 @@ jobs:
       - name: Set up Python
         run: uv python install
       - name: Run pre-commit
-        run: uv run --with pre-commit pre-commit run --all-files --show-diff-on-failure
+        run: uv run --group dev pre-commit run --all-files --show-diff-on-failure
 
   test:
+    needs: pre-commit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

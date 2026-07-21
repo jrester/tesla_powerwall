@@ -9,3 +9,6 @@ test-integration:
 
 example:
     uv run python examples/example.py
+
+pre-commit:
+    uv run --group dev pre-commit run --all-files

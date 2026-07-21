@@ -28,6 +28,9 @@ Homepage = "https://github.com/jrester/tesla_powerwall"
 test = [
     "aresponses",
 ]
+dev = [
+    "pre-commit",
+]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "I"]
