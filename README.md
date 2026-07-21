@@ -438,7 +438,7 @@ $ pre-commit install
 pre-commit installed at .git/hooks/pre-commit
 ```
 
-Now those checks will be execute on every `git commit`. You can also execute all checks manually with `pre-commit run --all-files`.
+Now those checks will be execute on every `git commit`. You can also execute all checks manually with `just pre-commit`.
 
 ## Building
 
@@ -449,14 +449,14 @@ $ python -m build
 ## Testing
 
 The tests are split in unit and integration tests.
-The unit tests are self-contained and can simply be run locally by executing `tox -e unit`, whereas the integration test, run against a real powerwall.
+The unit tests are self-contained and can simply be run locally, whereas the integration tests run against a real powerwall.
 
 ### Unit-Tests
 
-To run unit tests use tox:
+To run unit tests use just:
 
 ```sh
-$ tox -e unit
+$ just test-unit
 ```
 
 ### Integration-Tests
@@ -466,7 +466,7 @@ To execute the integration tests you need to first provide some information abou
 ```sh
 $ export POWERWALL_IP=<ip of your powerwall>
 $ export POWERWALL_PASSWORD=<password for your powerwall>
-$ tox -e integration
+$ just test-integration
 ```
 
 > The integration tests might take your powerwall off grid and bring it back online. Before running the tests, make sure that you know what you are doing!
