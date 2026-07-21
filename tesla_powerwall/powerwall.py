@@ -1,5 +1,4 @@
 from types import TracebackType
-from typing import List, Optional, Type, Union
 
 import aiohttp
 
@@ -24,7 +23,7 @@ class Powerwall:
         self,
         endpoint: str,
         timeout: int = 10,
-        http_session: Union[aiohttp.ClientSession, None] = None,
+        http_session: aiohttp.ClientSession | None = None,
         verify_ssl: bool = False,
     ) -> None:
         self._api = API(
@@ -36,7 +35,7 @@ class Powerwall:
 
     async def login_as(
         self,
-        user: Union[User, str],
+        user: User | str,
         password: str,
         email: str,
         force_sm_off: bool = False,
@@ -67,7 +66,7 @@ class Powerwall:
     async def stop(self) -> None:
         await self._api.get_sitemaster_stop()
 
-    async def get_charge(self) -> Union[float, int]:
+    async def get_charge(self) -> float | int:
         return assert_attribute(
             await self._api.get_system_status_soe(), "percentage", "soe"
         )
@@ -132,7 +131,7 @@ class Powerwall:
             "system_status",
         )
 
-    async def get_batteries(self) -> List[BatteryResponse]:
+    async def get_batteries(self) -> list[BatteryResponse]:
         batteries = assert_attribute(
             await self._api.get_system_status(), "battery_blocks", "system_status"
         )
@@ -159,7 +158,7 @@ class Powerwall:
         """Returns the device type of the powerwall"""
         return (await self.get_status()).device_type
 
-    async def get_serial_numbers(self) -> List[str]:
+    async def get_serial_numbers(self) -> list[str]:
         powerwalls = assert_attribute(
             await self._api.get_powerwalls(), "powerwalls", "powerwalls"
         )
@@ -185,7 +184,7 @@ class Powerwall:
             await self._api.get_operation(), "backup_reserve_percent", "operation"
         )
 
-    async def get_solars(self) -> List[SolarResponse]:
+    async def get_solars(self) -> list[SolarResponse]:
         return [
             SolarResponse.from_dict(solar) for solar in await self._api.get_solars()
         ]
@@ -220,8 +219,8 @@ class Powerwall:
 
     async def __aexit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         await self.close()

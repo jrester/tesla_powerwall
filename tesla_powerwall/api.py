@@ -1,7 +1,7 @@
 from http.client import responses
 from json.decoder import JSONDecodeError
 from types import TracebackType
-from typing import Any, List, Optional, Type
+from typing import Any
 
 import aiohttp
 import orjson
@@ -15,7 +15,7 @@ class API(object):
         self,
         endpoint: str,
         timeout: int = 10,
-        http_session: Optional[aiohttp.ClientSession] = None,
+        http_session: aiohttp.ClientSession | None = None,
         verify_ssl: bool = False,
     ) -> None:
         # Required if endpoint is a single ip address, because yarl does not correctly process them.
@@ -173,9 +173,9 @@ class API(object):
 
     async def __aexit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         await self.close()
 
@@ -241,7 +241,7 @@ class API(object):
     async def get_installer(self) -> dict:
         return await self.get("installer")
 
-    async def get_solar_brands(self) -> List[str]:
+    async def get_solar_brands(self) -> list[str]:
         return await self.get("solars/brands")
 
     async def get_system_update_status(self) -> dict:

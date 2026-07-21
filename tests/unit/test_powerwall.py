@@ -1,7 +1,6 @@
 import datetime
 import json
 import unittest
-from typing import Optional, Union
 
 import aiohttp
 import aresponses
@@ -63,7 +62,7 @@ class TestPowerWall(unittest.IsolatedAsyncioTestCase):
         path: str,
         method: str = "GET",
         content_type: str = "application/json",
-        body: Optional[Union[str, dict]] = None,
+        body: str | dict | None = None,
     ):
         self.aresponses.add(
             ENDPOINT_HOST,

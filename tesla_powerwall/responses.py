@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .const import (
     DEFAULT_KW_ROUND_PERSICION,
@@ -79,17 +79,17 @@ class MeterResponse(ResponseBase):
 
 @dataclass
 class MeterDetailsReadings(MeterResponse):
-    real_power_a: Optional[float]
-    real_power_b: Optional[float]
-    real_power_c: Optional[float]
+    real_power_a: float | None
+    real_power_b: float | None
+    real_power_c: float | None
 
-    i_a_current: Optional[float]
-    i_b_current: Optional[float]
-    i_c_current: Optional[float]
+    i_a_current: float | None
+    i_b_current: float | None
+    i_c_current: float | None
 
-    v_l1n: Optional[float]
-    v_l2n: Optional[float]
-    v_l3n: Optional[float]
+    v_l1n: float | None
+    v_l2n: float | None
+    v_l3n: float | None
 
     @staticmethod
     def from_dict(meter: MeterType, src: dict) -> "MeterDetailsReadings":
@@ -130,7 +130,7 @@ class MetersAggregatesResponse(ResponseBase):
         }
         return MetersAggregatesResponse(src, meters)
 
-    def __init__(self, response: dict, meters: Dict[MeterType, MeterResponse]) -> None:
+    def __init__(self, response: dict, meters: dict[MeterType, MeterResponse]) -> None:
         self._raw = response
         self.meters = meters
 
@@ -144,7 +144,7 @@ class MetersAggregatesResponse(ResponseBase):
         else:
             return object.__getattribute__(self, attr)
 
-    def get_meter(self, meter: MeterType) -> Optional[MeterResponse]:
+    def get_meter(self, meter: MeterType) -> MeterResponse | None:
         return self.meters.get(meter)
 
 
@@ -239,7 +239,7 @@ class LoginResponse(ResponseBase):
     firstname: str
     lastname: str
     token: str
-    roles: List[Roles]
+    roles: list[Roles]
     login_time: str
 
     @staticmethod
@@ -282,15 +282,15 @@ class BatteryResponse(ResponseBase):
     energy_remaining: int
     capacity: int
     # Values might be None if this battery is in GridState.DISABLED
-    energy_charged: Optional[int]
-    energy_discharged: Optional[int]
-    p_out: Optional[int]
-    q_out: Optional[int]
-    v_out: Optional[float]
-    f_out: Optional[float]
-    i_out: Optional[float]
+    energy_charged: int | None
+    energy_discharged: int | None
+    p_out: int | None
+    q_out: int | None
+    v_out: float | None
+    f_out: float | None
+    i_out: float | None
     grid_state: GridState
-    disabled_reasons: List[str]
+    disabled_reasons: list[str]
 
     @staticmethod
     def from_dict(src: dict) -> "BatteryResponse":
