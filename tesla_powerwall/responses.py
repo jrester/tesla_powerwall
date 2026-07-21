@@ -321,3 +321,9 @@ class BatteryResponse(ResponseBase):
             grid_state=grid_state,
             disabled_reasons=disabled_reasons,
         )
+
+    @property
+    def percent_charged(self) -> float:
+        if self.capacity == 0:
+            return 0.0
+        return 100.0 * self.energy_remaining / self.capacity

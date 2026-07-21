@@ -256,6 +256,7 @@ class TestPowerWall(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(batteries[0].q_out, 30)
         self.assertEqual(batteries[0].v_out, 226.60000000000002)
         self.assertEqual(batteries[0].grid_state, GridState.COMPLIANT)
+        self.assertEqual(batteries[0].percent_charged, 100.0 * 7378 / 14031)
         self.assertEqual(batteries[2].grid_state, GridState.DISABLED)
         self.assertEqual(batteries[2].p_out, None)
         self.assertEqual(batteries[2].i_out, None)

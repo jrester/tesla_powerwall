@@ -87,6 +87,7 @@ class TestPowerwall(unittest.IsolatedAsyncioTestCase):
             battery.capacity
             battery.part_number
             battery.serial_number
+            battery.percent_charged
 
     async def test_grid_status(self) -> None:
         grid_status = await self.powerwall.get_grid_status()
